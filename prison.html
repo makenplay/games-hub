@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Prison Escape Run Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a prison escape stealth game free online. Find the key, cutters and rope, dodge the guards' lights and slip out the gate. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#334155; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .pad { display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px; gap:5px; justify-content:center; padding:2px 0 8px; }
+  .btn { padding:11px 0; font-size:16px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.94); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-size:12px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔓 PRISON ESCAPE RUN</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🎒 ITEMS <b id="items">0/3</b></div>
+  <div class="stat">⚠️ STRIKES <b id="strikes">0/3</b></div>
+  <div class="stat">⏱️ TIME <b id="time">0s</b></div>
+  <div class="stat">BEST ESCAPE <b id="best">–</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Find the 🔑 key, ✂️ cutters and 🪢 rope hidden in the yard — then slip out the gate at the top. Avoid the torchlight cones!</div>
+<div class="pad">
+  <span></span><button class="btn" id="upBtn">⬆</button><span></span>
+  <button class="btn" id="leftBtn">◀</button><button class="btn primary" id="startBtn">▶ START</button><button class="btn" id="rightBtn">▶</button>
+  <span></span><button class="btn" id="downBtn">⬇</button><span></span>
+</div>
+<div class="row" style="display:flex;gap:8px;justify-content:center;padding-bottom:8px;">
+  <button class="btn" id="soundBtn" style="padding:11px 16px;">🔊</button>
+</div>
+<div class="keys">Caught in a guard's light = strike + back to your cell · 3 strikes and the escape is over · your items stay in your pocket</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Prison Escape Run</h2>
+  <p>Night falls on the prison yard and you have one plan: three tools hidden around the grounds — a key, wire cutters and a rope — and a gate at the north fence. Four guards sweep the dark with torchlight cones. Grab the gear, mind the light, and vanish.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with WASD, the arrow keys or the pad. Walk over an item to pocket it. If a guard's torch cone catches you, that's a strike and you're marched back to your cell (items stay with you). Three strikes end the run. With all three items, reach the glowing gate at the top to escape — fastest escape time is saved.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Four patrolling guards with sweeping torchlight vision cones</li>
+    <li>Strike system with cell restarts — items are never lost</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460;
+/* prison: outer walls, cell block (bottom), yard props as low walls */
+var WALLS=[
+  { x:0, y:0, w:262, h:14 }, { x:378, y:0, w:262, h:14 },
+  { x:0, y:446, w:640, h:14 },
+  { x:0, y:0, w:14, h:460 }, { x:626, y:0, w:14, h:460 },
+  /* cell block dividers (bottom) */
+  { x:150, y:330, w:14, h:116 }, { x:320, y:330, w:14, h:116 }, { x:476, y:330, w:14, h:116 },
+  { x:14, y:330, w:136, h:14 }, { x:164, y:330, w:156, h:14 }, { x:334, y:330, w:142, h:14 }, { x:490, y:330, w:136, h:14 },
+  /* yard props */
+  { x:90, y:120, w:70, h:16 }, { x:480, y:120, w:70, h:16 },
+  { x:90, y:230, w:70, h:16 }, { x:480, y:230, w:70, h:16 },
+  { x:285, y:170, w:70, h:16 }
+];
+var GATE={ x:320, y:10, w:116, h:16 };
+var CELL={ x:82, y:392 };
+var ITEMS=[
+  { id:'key',     icon:'🔑', name:'Master Key',   x:560, y:64 },
+  { id:'cutters', icon:'✂️', name:'Wire Cutters', x:70,  y:180 },
+  { id:'rope',    icon:'🪢', name:'Rope',          x:330, y:262 }
+];
+var PATROLS=[
+  [ {x:80,y:70}, {x:330,y:70}, {x:330,y:150}, {x:80,y:150} ],
+  [ {x:560,y:180}, {x:560,y:290}, {x:420,y:290}, {x:420,y:180} ],
+  [ {x:200,y:200}, {x:200,y:290}, {x:120,y:290}, {x:120,y:200} ],
+  [ {x:420,y:60}, {x:560,y:60}, {x:560,y:110}, {x:420,y:110} ]
+];
+/* ---------- pure logic (testable) ---------- */
+function guardSees(gx, gy, facing, px, py){
+  var d=Math.hypot(px-gx, py-gy);
+  if(d>126) return false;
+  if(d<16) return true;
+  var ang=Math.atan2(py-gy, px-gx);
+  var diff=Math.abs(((ang - facing + Math.PI*3) % (Math.PI*2)) - Math.PI);
+  return diff < 0.58;
+}
+function hasAllItems(collected){
+  return !!(collected.key && collected.cutters && collected.rope);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, player, guards, collected, strikes, elapsed, escaped, failed, graceT, keys, rafId, lastTick;
+var bestTime=+(localStorage.getItem('makenPrisonBest')||0);
+el('best').textContent= bestTime ? bestTime+'s' : '–';
+function itemsGot(){ return ITEMS.filter(function(i){ return collected[i.id]; }).length; }
+function hud(){
+  el('items').textContent=itemsGot()+'/3';
+  el('strikes').textContent=strikes+'/3';
+  el('strikes').style.color= strikes>0 ? '#f87171' : '#9aa7c7';
+  el('time').textContent=Math.floor(elapsed)+'s';
+  el('best').textContent= bestTime ? bestTime+'s' : '–';
+}
+function makeGuard(patrol){
+  return { x:patrol[0].x, y:patrol[0].y, patrol:patrol, wp:1, facing:0, alert:0, mode:'patrol' };
+}
+function reset(){
+  playing=false; escaped=false; failed=false;
+  player={ x:CELL.x, y:CELL.y };
+  guards=PATROLS.map(makeGuard);
+  collected={};
+  strikes=0; elapsed=0; graceT=0;
+  keys={};
+  hud(); draw();
+}
+function hitsWall(x, y, r){
+  for(var i=0;i<WALLS.length;i++){
+    var w=WALLS[i];
+    if(x+r > w.x && x-r < w.x+w.w && y+r > w.y && y-r < w.y+w.h) return true;
+  }
+  return false;
+}
+function moveEntity(e, dx, dy, dt, speed){
+  var nx=e.x + dx*speed*dt;
+  var ny=e.y + dy*speed*dt;
+  if(!hitsWall(nx, e.y, 11)) e.x=nx;
+  if(!hitsWall(e.x, ny, 11)) e.y=ny;
+}
+function draw(){
+  /* night yard */
+  ctx.fillStyle='#1e293b'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#263449';
+  for(var gx=0; gx<W; gx+=46) for(var gy=0; gy<H; gy+=46) if(((gx+gy)/46)%2===0) ctx.fillRect(gx, gy, 46, 46);
+  /* cell block floor */
+  ctx.fillStyle='#3b2f2f'; ctx.fillRect(14, 344, 612, 102);
+  ctx.fillStyle='#fbbf24'; ctx.font='bold 10.5px Arial'; ctx.textAlign='center';
+  ctx.fillText('CELL BLOCK', 82, 362);
+  /* gate */
+  var open=hasAllItems(collected);
+  ctx.fillStyle= open ? '#14532d' : '#7f1d1d';
+  ctx.fillRect(GATE.x-GATE.w/2, GATE.y-4, GATE.w, GATE.h+6);
+  ctx.font='17px Arial'; ctx.textAlign='center';
+  ctx.fillText(open ? '🔓' : '🔒', GATE.x, GATE.y+13);
+  ctx.fillStyle= open ? '#4ade80' : '#f87171'; ctx.font='bold 10px Arial';
+  ctx.fillText(open ? 'ESCAPE!' : 'GATE — NEED ALL 3 ITEMS', GATE.x, GATE.y+34);
+  /* torch cones */
+  guards.forEach(function(g){
+    var grad=ctx.createRadialGradient(g.x, g.y, 8, g.x, g.y, 126);
+    grad.addColorStop(0, g.mode==='chase' ? 'rgba(239,68,68,0.4)' : 'rgba(253,224,71,0.30)');
+    grad.addColorStop(1, 'rgba(253,224,71,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.moveTo(g.x, g.y);
+    ctx.arc(g.x, g.y, 126, g.facing-0.58, g.facing+0.58);
+    ctx.closePath(); ctx.fill();
+  });
+  /* walls */
+  ctx.fillStyle='#0f172a';
+  WALLS.forEach(function(w){ ctx.fillRect(w.x, w.y, w.w, w.h); });
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  WALLS.forEach(function(w){ ctx.fillRect(w.x, w.y, w.w, 3); });
+  /* items */
+  ITEMS.forEach(function(it){
+    if(collected[it.id]) return;
+    ctx.fillStyle='rgba(250,204,21,'+(0.16+0.1*Math.sin(performance.now()/260))+')';
+    ctx.beginPath(); ctx.arc(it.x, it.y, 15, 0, Math.PI*2); ctx.fill();
+    ctx.font='17px Arial'; ctx.textAlign='center';
+    ctx.fillText(it.icon, it.x, it.y+6);
+  });
+  /* guards */
+  guards.forEach(function(g){
+    ctx.fillStyle='#7c3aed';
+    ctx.beginPath(); ctx.arc(g.x, g.y, 11.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ddd6fe';
+    ctx.beginPath(); ctx.arc(g.x, g.y-3, 5.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1e1b4b';
+    ctx.fillRect(g.x-6.4, g.y-11.2, 12.8, 3.6);
+    if(g.mode==='chase'){
+      ctx.fillStyle='#ef4444'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+      ctx.fillText('!', g.x, g.y-16);
+    } else if(g.alert>0.25){
+      ctx.fillStyle='#facc15'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+      ctx.fillText('?', g.x, g.y-15);
+    }
+  });
+  /* player (stripes) */
+  ctx.fillStyle='#f97316';
+  ctx.beginPath(); ctx.arc(player.x, player.y, 11.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.fillRect(player.x-11.5, player.y-3.4, 23, 3);
+  ctx.fillRect(player.x-11.5, player.y+3.4, 23, 3);
+  ctx.fillStyle='#ffedd5';
+  ctx.beginPath(); ctx.arc(player.x, player.y-3.4, 5, 0, Math.PI*2); ctx.fill();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
+    ctx.fillText(escaped ? '🔓 YOU ESCAPED!' : failed ? '🚔 ESCAPE FOILED!' : '🔓 PRISON ESCAPE RUN', W/2, H/2-8);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(escaped ? 'Out in '+Math.floor(elapsed)+'s with '+strikes+' strike(s)!' : failed ? 'Three strikes — the yard wins this time' : 'Press START — 3 items, 4 guards, 1 gate', W/2, H/2+20);
+  }
+}
+function caught(){
+  strikes++;
+  player.x=CELL.x; player.y=CELL.y;
+  graceT=2.2;
+  guards.forEach(function(g){ g.mode='patrol'; g.alert=0; });
+  if(strikes>=3){
+    failed=true; playing=false;
+    el('msg').textContent='🚔 Third strike — escape foiled! Press START to try again.';
+    beep(140,0.3,'sawtooth',0.08);
+  } else {
+    el('msg').textContent='🚔 Caught! Strike '+strikes+'/3 — back to your cell. Your items are safe.';
+    beep(180,0.2,'sawtooth',0.07);
+  }
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  elapsed+=dt;
+  if(graceT>0) graceT-=dt;
+  var dx=0, dy=0;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) dx-=1;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) dx+=1;
+  if(keys.KeyW || keys.ArrowUp || keys.__up) dy-=1;
+  if(keys.KeyS || keys.ArrowDown || keys.__down) dy+=1;
+  var len=Math.hypot(dx, dy) || 1;
+  if(dx||dy) moveEntity(player, dx/len, dy/len, dt, 172);
+  /* items */
+  ITEMS.forEach(function(it){
+    if(!collected[it.id] && Math.hypot(it.x-player.x, it.y-player.y) < 21){
+      collected[it.id]=true;
+      el('msg').textContent=it.icon+' '+it.name+' pocketed! ('+itemsGot()+'/3)'+(hasAllItems(collected) ? ' — the gate is OPEN, run north!' : '');
+      beep(1040,0.07,'sine',0.05);
+    }
+  });
+  /* escape */
+  if(hasAllItems(collected) && Math.abs(player.x-GATE.x) < GATE.w/2 && player.y < 30){
+    escaped=true; playing=false;
+    var t=Math.floor(elapsed);
+    if(!bestTime || t<bestTime){ bestTime=t; localStorage.setItem('makenPrisonBest', bestTime); }
+    el('msg').textContent='🔓 You slipped out in '+t+' seconds! Freedom tastes sweet.';
+    beep(1180,0.22,'sine',0.07);
+    hud(); draw();
+    return;
+  }
+  /* guards */
+  guards.forEach(function(g){
+    var sees= graceT<=0 && guardSees(g.x, g.y, g.facing, player.x, player.y);
+    if(sees) g.alert=Math.min(1, g.alert + dt*2.8);
+    else g.alert=Math.max(0, g.alert - dt*0.7);
+    if(g.alert>=1) g.mode='chase';
+    if(g.mode==='chase'){
+      if(!sees && g.alert<=0) g.mode='patrol';
+      var d=Math.hypot(player.x-g.x, player.y-g.y);
+      if(d>2){
+        var mdx=(player.x-g.x)/d, mdy=(player.y-g.y)/d;
+        g.facing=Math.atan2(mdy, mdx);
+        moveEntity(g, mdx, mdy, dt, 138);
+      }
+      if(d<19 && graceT<=0){ caught(); }
+    } else {
+      var target=g.patrol[g.wp];
+      var d2=Math.hypot(target.x-g.x, target.y-g.y);
+      if(d2<7){ g.wp=(g.wp+1)%g.patrol.length; target=g.patrol[g.wp]; d2=Math.hypot(target.x-g.x, target.y-g.y); }
+      if(d2>2){
+        var pdx=(target.x-g.x)/d2, pdy=(target.y-g.y)/d2;
+        g.facing=Math.atan2(pdy, pdx);
+        moveEntity(g, pdx, pdy, dt, 97);
+      }
+    }
+  });
+  if(!playing) return;
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('upBtn','__up'); holdBtn('downBtn','__down');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🔓 Lights out — make your run!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ guardSees:guardSees, hasAllItems:hasAllItems, ITEMS:ITEMS, PATROLS:PATROLS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

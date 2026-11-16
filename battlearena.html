@@ -191,7 +191,7 @@ function drawFighter(f){
   var sx=f.x-camX+W/2, sy=f.y-camY+H/2;
   if(sx<-30 || sx>W+30 || sy<-30 || sy>H+30) return;
   ctx.fillStyle='rgba(0,0,0,0.25)';
-  ctx.beginPath(); ctx.ellipse(sx, sy+11, 11, 4.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx, sy+11, 11, 4.4, 0, 0, Math.PI*2); ctx.fill();
   if(f.weapon!=='fists'){
     ctx.save();
     ctx.translate(sx, sy);

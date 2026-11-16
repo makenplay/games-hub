@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Heist Run Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a bank heist stealth game free online. Slip past the guards, grab every money bag and escape to the van before the clock dies. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#78350f; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .pad { display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px; gap:5px; justify-content:center; padding:2px 0 8px; }
+  .btn { padding:11px 0; font-size:16px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.94); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-size:12px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>💰 HEIST RUN</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">💵 LOOT <b id="cash">0</b></div>
+  <div class="stat">🎒 BAGS <b id="bags">0/8</b></div>
+  <div class="stat">⏱️ <b id="time">150s</b></div>
+  <div class="stat">🚨 ALARM <b id="alarm">Calm</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Slip inside, grab all 8 money bags and reach the 🚐 van. Stay out of the guards' yellow vision cones!</div>
+<div class="pad">
+  <span></span><button class="btn" id="upBtn">⬆</button><span></span>
+  <button class="btn" id="leftBtn">◀</button><button class="btn primary" id="startBtn">▶ START</button><button class="btn" id="rightBtn">▶</button>
+  <span></span><button class="btn" id="downBtn">⬇</button><span></span>
+</div>
+<div class="row" style="display:flex;gap:8px;justify-content:center;padding-bottom:8px;">
+  <button class="btn" id="soundBtn" style="padding:11px 16px;">🔊</button>
+</div>
+<div class="keys">Seen by a guard = chase! Caught = busted back to the entrance and the alarm rises · bags get heavier — you slow down as you carry more</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Heist Run</h2>
+  <p>One robber, one bank, 150 seconds. Eight money bags sit in the vault rooms while three guards pace their patrols, sweeping yellow vision cones across the floor. Thread the gaps, fill your bags — every bag makes you richer and slower — then leg it to the getaway van.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with WASD, the arrow keys or the pad. Walk over a money bag to grab it. If a guard's vision cone touches you he gives chase; if he catches you, you're dumped back at the entrance and the alarm level rises (guards patrol faster). Grab all 8 bags and stand at the van before the timer ends to complete the heist.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real stealth vision cones with patrol, chase and search behaviour</li>
+    <li>Risk-reward carrying: more loot, slower legs, bigger score</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, TIME_LIMIT=150;
+/* walls: bank interior — outer walls + room dividers with door gaps */
+var WALLS=[
+  { x:0, y:0, w:640, h:14 }, { x:0, y:446, w:640, h:14 },
+  { x:0, y:0, w:14, h:460 }, { x:626, y:0, w:14, h:460 },
+  { x:206, y:14, w:14, h:170 }, { x:206, y:262, w:14, h:184 },
+  { x:420, y:14, w:14, h:120 }, { x:420, y:212, w:14, h:234 },
+  { x:14, y:300, w:120, h:14 }, { x:196, y:300, w:224, h:14 },
+  { x:494, y:300, w:132, h:14 }
+];
+var BAGS=[ {x:80,y:66},{x:150,y:120},{x:300,y:60},{x:370,y:150},{x:520,y:70},{x:560,y:230},{x:110,y:390},{x:520,y:390} ];
+var VAN={ x:320, y:436, w:74, h:22 };
+var ENTRY={ x:320, y:420 };
+var PATROLS=[
+  [ {x:110,y:230}, {x:330,y:230}, {x:330,y:120}, {x:110,y:120} ],
+  [ {x:520,y:130}, {x:520,y:270}, {x:460,y:270}, {x:460,y:130} ],
+  [ {x:90,y:340}, {x:300,y:340}, {x:300,y:410}, {x:560,y:410}, {x:560,y:340} ]
+];
+/* ---------- pure logic (testable) ---------- */
+function guardSees(gx, gy, facing, px, py){
+  var d=Math.hypot(px-gx, py-gy);
+  if(d>118) return false;
+  if(d<17) return true;
+  var ang=Math.atan2(py-gy, px-gx);
+  var diff=Math.abs(((ang - facing + Math.PI*3) % (Math.PI*2)) - Math.PI);
+  return diff < 0.62;
+}
+function playerSpeed(bagsCarried){
+  return 176 - bagsCarried*7;
+}
+function scoreFor(cash, timeLeft, alarmLevel){
+  return cash + Math.floor(timeLeft)*8 - alarmLevel*60;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, player, guards, bags, cash, timeLeft, alarm, won, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenHeistBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('cash').textContent=cash;
+  el('bags').textContent=bags.filter(function(b){ return b.taken; }).length+'/8';
+  el('time').textContent=Math.max(0, Math.ceil(timeLeft))+'s';
+  el('alarm').textContent= alarm===0 ? 'Calm' : alarm===1 ? 'Raised' : alarm===2 ? 'High' : 'MAX';
+  el('alarm').style.color= alarm===0 ? '#9aa7c7' : '#f87171';
+  var sc=scoreFor(cash, Math.max(0, timeLeft), alarm);
+  if(won && sc>best){ best=sc; localStorage.setItem('makenHeistBest', best); }
+  el('best').textContent=best;
+}
+function makeGuard(patrol){
+  return { x:patrol[0].x, y:patrol[0].y, patrol:patrol, wp:1, facing:0, mode:'patrol', alert:0, searchT:0 };
+}
+function reset(){
+  playing=false; won=false;
+  player={ x:ENTRY.x, y:ENTRY.y };
+  guards=PATROLS.map(makeGuard);
+  bags=BAGS.map(function(b){ return { x:b.x, y:b.y, taken:false }; });
+  cash=0; timeLeft=TIME_LIMIT; alarm=0;
+  keys={};
+  hud(); draw();
+}
+function hitsWall(x, y, r){
+  for(var i=0;i<WALLS.length;i++){
+    var w=WALLS[i];
+    if(x+r > w.x && x-r < w.x+w.w && y+r > w.y && y-r < w.y+w.h) return true;
+  }
+  return false;
+}
+function moveEntity(e, dx, dy, dt, speed){
+  var nx=e.x + dx*speed*dt;
+  var ny=e.y + dy*speed*dt;
+  if(!hitsWall(nx, e.y, 11)) e.x=nx;
+  if(!hitsWall(e.x, ny, 11)) e.y=ny;
+}
+function draw(){
+  /* floor */
+  ctx.fillStyle='#92400e'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#a16207';
+  for(var gx=0; gx<W; gx+=44) for(var gy=0; gy<H; gy+=44) if(((gx+gy)/44)%2===0) ctx.fillRect(gx, gy, 44, 44);
+  /* vault room tint */
+  ctx.fillStyle='rgba(250,204,21,0.08)'; ctx.fillRect(434, 14, 192, 286);
+  ctx.fillStyle='#facc15'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText('🔒 VAULT', 530, 34);
+  /* vision cones */
+  guards.forEach(function(g){
+    ctx.fillStyle= g.mode==='chase' ? 'rgba(239,68,68,0.32)' : 'rgba(250,204,21,0.20)';
+    ctx.beginPath();
+    ctx.moveTo(g.x, g.y);
+    ctx.arc(g.x, g.y, 118, g.facing-0.62, g.facing+0.62);
+    ctx.closePath(); ctx.fill();
+  });
+  /* walls */
+  ctx.fillStyle='#451a03';
+  WALLS.forEach(function(w){ ctx.fillRect(w.x, w.y, w.w, w.h); });
+  ctx.fillStyle='rgba(255,255,255,0.09)';
+  WALLS.forEach(function(w){ ctx.fillRect(w.x, w.y, w.w, 3); });
+  /* entrance + van */
+  ctx.fillStyle='#1e293b'; ctx.fillRect(VAN.x-VAN.w/2, VAN.y-6, VAN.w, VAN.h);
+  ctx.font='21px Arial'; ctx.textAlign='center';
+  ctx.fillText('🚐', VAN.x, VAN.y+13);
+  ctx.fillStyle='#4ade80'; ctx.font='bold 10px Arial';
+  var allBags=bags.every(function(b){ return b.taken; });
+  ctx.fillText(allBags ? 'ESCAPE HERE!' : 'GETAWAY VAN', VAN.x, VAN.y-10);
+  /* bags */
+  bags.forEach(function(b){
+    if(b.taken) return;
+    ctx.font='19px Arial'; ctx.textAlign='center';
+    ctx.fillText('💰', b.x, b.y+7);
+  });
+  /* guards */
+  guards.forEach(function(g){
+    ctx.fillStyle='#1d4ed8';
+    ctx.beginPath(); ctx.arc(g.x, g.y, 11.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fbbf24';
+    ctx.beginPath(); ctx.arc(g.x, g.y-3, 5.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111827';
+    ctx.fillRect(g.x-6.4, g.y-11.4, 12.8, 3.6);
+    if(g.mode==='chase'){
+      ctx.fillStyle='#ef4444'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+      ctx.fillText('!', g.x, g.y-16);
+    } else if(g.alert>0.25){
+      ctx.fillStyle='#facc15'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+      ctx.fillText('?', g.x, g.y-15);
+    }
+  });
+  /* player */
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(player.x, player.y, 11.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e5e7eb';
+  ctx.beginPath(); ctx.arc(player.x, player.y-2.6, 5.6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.fillRect(player.x-6.6, player.y-6.6, 13.2, 3.4);
+  var carried=bags.filter(function(b){ return b.taken; }).length;
+  if(carried>0){
+    ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('🎒', player.x+13, player.y+2);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(won ? '💰 HEIST COMPLETE!' : timeLeft<=0 && started ? '⏱️ TIME UP — THE VAULT SEALED!' : '💰 HEIST RUN', W/2, H/2-8);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(won ? 'Score '+scoreFor(cash, timeLeft, alarm)+' — clean getaway!' : 'Press START — 8 bags, 3 guards, 150 seconds', W/2, H/2+20);
+  }
+}
+var started=false;
+function busted(){
+  alarm=Math.min(3, alarm+1);
+  player.x=ENTRY.x; player.y=ENTRY.y;
+  guards.forEach(function(g){ g.mode='patrol'; g.alert=0; });
+  el('msg').textContent='🚨 BUSTED! Back at the entrance — alarm level '+alarm+'. Guards are faster now.';
+  beep(160,0.26,'sawtooth',0.08);
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    timeLeft=0; playing=false;
+    el('msg').textContent='⏱️ Time up! You escaped with $'+cash+' but the heist is incomplete.';
+    beep(150,0.28,'sawtooth',0.08);
+    hud(); draw();
+    return;
+  }
+  var dx=0, dy=0;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) dx-=1;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) dx+=1;
+  if(keys.KeyW || keys.ArrowUp || keys.__up) dy-=1;
+  if(keys.KeyS || keys.ArrowDown || keys.__down) dy+=1;
+  var len=Math.hypot(dx, dy) || 1;
+  var carried=bags.filter(function(b){ return b.taken; }).length;
+  if(dx||dy) moveEntity(player, dx/len, dy/len, dt, playerSpeed(carried));
+  /* bags pickup */
+  bags.forEach(function(b){
+    if(!b.taken && Math.hypot(b.x-player.x, b.y-player.y) < 21){
+      b.taken=true;
+      cash+=100;
+      el('msg').textContent='💰 Bag grabbed! $'+cash+' — '+(8-carried-1)+' bags left.';
+      beep(1180,0.06,'sine',0.05);
+    }
+  });
+  /* escape */
+  if(bags.every(function(b){ return b.taken; }) && Math.abs(player.x-VAN.x) < VAN.w/2 && Math.abs(player.y-VAN.y) < 20){
+    won=true; playing=false;
+    el('msg').textContent='🚐 Clean getaway! Score: '+scoreFor(cash, timeLeft, alarm)+'.';
+    beep(1180,0.22,'sine',0.07);
+    hud(); draw();
+    return;
+  }
+  /* guards */
+  var guardSpeed= 96 + alarm*13;
+  guards.forEach(function(g){
+    var sees=guardSees(g.x, g.y, g.facing, player.x, player.y);
+    if(sees) g.alert=Math.min(1, g.alert + dt*2.6);
+    else g.alert=Math.max(0, g.alert - dt*0.7);
+    if(g.alert>=1) g.mode='chase';
+    if(g.mode==='chase'){
+      if(!sees && g.alert<=0){ g.mode='patrol'; }
+      var d=Math.hypot(player.x-g.x, player.y-g.y);
+      if(d>2){
+        var mdx=(player.x-g.x)/d, mdy=(player.y-g.y)/d;
+        g.facing=Math.atan2(mdy, mdx);
+        moveEntity(g, mdx, mdy, dt, guardSpeed+34);
+      }
+      if(d<19){ busted(); }
+    } else {
+      var target=g.patrol[g.wp];
+      var d2=Math.hypot(target.x-g.x, target.y-g.y);
+      if(d2<7){ g.wp=(g.wp+1)%g.patrol.length; target=g.patrol[g.wp]; d2=Math.hypot(target.x-g.x, target.y-g.y); }
+      if(d2>2){
+        var pdx=(target.x-g.x)/d2, pdy=(target.y-g.y)/d2;
+        g.facing=Math.atan2(pdy, pdx);
+        moveEntity(g, pdx, pdy, dt, guardSpeed);
+      }
+    }
+  });
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('upBtn','__up'); holdBtn('downBtn','__down');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  started=true;
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='💰 The heist is on — grab those bags!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ guardSees:guardSees, playerSpeed:playerSpeed, scoreFor:scoreFor, WALLS:WALLS, BAGS:BAGS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
