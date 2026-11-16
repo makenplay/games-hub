@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Battle Arena Royale Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a top-down battle royale free online. Loot guns, survive the shrinking zone, outlast 23 rivals — winner winner! No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .hpwrap { width:min(640px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .hpwrap i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#84cc16); transition:width .15s; }
+  canvas#cv { background:#4d7c0f; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.fire { background:linear-gradient(180deg,#ef4444,#991b1b); color:#fff; }
+  .btn.heal { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏆 BATTLE ARENA ROYALE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">ALIVE <b id="alive">24</b></div>
+  <div class="stat">KILLS <b id="kills">0</b></div>
+  <div class="stat">WEAPON <b id="weapon">Fists</b></div>
+  <div class="stat">MEDKITS <b id="medkits">0</b></div>
+  <div class="stat">ZONE <b id="zone">–</b></div>
+  <div class="stat">BEST <b id="best">#24</b></div>
+</div>
+<div class="hpwrap"><i id="hpBar" style="width:100%"></i></div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">WASD to move, mouse to aim, click / hold to shoot. Loot a gun fast — and stay inside the white zone circle!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ DROP IN</button>
+  <button class="btn fire" id="fireBtn">🔥 FIRE</button>
+  <button class="btn heal" id="healBtn">💊 HEAL (H)</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Loot: walk over guns &amp; medkits · zone shrinks in phases — outside it bleeds HP · last one standing wins the chicken dinner 🍗</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Battle Arena Royale</h2>
+  <p>Twenty-four fighters, one island, one winner. Drop in with your fists, scavenge pistols, SMGs, rifles and shotguns from the field, grab medkits, and keep inside the shrinking safe zone while 23 AI rivals loot and fight each other down to the last duel.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with WASD or the arrow keys; aim with the mouse and click or hold to fire (on touch, FIRE aims at the nearest enemy). Walk over loot to pick it up — better guns replace weaker ones automatically. Press H or HEAL to use a medkit. The zone shrinks in phases; outside it you bleed health fast. Be the last fighter standing.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>24-fighter royale with looting AI that fights itself down</li>
+    <li>Five weapon tiers, medkits and a phased shrinking zone</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, WORLD=1900;
+/* ---------- pure logic (testable) ---------- */
+var WEAPONS={
+  fists:   { name:'Fists',   dmg:6,  rate:0.42, range:34,  speed:0,   spread:0,    pellets:1, tier:0 },
+  pistol:  { name:'Pistol',  dmg:11, rate:0.34, range:330, speed:520, spread:0.03, pellets:1, tier:1 },
+  smg:     { name:'SMG',     dmg:8,  rate:0.11, range:300, speed:540, spread:0.09, pellets:1, tier:2 },
+  shotgun: { name:'Shotgun', dmg:9,  rate:0.85, range:215, speed:480, spread:0.16, pellets:5, tier:3 },
+  rifle:   { name:'Rifle',   dmg:17, rate:0.42, range:430, speed:640, spread:0.015, pellets:1, tier:4 }
+};
+var ZONE_PHASES=[ {r:1350, wait:16, shrink:20}, {r:900, wait:14, shrink:18}, {r:560, wait:12, shrink:16}, {r:320, wait:11, shrink:14}, {r:170, wait:10, shrink:12}, {r:80, wait:999, shrink:10} ];
+function zoneDamage(dist, zoneR){
+  if(dist<=zoneR) return 0;
+  var over=(dist-zoneR)/100;
+  return 4 + over*3.2;
+}
+function betterWeapon(a, b){
+  return WEAPONS[b].tier > WEAPONS[a].tier ? b : a;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.04; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var NAMES=['Viper','Ghost','Bandit','Rogue','Falcon','Wolf','Cobra','Havoc','Blitz','Onyx','Raven','Storm','Titan','Echo','Nomad','Pixel','Ranger','Sable','Turbo','Vandal','Wraith','Yeti','Zephyr'];
+var playing, fighters, bullets, loots, zone, zoneT, phase, aim, firing, camX, camY, kills, keys, rafId, lastTick, over;
+var bestPlace=+(localStorage.getItem('makenRoyaleBest')||24);
+el('best').textContent='#'+bestPlace;
+function aliveCount(){ return fighters.filter(function(f){ return f.alive; }).length; }
+function hud(){
+  var me=fighters[0];
+  el('alive').textContent=aliveCount();
+  el('kills').textContent=kills;
+  el('weapon').textContent=WEAPONS[me.weapon].name;
+  el('medkits').textContent=me.medkits;
+  el('zone').textContent= zone.state==='wait' ? 'shrinks '+Math.ceil(zoneT)+'s' : 'SHRINKING!';
+  el('hpBar').style.width=Math.max(0, me.hp)+'%';
+  el('hpBar').style.background= me.hp>50 ? 'linear-gradient(90deg,#22c55e,#84cc16)' : me.hp>25 ? 'linear-gradient(90deg,#f59e0b,#facc15)' : 'linear-gradient(90deg,#ef4444,#f87171)';
+}
+function makeFighter(x, y, name, color, isPlayer){
+  return { x:x, y:y, vx:0, vy:0, r:13, hp:100, name:name, color:color, isPlayer:!!isPlayer,
+           weapon:'fists', medkits:0, fireCd:0, aimAng:0, alive:true, aiT:Math.random()*0.4, tx:x, ty:y, target:null, healT:0 };
+}
+function spawnLoot(x, y){
+  var roll=Math.random();
+  var kind= roll<0.16 ? 'pistol' : roll<0.30 ? 'smg' : roll<0.42 ? 'shotgun' : roll<0.52 ? 'rifle' : roll<0.74 ? 'medkit' : roll<0.9 ? 'ammo' : 'pistol';
+  loots.push({ x:x!==undefined ? x : 80+Math.random()*(WORLD-160), y:y!==undefined ? y : 80+Math.random()*(WORLD-160), kind:kind });
+}
+function reset(){
+  playing=false; over=false;
+  fighters=[makeFighter(WORLD/2, WORLD/2, 'YOU', '#3b82f6', true)];
+  for(var i=0;i<23;i++){
+    fighters.push(makeFighter(90+Math.random()*(WORLD-180), 90+Math.random()*(WORLD-180), NAMES[i], 'hsl('+Math.floor(Math.random()*360)+', 70%, 55%)', false));
+  }
+  bullets=[];
+  loots=[];
+  for(var j=0;j<64;j++) spawnLoot();
+  zone={ cx:WORLD/2, cy:WORLD/2, r:1500, state:'wait' };
+  phase=0; zoneT=ZONE_PHASES[0].wait;
+  aim={ x:WORLD/2+80, y:WORLD/2 };
+  firing=false; kills=0; keys={};
+  camX=fighters[0].x; camY=fighters[0].y;
+  hud(); draw();
+}
+function drawFighter(f){
+  var sx=f.x-camX+W/2, sy=f.y-camY+H/2;
+  if(sx<-30 || sx>W+30 || sy<-30 || sy>H+30) return;
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(sx, sy+11, 11, 4.4, 0, Math.PI*2); ctx.fill();
+  if(f.weapon!=='fists'){
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(f.aimAng);
+    ctx.fillStyle='#1f2937';
+    ctx.fillRect(8, -2.4, 17, 4.8);
+    ctx.restore();
+  }
+  ctx.fillStyle=f.color;
+  ctx.beginPath(); ctx.arc(sx, sy, f.r, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle= f.isPlayer ? '#fff' : 'rgba(0,0,0,0.4)';
+  ctx.lineWidth= f.isPlayer ? 2.6 : 1.6;
+  ctx.stroke();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(sx, sy, 4.6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827'; ctx.font='bold 9.5px Arial'; ctx.textAlign='center';
+  ctx.fillText(f.name, sx, sy-f.r-13);
+  ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(sx-13, sy-f.r-10, 26, 4);
+  ctx.fillStyle= f.hp>50 ? '#4ade80' : f.hp>25 ? '#facc15' : '#f87171';
+  ctx.fillRect(sx-13, sy-f.r-10, 26*Math.max(0, f.hp/100), 4);
+  if(f.healT>0){
+    ctx.fillStyle='#22c55e'; ctx.font='bold 12px Arial';
+    ctx.fillText('💊', sx, sy-f.r-20);
+  }
+}
+function draw(){
+  /* island grass */
+  ctx.fillStyle='#3f6212'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#4d7c0f';
+  ctx.fillRect(-camX+W/2, -camY+H/2, WORLD, WORLD);
+  ctx.fillStyle='rgba(0,0,0,0.14)';
+  for(var gx=0; gx<WORLD; gx+=120){
+    for(var gy=((gx/120)%2)*60; gy<WORLD; gy+=120){
+      var sx=gx-camX+W/2, sy=gy-camY+H/2;
+      if(sx>-60 && sx<W && sy>-60 && sy<H) ctx.fillRect(sx, sy, 60, 60);
+    }
+  }
+  /* trees */
+  ctx.font='17px Arial'; ctx.textAlign='center';
+  TREE_SPOTS.forEach(function(t){
+    var sx=t.x-camX+W/2, sy=t.y-camY+H/2;
+    if(sx<-14 || sx>W+14 || sy<-14 || sy>H+14) return;
+    ctx.fillText('🌲', sx, sy+6);
+  });
+  /* zone: shade outside */
+  var zx=zone.cx-camX+W/2, zy=zone.cy-camY+H/2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.arc(zx, zy, zone.r, 0, Math.PI*2, true);
+  ctx.fillStyle='rgba(59,130,246,0.34)';
+  ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2.6;
+  ctx.beginPath(); ctx.arc(zx, zy, zone.r, 0, Math.PI*2); ctx.stroke();
+  /* next zone preview */
+  if(zone.state==='wait' && zone.nextR){
+    ctx.strokeStyle='rgba(250,204,21,0.75)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(zx, zy, zone.nextR, 0, Math.PI*2); ctx.stroke();
+  }
+  /* loot */
+  loots.forEach(function(l){
+    var sx=l.x-camX+W/2, sy=l.y-camY+H/2;
+    if(sx<-16 || sx>W+16 || sy<-16 || sy>H+16) return;
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.arc(sx, sy, 11, 0, Math.PI*2); ctx.fill();
+    ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText(l.kind==='medkit' ? '💊' : l.kind==='ammo' ? '🧰' : '🔫', sx, sy+4.6);
+  });
+  /* bullets */
+  bullets.forEach(function(b){
+    var sx=b.x-camX+W/2, sy=b.y-camY+H/2;
+    if(sx<-8 || sx>W+8 || sy<-8 || sy>H+8) return;
+    ctx.fillStyle='#fde68a';
+    ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI*2); ctx.fill();
+  });
+  fighters.forEach(function(f){ if(f.alive) drawFighter(f); });
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
+    var me=fighters[0];
+    if(over && me.alive) ctx.fillText('🍗 WINNER WINNER CHICKEN DINNER!', W/2, H/2-10);
+    else if(over) ctx.fillText('💀 YOU PLACED #'+lastPlace, W/2, H/2-10);
+    else ctx.fillText('🏆 BATTLE ARENA ROYALE', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Kills: '+kills+' — press DROP IN to play again' : 'Press DROP IN — 24 fighters, 1 winner', W/2, H/2+18);
+  }
+}
+var TREE_SPOTS=[];
+for(var ti=0; ti<130; ti++) TREE_SPOTS.push({ x:60+Math.random()*(WORLD-120), y:60+Math.random()*(WORLD-120) });
+var lastPlace=24;
+function killFighter(f, killer){
+  if(!f.alive) return;
+  f.alive=false;
+  /* drop loot */
+  if(f.weapon!=='fists') loots.push({ x:f.x, y:f.y, kind:f.weapon });
+  if(Math.random()<0.4) loots.push({ x:f.x+14, y:f.y+8, kind:'medkit' });
+  var place=aliveCount()+1;
+  if(killer && killer.isPlayer){
+    kills++;
+    el('msg').textContent='🔫 You eliminated '+f.name+'! ('+place+' fighters → '+aliveCount()+' left)';
+    beep(520,0.08,'sine',0.05);
+  }
+  if(f.isPlayer){
+    lastPlace=place;
+    over=true; playing=false;
+    if(place<bestPlace){ bestPlace=place; localStorage.setItem('makenRoyaleBest', bestPlace); }
+    el('best').textContent='#'+bestPlace;
+    el('msg').textContent='💀 Eliminated by '+(killer ? killer.name : 'the zone')+'. You placed #'+place+' of 24.';
+    beep(140,0.28,'sawtooth',0.08);
+    hud(); draw();
+  } else if(aliveCount()===1 && fighters[0].alive){
+    over=true; playing=false;
+    lastPlace=1;
+    if(bestPlace>1){ bestPlace=1; localStorage.setItem('makenRoyaleBest', 1); }
+    el('best').textContent='#1';
+    el('msg').textContent='🍗 WINNER WINNER CHICKEN DINNER! Kills: '+kills+'.';
+    beep(1180,0.24,'sine',0.07);
+    hud(); draw();
+  }
+}
+function fireWeapon(f){
+  var wp=WEAPONS[f.weapon];
+  f.fireCd=wp.rate;
+  if(wp.pellets===0 || wp.speed===0){
+    /* fists melee */
+    fighters.forEach(function(o){
+      if(o===f || !o.alive) return;
+      if(Math.hypot(o.x-f.x, o.y-f.y) < wp.range + o.r){
+        o.hp -= wp.dmg;
+        if(o.hp<=0) killFighter(o, f);
+      }
+    });
+    return;
+  }
+  for(var i=0;i<wp.pellets;i++){
+    var ang=f.aimAng + (Math.random()*2-1)*wp.spread;
+    bullets.push({ x:f.x+Math.cos(f.aimAng)*16, y:f.y+Math.sin(f.aimAng)*16,
+                   vx:Math.cos(ang)*wp.speed, vy:Math.sin(ang)*wp.speed,
+                   dmg:wp.dmg, owner:f, life:wp.range/wp.speed });
+  }
+  if(f.isPlayer) beep(300+Math.random()*80, 0.045, 'square', 0.035);
+}
+function stepFighter(f, dt){
+  var dx=0, dy=0, wantFire=false;
+  if(f.isPlayer){
+    if(keys.KeyA || keys.ArrowLeft) dx-=1;
+    if(keys.KeyD || keys.ArrowRight) dx+=1;
+    if(keys.KeyW || keys.ArrowUp) dy-=1;
+    if(keys.KeyS || keys.ArrowDown) dy+=1;
+    f.aimAng=Math.atan2(aim.y-f.y, aim.x-f.x);
+    wantFire=firing;
+  } else {
+    f.aiT-=dt;
+    var zdist=Math.hypot(f.x-zone.cx, f.y-zone.cy);
+    var mustMoveIn = zdist > zone.r*0.82;
+    if(f.aiT<=0){
+      f.aiT=0.35+Math.random()*0.35;
+      /* nearest enemy */
+      var enemy=null, ed=1e12;
+      fighters.forEach(function(o){
+        if(o===f || !o.alive) return;
+        var d=Math.hypot(o.x-f.x, o.y-f.y);
+        if(d<ed){ ed=d; enemy=o; }
+      });
+      f.target=enemy;
+      /* nearest loot if unarmed or low */
+      var loot=null, ld=1e12;
+      if(f.weapon==='fists' || f.medkits===0){
+        loots.forEach(function(l){
+          var d=Math.hypot(l.x-f.x, l.y-f.y);
+          if(d<ld){ ld=d; loot=l; }
+        });
+      }
+      if(f.hp<42 && f.medkits>0 && (!enemy || ed>240)){
+        f.healT=1.6;
+      }
+      if(mustMoveIn){ f.tx=zone.cx+(Math.random()-0.5)*zone.r*0.5; f.ty=zone.cy+(Math.random()-0.5)*zone.r*0.5; f.aiMode='zone'; }
+      else if(loot && (f.weapon==='fists' || ld<ed)){ f.tx=loot.x; f.ty=loot.y; f.aiMode='loot'; }
+      else if(enemy){ f.tx=enemy.x; f.ty=enemy.y; f.aiMode='fight'; }
+      else { f.tx=zone.cx+(Math.random()-0.5)*zone.r; f.ty=zone.cy+(Math.random()-0.5)*zone.r; f.aiMode='roam'; }
+    }
+    var mdx=f.tx-f.x, mdy=f.ty-f.y;
+    var md=Math.hypot(mdx, mdy);
+    var stopAt= f.aiMode==='fight' ? WEAPONS[f.weapon].range*0.62 : 6;
+    if(md>stopAt){ dx=mdx/md; dy=mdy/md; }
+    if(f.target && f.target.alive){
+      f.aimAng=Math.atan2(f.target.y-f.y, f.target.x-f.x);
+      var edNow=Math.hypot(f.target.x-f.x, f.target.y-f.y);
+      if(edNow < WEAPONS[f.weapon].range && f.healT<=0) wantFire=true;
+    }
+  }
+  if(f.healT>0){
+    f.healT-=dt;
+    dx=0; dy=0; wantFire=false;
+    if(f.healT<=0 && f.medkits>0){
+      f.medkits--;
+      f.hp=Math.min(100, f.hp+55);
+      if(f.isPlayer) el('msg').textContent='💊 Healed +55 HP.';
+    }
+  }
+  var len=Math.hypot(dx, dy) || 1;
+  var sp= f.weapon==='fists' ? 178 : 168;
+  f.vx += (dx/len*sp*(dx||dy?1:0) - f.vx)*Math.min(1, dt*6);
+  f.vy += (dy/len*sp*(dx||dy?1:0) - f.vy)*Math.min(1, dt*6);
+  f.x=Math.max(f.r, Math.min(WORLD-f.r, f.x + f.vx*dt));
+  f.y=Math.max(f.r, Math.min(WORLD-f.r, f.y + f.vy*dt));
+  f.fireCd-=dt;
+  if(wantFire && f.fireCd<=0 && f.healT<=0) fireWeapon(f);
+  /* loot pickup */
+  for(var i=loots.length-1;i>=0;i--){
+    var l=loots[i];
+    if(Math.hypot(l.x-f.x, l.y-f.y) < f.r+11){
+      if(l.kind==='medkit'){
+        if(f.medkits<3){ f.medkits++; loots.splice(i,1); if(f.isPlayer){ el('msg').textContent='💊 Medkit picked up ('+f.medkits+').'; beep(880,0.05,'sine',0.04); } }
+      } else if(l.kind==='ammo'){
+        loots.splice(i,1);
+        if(f.isPlayer){ f.hp=Math.min(100, f.hp+12); el('msg').textContent='🧰 Supply kit: +12 HP.'; beep(880,0.05,'sine',0.04); }
+      } else if(WEAPONS[l.kind]){
+        if(WEAPONS[l.kind].tier > WEAPONS[f.weapon].tier){
+          var old=f.weapon;
+          f.weapon=l.kind;
+          loots.splice(i,1);
+          if(old!=='fists') loots.push({ x:f.x-16, y:f.y+10, kind:old });
+          if(f.isPlayer){ el('msg').textContent='🔫 Picked up a '+WEAPONS[l.kind].name+'!'; beep(980,0.06,'sine',0.05); }
+        }
+        /* same or weaker gun: leave it on the ground */
+      }
+    }
+  }
+  /* zone damage */
+  var zd=Math.hypot(f.x-zone.cx, f.y-zone.cy);
+  var dmg=zoneDamage(zd, zone.r);
+  if(dmg>0){
+    f.hp -= dmg*dt;
+    if(f.isPlayer && Math.random()<dt*2) el('msg').textContent='🔵 You are OUTSIDE the zone — get inside!';
+    if(f.hp<=0) killFighter(f, null);
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  /* zone phases */
+  zoneT-=dt;
+  if(zone.state==='wait' && zoneT<=0 && phase<ZONE_PHASES.length-1){
+    phase++;
+    zone.state='shrinking';
+    zone.fromR=zone.r;
+    zoneT=ZONE_PHASES[phase].shrink;
+    /* drift the centre a little */
+    zone.ncx=zone.cx + (Math.random()-0.5)*zone.r*0.3;
+    zone.ncy=zone.cy + (Math.random()-0.5)*zone.r*0.3;
+  } else if(zone.state==='shrinking'){
+    var target=ZONE_PHASES[phase].r;
+    var total=ZONE_PHASES[phase].shrink;
+    var k=1 - Math.max(0, zoneT)/total;
+    zone.r = zone.fromR + (target - zone.fromR)*k;
+    zone.cx += ((zone.ncx||zone.cx) - zone.cx)*Math.min(1, dt*0.7);
+    zone.cy += ((zone.ncy||zone.cy) - zone.cy)*Math.min(1, dt*0.7);
+    if(zoneT<=0){
+      zone.r=target;
+      zone.state='wait';
+      zoneT=ZONE_PHASES[phase].wait;
+      zone.nextR= phase<ZONE_PHASES.length-1 ? ZONE_PHASES[phase+1].r : null;
+    }
+  }
+  if(phase===0 && zone.state==='wait') zone.nextR=ZONE_PHASES[1].r;
+  fighters.slice().forEach(function(f){ if(f.alive) stepFighter(f, dt); });
+  if(!playing) return;
+  bullets=bullets.filter(function(b){
+    b.x+=b.vx*dt; b.y+=b.vy*dt; b.life-=dt;
+    return b.life>0 && b.x>0 && b.y>0 && b.x<WORLD && b.y<WORLD;
+  });
+  for(var bi=bullets.length-1; bi>=0; bi--){
+    var b=bullets[bi], hit=false;
+    for(var fi=0; fi<fighters.length; fi++){
+      var t=fighters[fi];
+      if(!t.alive || t===b.owner) continue;
+      if(Math.hypot(b.x-t.x, b.y-t.y) < t.r+3){
+        t.hp -= b.dmg;
+        hit=true;
+        if(t.hp<=0) killFighter(t, b.owner);
+        break;
+      }
+    }
+    if(hit) bullets.splice(bi,1);
+  }
+  if(!playing) return;
+  var me=fighters[0];
+  camX += (me.x-camX)*Math.min(1, dt*5.4);
+  camY += (me.y-camY)*Math.min(1, dt*5.4);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function setAim(e){
+  var r=cvs.getBoundingClientRect();
+  var cx=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var cy=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  aim.x = camX + (cx*(W/r.width) - W/2);
+  aim.y = camY + (cy*(H/r.height) - H/2);
+  /* touch fire: aim assist toward nearest enemy */
+  if(e.touches){
+    var me=fighters[0], bestE=null, bd=1e12;
+    fighters.forEach(function(o){
+      if(o===me || !o.alive) return;
+      var d=Math.hypot(o.x-me.x, o.y-me.y);
+      if(d<bd){ bd=d; bestE=o; }
+    });
+    if(bestE){ aim.x=bestE.x; aim.y=bestE.y; }
+  }
+}
+cvs.addEventListener('mousemove', setAim);
+cvs.addEventListener('mousedown', function(e){ setAim(e); firing=true; });
+document.addEventListener('mouseup', function(){ firing=false; });
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); setAim(e); firing=true; }, {passive:false});
+cvs.addEventListener('touchend', function(){ firing=false; });
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+  if(e.code==='Space') firing=true;
+  if(e.code==='KeyH') tryHeal();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; if(e.code==='Space') firing=false; });
+keys={};
+function tryHeal(){
+  var me=fighters[0];
+  if(!playing || !me.alive) return;
+  if(me.medkits<=0){ el('msg').textContent='💊 No medkits — find one (💊 icons on the field).'; return; }
+  if(me.hp>=100){ el('msg').textContent='💊 Health is already full.'; return; }
+  if(me.healT>0) return;
+  me.healT=1.6;
+  el('msg').textContent='💊 Healing… stay still!';
+}
+el('healBtn').addEventListener('click', tryHeal);
+el('fireBtn').addEventListener('touchstart', function(e){ e.preventDefault(); firing=true; setAim(e); }, {passive:false});
+el('fireBtn').addEventListener('touchend', function(){ firing=false; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🪂 Dropped in! Loot a gun and survive!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ WEAPONS:WEAPONS, ZONE_PHASES:ZONE_PHASES, zoneDamage:zoneDamage, betterWeapon:betterWeapon };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

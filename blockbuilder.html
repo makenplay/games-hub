@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Block Builder Sandbox Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a block-building sandbox free online. Mine grass, dirt, stone and wood, then build anything you imagine. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#7dd3fc; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .hotbar { display:flex; gap:6px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .slot { width:52px; height:52px; border-radius:9px; border:2.6px solid #26335f; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:19px; background:#0e1530; color:#dbe6ff; }
+  .slot.sel { border-color:#facc15; box-shadow:0 0 0 2px rgba(250,204,21,0.4); }
+  .slot small { font-size:10.5px; font-weight:700; color:#9aa7c7; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🧱 BLOCK BUILDER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⛏️ MINED <b id="mined">0</b></div>
+  <div class="stat">🧱 PLACED <b id="placed">0</b></div>
+  <div class="stat">MODE <b id="mode">Mine</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">A / D or arrows to walk, W / SPACE to jump. Click a block to mine it — pick a block below, then click empty space to build!</div>
+<div class="hotbar" id="hotbar"></div>
+<div class="row">
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn primary" id="jumpBtn">⬆ JUMP</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="newBtn">🌍 NEW WORLD</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Number keys 1-7 pick a block · mined blocks go into your pocket — placing uses them up · trees give wood &amp; leaves</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Block Builder</h2>
+  <p>A pocket blocky sandbox in the browser: rolling hills, oak trees and stone under your feet. Mine any block into your pocket, then place blocks back to build towers, bridges, houses — anything. Your world saves automatically in this browser, so your castle is still here tomorrow.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Walk with A/D or the arrows and jump with W or SPACE. Click or tap any block within reach to mine it. Choose a block in the hotbar (or keys 1–7) and click an empty cell next to solid ground to place it. Placing spends blocks from your pocket, so mine before you build. NEW WORLD generates a fresh landscape.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Procedural hills-and-trees world, 90 blocks wide</li>
+    <li>7 block types with a real mine → carry → build inventory loop</li>
+    <li>Your world auto-saves — free to play, no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, TILE=32, COLS=90, ROWS=24, VIEW_COLS=20;
+/* block ids: 0 air, 1 grass, 2 dirt, 3 stone, 4 wood, 5 leaves, 6 sand, 7 glass */
+var BLOCKS={
+  1:{ name:'Grass', icon:'🟩' }, 2:{ name:'Dirt', icon:'🟫' }, 3:{ name:'Stone', icon:'🪨' },
+  4:{ name:'Wood', icon:'🪵' }, 5:{ name:'Leaves', icon:'🍃' }, 6:{ name:'Sand', icon:'🏖️' }, 7:{ name:'Glass', icon:'🪟' }
+};
+/* ---------- pure logic (testable) ---------- */
+function genWorld(rnd){
+  var grid=[];
+  for(var y=0;y<ROWS;y++){ grid.push(new Array(COLS).fill(0)); }
+  var heights=[];
+  var h=13;
+  for(var x=0;x<COLS;x++){
+    h += Math.floor(rnd()*3)-1;
+    h=Math.max(10, Math.min(16, h));
+    heights.push(h);
+    for(var y2=h;y2<ROWS;y2++){
+      if(y2===h) grid[y2][x]=1;
+      else if(y2<h+3) grid[y2][x]=2;
+      else grid[y2][x]=3;
+    }
+    if(x>0 && x<COLS-1 && grid[h][x]===1 && grid[h+1][x]===2){
+      /* beach sand near the low spots */
+      if(h>=15) grid[h][x]=6;
+    }
+  }
+  /* trees */
+  for(var t=0;t<11;t++){
+    var tx=3+Math.floor(rnd()*(COLS-6));
+    var gy=heights[tx];
+    if(grid[gy][tx]!==1) continue;
+    for(var k=1;k<=3;k++) grid[gy-k][tx]=4;
+    for(var ly=gy-5; ly<=gy-3; ly++){
+      for(var lx=tx-1; lx<=tx+1; lx++){
+        if(ly===gy-5 && lx!==tx) continue;
+        if(grid[ly] && grid[ly][lx]===0) grid[ly][lx]=5;
+      }
+    }
+  }
+  return grid;
+}
+function canPlace(grid, x, y){
+  if(x<0 || y<0 || x>=COLS || y>=ROWS) return false;
+  if(grid[y][x]!==0) return false;
+  var neighbors=[[1,0],[-1,0],[0,1],[0,-1]];
+  for(var i=0;i<neighbors.length;i++){
+    var nx=x+neighbors[i][0], ny=y+neighbors[i][1];
+    if(nx>=0 && ny>=0 && nx<COLS && ny<ROWS && grid[ny][nx]!==0) return true;
+  }
+  return y===ROWS-1;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.04; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var grid, player, camX, inventory, selected, mined, placed, keys, rafId, lastTick, started;
+function hud(){
+  el('mined').textContent=mined;
+  el('placed').textContent=placed;
+  el('mode').textContent=BLOCKS[selected].name;
+  renderHotbar();
+}
+function renderHotbar(){
+  var hb=el('hotbar');
+  hb.innerHTML='';
+  [1,2,3,4,5,6,7].forEach(function(id){
+    var d=document.createElement('button');
+    d.className='slot' + (selected===id ? ' sel' : '');
+    d.innerHTML=BLOCKS[id].icon+'<small>'+(inventory[id]||0)+'</small>';
+    d.title=BLOCKS[id].name;
+    d.addEventListener('click', function(){ selected=id; el('mode').textContent=BLOCKS[id].name; renderHotbar(); });
+    hb.appendChild(d);
+  });
+}
+function save(){
+  try{
+    var flat=[];
+    for(var y=0;y<ROWS;y++) flat.push(grid[y].join(''));
+    localStorage.setItem('makenBuilderWorld', flat.join('/'));
+    localStorage.setItem('makenBuilderInv', JSON.stringify(inventory));
+  }catch(e){}
+}
+function load(){
+  try{
+    var raw=localStorage.getItem('makenBuilderWorld');
+    if(!raw) return false;
+    var rows=raw.split('/');
+    if(rows.length!==ROWS) return false;
+    grid=rows.map(function(r){
+      return r.split('').map(function(ch){ return +ch; });
+    });
+    inventory=JSON.parse(localStorage.getItem('makenBuilderInv')||'{}');
+    return true;
+  }catch(e){ return false; }
+}
+function newWorld(){
+  grid=genWorld(Math.random);
+  inventory={};
+  mined=0; placed=0;
+  player={ x:6*TILE, y:4*TILE, vx:0, vy:0, w:22, h:29, ground:false, face:1 };
+  save();
+}
+function reset(){
+  started=true;
+  if(!load()) newWorld();
+  if(!player) player={ x:6*TILE, y:4*TILE, vx:0, vy:0, w:22, h:29, ground:false, face:1 };
+  selected=1;
+  mined=0; placed=0;
+  keys={};
+  camX=Math.max(0, Math.min(COLS*TILE-W, player.x-W/2));
+  hud(); draw();
+}
+function solidAt(px, py){
+  var tx=Math.floor(px/TILE), ty=Math.floor(py/TILE);
+  if(tx<0 || tx>=COLS) return true;
+  if(ty<0) return false;
+  if(ty>=ROWS) return true;
+  return grid[ty][tx]!==0;
+}
+function collideMove(dt){
+  var p=player;
+  p.x += p.vx*dt;
+  if(solidAt(p.x, p.y+4) || solidAt(p.x, p.y+p.h-4)) { p.x -= p.vx*dt; p.vx=0; }
+  if(solidAt(p.x+p.w, p.y+4) || solidAt(p.x+p.w, p.y+p.h-4)) { p.x -= p.vx*dt; p.vx=0; }
+  p.y += p.vy*dt;
+  p.ground=false;
+  if(solidAt(p.x+3, p.y+p.h) || solidAt(p.x+p.w-3, p.y+p.h)){
+    if(p.vy>0){ p.y=Math.floor((p.y+p.h)/TILE)*TILE - p.h - 0.01; p.ground=true; }
+    p.vy=0;
+  }
+  if(solidAt(p.x+3, p.y) || solidAt(p.x+p.w-3, p.y)){
+    if(p.vy<0) p.y=(Math.floor(p.y/TILE)+1)*TILE + 0.01;
+    p.vy=0;
+  }
+}
+function drawBlock(bx, by, id){
+  var sx=bx*TILE-camX, sy=by*TILE;
+  if(sx<-TILE || sx>W) return;
+  if(id===1){ ctx.fillStyle='#8a5a2b'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='#4ade80'; ctx.fillRect(sx, sy, TILE, 9); ctx.fillStyle='#22c55e'; ctx.fillRect(sx, sy+9, TILE, 3); }
+  else if(id===2){ ctx.fillStyle='#8a5a2b'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='rgba(0,0,0,0.16)'; ctx.fillRect(sx+6, sy+9, 5, 4); ctx.fillRect(sx+19, sy+20, 6, 4); }
+  else if(id===3){ ctx.fillStyle='#9ca3af'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='rgba(0,0,0,0.14)'; ctx.fillRect(sx+4, sy+6, 11, 3); ctx.fillRect(sx+16, sy+21, 12, 3); }
+  else if(id===4){ ctx.fillStyle='#a16207'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(sx+5, sy, 3, TILE); ctx.fillRect(sx+23, sy, 3, TILE); }
+  else if(id===5){ ctx.fillStyle='#16a34a'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='rgba(255,255,255,0.16)'; ctx.fillRect(sx+7, sy+7, 7, 6); ctx.fillRect(sx+19, sy+19, 8, 6); }
+  else if(id===6){ ctx.fillStyle='#fde68a'; ctx.fillRect(sx, sy, TILE, TILE); ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(sx+8, sy+11, 4, 3); ctx.fillRect(sx+20, sy+23, 4, 3); }
+  else if(id===7){ ctx.fillStyle='rgba(186,230,253,0.5)'; ctx.fillRect(sx, sy, TILE, TILE); ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=1.6; ctx.strokeRect(sx+1, sy+1, TILE-2, TILE-2); ctx.beginPath(); ctx.moveTo(sx+6, sy+24); ctx.lineTo(sx+20, sy+8); ctx.stroke(); }
+  ctx.strokeStyle='rgba(0,0,0,0.13)'; ctx.lineWidth=1;
+  ctx.strokeRect(sx+0.5, sy+0.5, TILE-1, TILE-1);
+}
+function draw(){
+  var grad=ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#7dd3fc');
+  grad.addColorStop(1, '#bae6fd');
+  ctx.fillStyle=grad; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle='#fef08a';
+  ctx.beginPath(); ctx.arc(572, 52, 25, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  [[120,60],[330,40],[520,96]].forEach(function(c){
+    var cx=((c[0] - camX*0.3) % (W+160) + W+160) % (W+160) - 80;
+    ctx.beginPath();
+    ctx.ellipse(cx, c[1], 34, 12, 0, 0, Math.PI*2);
+    ctx.ellipse(cx+24, c[1]+3, 24, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+  });
+  var startCol=Math.max(0, Math.floor(camX/TILE));
+  var endCol=Math.min(COLS-1, startCol+VIEW_COLS+1);
+  for(var y=0;y<ROWS;y++){
+    for(var x=startCol;x<=endCol;x++){
+      if(grid[y][x]!==0) drawBlock(x, y, grid[y][x]);
+    }
+  }
+  /* player */
+  var px=player.x-camX, py=player.y;
+  ctx.fillStyle='#2563eb';
+  ctx.fillRect(px+3, py+13, 16, 16);
+  ctx.fillStyle='#fbbf24';
+  ctx.fillRect(px+4, py+1, 14, 12);
+  ctx.fillStyle='#111827';
+  ctx.fillRect(px + (player.face>0 ? 12 : 5), py+6, 3.4, 3.4);
+  ctx.fillStyle='#1e3a8a';
+  ctx.fillRect(px+3, py+29-0, 6, 0);
+  ctx.fillStyle='#374151';
+  ctx.fillRect(px+3, py+26, 6, 4); ctx.fillRect(px+13, py+26, 6, 4);
+}
+function loop(ts){
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  var jump=keys.KeyW || keys.ArrowUp || keys.Space || keys.__jump;
+  player.vx = left ? -168 : right ? 168 : 0;
+  if(player.vx) player.face= player.vx>0 ? 1 : -1;
+  player.vy += 900*dt;
+  if(player.vy>560) player.vy=560;
+  if(jump && player.ground){ player.vy=-392; player.ground=false; beep(330,0.05,'square',0.03); }
+  collideMove(dt);
+  var targetCam=Math.max(0, Math.min(COLS*TILE-W, player.x + player.w/2 - W/2));
+  camX += (targetCam-camX)*Math.min(1, dt*7);
+  draw();
+  rafId=requestAnimationFrame(loop);
+}
+function canvasTile(e){
+  var r=cvs.getBoundingClientRect();
+  var cx=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var cy=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  var wx=cx*(W/r.width) + camX;
+  var wy=cy*(H/r.height);
+  return { tx:Math.floor(wx/TILE), ty:Math.floor(wy/TILE), wx:wx, wy:wy };
+}
+function interact(e){
+  var t=canvasTile(e);
+  if(t.tx<0 || t.tx>=COLS || t.ty<0 || t.ty>=ROWS) return;
+  var cx=player.x+player.w/2, cy=player.y+player.h/2;
+  var dist=Math.hypot(t.wx-cx, t.wy-cy);
+  if(dist > TILE*4.6){ el('msg').textContent='⛏️ Too far — walk closer to that block.'; return; }
+  if(grid[t.ty][t.tx]!==0){
+    var id=grid[t.ty][t.tx];
+    grid[t.ty][t.tx]=0;
+    inventory[id]=(inventory[id]||0)+1;
+    mined++;
+    el('msg').textContent='⛏️ Mined '+BLOCKS[id].name+' — you now carry '+(inventory[id])+'.';
+    beep(210,0.05,'square',0.045);
+    save(); hud();
+  } else {
+    if((inventory[selected]||0)<=0){
+      el('msg').textContent='🧱 No '+BLOCKS[selected].name+' in your pocket — mine some first!';
+      beep(160,0.08,'sawtooth',0.05);
+      return;
+    }
+    /* never place inside the player */
+    var ptx=Math.floor(cx/TILE), pty=Math.floor((player.y+4)/TILE), pty2=Math.floor((player.y+player.h-4)/TILE);
+    if(t.tx===ptx && (t.ty===pty || t.ty===pty2)) return;
+    if(canPlace(grid, t.tx, t.ty)){
+      grid[t.ty][t.tx]=selected;
+      inventory[selected]--;
+      placed++;
+      el('msg').textContent='🧱 Placed '+BLOCKS[selected].name+'. ('+inventory[selected]+' left)';
+      beep(520,0.05,'sine',0.045);
+      save(); hud();
+    } else {
+      el('msg').textContent='🧱 Blocks must sit next to solid ground.';
+    }
+  }
+  draw();
+}
+cvs.addEventListener('mousedown', interact);
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); interact(e); }, {passive:false});
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+  var n=parseInt(e.key, 10);
+  if(n>=1 && n<=7){ selected=n; el('mode').textContent=BLOCKS[n].name; renderHotbar(); }
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('jumpBtn','__jump');
+el('newBtn').addEventListener('click', function(){
+  newWorld();
+  player={ x:6*TILE, y:4*TILE, vx:0, vy:0, w:22, h:29, ground:false, face:1 };
+  el('msg').textContent='🌍 A fresh world generated — happy building!';
+  hud(); draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+lastTick=performance.now();
+rafId=requestAnimationFrame(loop);
+if(typeof module!=='undefined') module.exports={ genWorld:genWorld, canPlace:canPlace, BLOCKS:BLOCKS, COLS:COLS, ROWS:ROWS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
