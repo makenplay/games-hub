@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Drag Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play drag racing free online. Nail the launch on green, shift at the perfect RPM and beat your rival down the quarter mile. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#0f172a 0%,#1e293b 45%,#334155 45.2%,#475569 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .btn.shift { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🚦 DRAG RACING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">GEAR <b id="gear">1</b></div>
+  <div class="stat">RPM <b id="rpm">0</b></div>
+  <div class="stat">SPEED <b id="speed">0 km/h</b></div>
+  <div class="stat">YOUR ET <b id="et">–</b></div>
+  <div class="stat">RIVAL ET <b id="etr">–</b></div>
+  <div class="stat">WINS <b id="wins">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Wait for GREEN, then hold GAS. Shift (SPACE / button) when the needle hits the green zone!</div>
+<div class="row">
+  <button class="btn primary" id="stageBtn">▶ STAGE</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS (hold)</button>
+  <button class="btn shift" id="shiftBtn">⚙️ SHIFT</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Jump the green = red light, race lost · perfect shifts keep the power on · 5 gears over the quarter mile (402 m)</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Drag Racing</h2>
+  <p>Pure reaction and timing. A Christmas-tree start light, five gears, and a rival in the next lane who does not make many mistakes. Win the launch, hit every shift in the green, and the quarter mile is yours.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press STAGE to light the tree: three ambers, then green. Hold GAS only after green — launching early is a red-light foul and the race is over. Keep GAS held and press SHIFT (Space or the button) each time the RPM needle reaches the green zone; perfect shifts keep acceleration strong, late shifts hit the limiter and bog you down.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Authentic staging-tree starts with reaction-time scoring</li>
+    <li>RPM-based shifting with perfect/good/late shift grades</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, TRACK=402;
+/* ---------- pure logic (testable) ---------- */
+var GEAR_TOP=[0, 62, 98, 138, 182, 235]; /* km/h top speed per gear 1..5 */
+var SHIFT_GREEN=[0.86, 0.97];            /* fraction of gear range = perfect zone */
+function shiftQuality(rpmFrac){
+  if(rpmFrac >= SHIFT_GREEN[0] && rpmFrac <= SHIFT_GREEN[1]) return 'perfect';
+  if(rpmFrac >= 0.72 && rpmFrac < SHIFT_GREEN[0]) return 'good';
+  if(rpmFrac > SHIFT_GREEN[1]) return 'late';
+  return 'early';
+}
+function accelFor(gear, rpmFrac, qualityMult){
+  var base=[0, 26, 21, 16.5, 12.5, 9][gear];
+  var curve= 0.55 + 0.45*Math.sin(Math.min(1, rpmFrac)*Math.PI*0.72);
+  return base * curve * qualityMult;
+}
+function gearForSpeed(kmh){
+  for(var g=1; g<=5; g++){ if(kmh <= GEAR_TOP[g]) return g; }
+  return 5;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var phase, stageT, you, rival, wins, reaction, resultShown, keys, rafId, lastTick;
+var bestET=+(localStorage.getItem('makenDragBest')||0);
+wins=+(localStorage.getItem('makenDragWins')||0);
+function newCar(){ return { dist:0, kmh:0, gear:1, rpmF:0.12, mult:1, et:null, shiftFlash:'' }; }
+function reset(){
+  phase='idle';
+  stageT=0;
+  you=newCar(); rival=newCar();
+  reaction=null; resultShown=false;
+  keys={};
+  hud(); draw();
+}
+function hud(){
+  el('gear').textContent=you.gear;
+  el('rpm').textContent=Math.round(you.rpmF*8000);
+  el('speed').textContent=Math.round(you.kmh)+' km/h';
+  el('et').textContent= you.et ? you.et.toFixed(2)+'s' : '–';
+  el('etr').textContent= rival.et ? rival.et.toFixed(2)+'s' : '–';
+  el('wins').textContent=wins;
+}
+function drawTree(){
+  var x=44, y=66;
+  ctx.fillStyle='#111827'; ctx.fillRect(x-16, y-38, 32, 150);
+  var lights=[
+    { c: phase==='idle' ? '#374151' : '#3b82f6', label:'STAGE' },
+    { c: stageT>0.5 ? '#f59e0b' : '#374151', label:'' },
+    { c: stageT>1.0 ? '#f59e0b' : '#374151', label:'' },
+    { c: stageT>1.5 ? '#f59e0b' : '#374151', label:'' },
+    { c: phase==='green' || phase==='racing' || phase==='done' ? '#22c55e' : phase==='red' ? '#ef4444' : '#374151', label: phase==='red' ? 'FOUL' : 'GO' }
+  ];
+  lights.forEach(function(L, i){
+    ctx.fillStyle=L.c;
+    ctx.beginPath(); ctx.arc(x, y+i*30, 10, 0, Math.PI*2); ctx.fill();
+    if(L.label){
+      ctx.fillStyle='#e5e7eb'; ctx.font='bold 9px Arial'; ctx.textAlign='left';
+      ctx.fillText(L.label, x+15, y+i*30+3);
+    }
+  });
+}
+function drawCarShape(x, y, color, name){
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(x+30, y+16, 40, 6, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle=color;
+  ctx.fillRect(x, y-8, 62, 15);
+  ctx.fillRect(x+14, y-17, 30, 10);
+  ctx.fillStyle='#bae6fd'; ctx.fillRect(x+20, y-15.4, 10, 7);
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(x+13, y+8, 7.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+50, y+8, 7.4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#facc15'; ctx.fillRect(x+60, y-5, 2.6, 4.6);
+  ctx.fillStyle='#e5e7eb'; ctx.font='bold 11px Arial'; ctx.textAlign='left';
+  ctx.fillText(name, x+2, y-24);
+}
+function drawGauge(){
+  /* RPM gauge bottom-left */
+  var gx=86, gy=352, r=44;
+  ctx.strokeStyle='#1f2937'; ctx.lineWidth=9;
+  ctx.beginPath(); ctx.arc(gx, gy, r, Math.PI*0.85, Math.PI*2.05); ctx.stroke();
+  ctx.strokeStyle='#22c55e';
+  ctx.beginPath(); ctx.arc(gx, gy, r, Math.PI*(0.85+0.86*1.2), Math.PI*(0.85+0.97*1.2)); ctx.stroke();
+  ctx.strokeStyle='#ef4444';
+  ctx.beginPath(); ctx.arc(gx, gy, r, Math.PI*(0.85+0.97*1.2), Math.PI*2.05); ctx.stroke();
+  var a=Math.PI*(0.85 + you.rpmF*1.2);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx+Math.cos(a)*(r-6), gy+Math.sin(a)*(r-6)); ctx.stroke();
+  ctx.fillStyle='#e5e7eb'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText('RPM ×1000', gx, gy+26);
+  if(you.shiftFlash){
+    ctx.fillStyle= you.shiftFlash==='PERFECT!' ? '#4ade80' : you.shiftFlash==='LATE!' ? '#f87171' : '#fbbf24';
+    ctx.font='bold 15px Arial';
+    ctx.fillText(you.shiftFlash, gx, gy-58);
+  }
+}
+function draw(){
+  /* stands + floodlights */
+  ctx.fillStyle='#f8fafc';
+  ctx.fillRect(120, 40, 6, 60); ctx.fillRect(500, 40, 6, 60);
+  ctx.beginPath(); ctx.arc(123, 36, 9, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(503, 36, 9, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.16)';
+  for(var i=0;i<40;i++) ctx.fillRect(150+(i*31)%360, 118+(i*13)%34, 4, 4);
+  /* track: two lanes */
+  ctx.fillStyle='#1f2937'; ctx.fillRect(0, 196, W, 118);
+  ctx.strokeStyle='#f8fafc'; ctx.lineWidth=2; ctx.setLineDash([16,14]);
+  ctx.beginPath(); ctx.moveTo(0, 255); ctx.lineTo(W, 255); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#facc15'; ctx.fillRect(96, 196, 4, 118);
+  var scale=(W-150)/TRACK;
+  var rx=100 + rival.dist*scale, yx=100 + you.dist*scale;
+  drawCarShape(Math.min(rx, W-70), 224, '#dc2626', 'RIVAL');
+  drawCarShape(Math.min(yx, W-70), 284, '#2563eb', 'YOU');
+  /* progress bar */
+  ctx.fillStyle='#111827'; ctx.fillRect(120, 330, W-160, 8);
+  ctx.fillStyle='#dc2626'; ctx.fillRect(120, 330, (W-160)*Math.min(1, rival.dist/TRACK), 3.4);
+  ctx.fillStyle='#3b82f6'; ctx.fillRect(120, 334.6, (W-160)*Math.min(1, you.dist/TRACK), 3.4);
+  drawTree();
+  drawGauge();
+  if(reaction!==null && phase==='racing'){
+    ctx.fillStyle='#4ade80'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+    ctx.fillText('Reaction: '+reaction.toFixed(3)+'s', W/2, 150);
+  }
+  if(phase==='idle'){
+    ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText('🚦 DRAG RACING', W/2, H/2-64);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Press STAGE — wait for green, launch, shift in the green zone', W/2, H/2-40);
+    if(bestET) ctx.fillText('Your best ET: '+bestET.toFixed(2)+'s', W/2, H/2-18);
+  }
+  if(phase==='done' && resultShown){
+    ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(0,130,W,120);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(resultShown, W/2, 178);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('You: '+(you.et?you.et.toFixed(2)+'s':'DNF')+' · Rival: '+(rival.et?rival.et.toFixed(2)+'s':'DNF')+' — press STAGE to run again', W/2, 206);
+  }
+  if(phase==='red'){
+    ctx.fillStyle='#ef4444'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔴 RED LIGHT — FOUL!', W/2, 150);
+  }
+}
+function doShift(){
+  if(phase!=='racing' || you.gear>=5) return;
+  var q=shiftQuality(you.rpmF);
+  you.gear++;
+  you.rpmF=0.34;
+  you.mult= q==='perfect' ? 1.0 : q==='good' ? 0.9 : q==='late' ? 0.72 : 0.8;
+  you.shiftFlash= q==='perfect' ? 'PERFECT!' : q==='good' ? 'GOOD' : q==='late' ? 'LATE!' : 'EARLY';
+  el('msg').textContent= q==='perfect' ? '⚙️ PERFECT shift! Power stays on.' : q==='good' ? '⚙️ Good shift.' : q==='late' ? '⚙️ LATE — you hit the limiter, power drops!' : '⚙️ Early shift — short-shifted, less pull.';
+  beep(q==='perfect'?980:q==='late'?220:660, 0.08, 'square', 0.06);
+  hud();
+}
+function finishCheck(){
+  if(phase!=='racing') return;
+  if(you.et && rival.et){
+    phase='done';
+    if(you.et < rival.et){
+      wins++; localStorage.setItem('makenDragWins', wins);
+      resultShown='🏆 YOU WIN THE RACE!';
+      if(!bestET || you.et<bestET){ bestET=you.et; localStorage.setItem('makenDragBest', bestET); }
+      el('msg').textContent='🏆 Win! Your '+you.et.toFixed(2)+'s beats '+rival.et.toFixed(2)+'s. Best ET: '+bestET.toFixed(2)+'s.';
+    } else {
+      resultShown='😖 RIVAL WINS';
+      el('msg').textContent='😖 Rival\'s '+rival.et.toFixed(2)+'s beats your '+you.et.toFixed(2)+'s. Sharper shifts next time!';
+    }
+    beep(you.et<rival.et?980:220, 0.2, 'sine', 0.07);
+    hud();
+  }
+}
+function stepCar(c, dt, isRival, now){
+  if(c.et) return;
+  var target=GEAR_TOP[c.gear];
+  var lowEnd= c.gear===1 ? 0 : GEAR_TOP[c.gear-1]*0.82;
+  c.rpmF= 0.12 + 0.88*Math.max(0, Math.min(1, (c.kmh-lowEnd)/((target-lowEnd)||1)));
+  var a=accelFor(c.gear, c.rpmF, c.mult);
+  c.kmh += a*dt*3.6;
+  /* limiter */
+  if(c.kmh > target){
+    c.kmh = target + Math.sin(now/40)*1.4;
+    if(isRival){ /* CPU shifts itself */
+      if(c.gear<5 && Math.random()<dt*7){ c.gear++; c.mult=0.92+Math.random()*0.08; }
+    }
+  }
+  c.kmh *= Math.pow(0.995, dt*60);
+  c.dist += c.kmh/3.6*dt;
+  if(c.dist>=TRACK){
+    c.dist=TRACK;
+    c.et=raceTime;
+  }
+}
+var raceTime=0;
+function loop(ts){
+  if(phase==='idle' || phase==='done') return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(phase==='staging'){
+    stageT += dt;
+    if(stageT>=2.0){
+      phase='green';
+      greenAt=performance.now();
+      el('msg').textContent='🟢 GREEN! GO GO GO!';
+      beep(880,0.14,'sine',0.07);
+    }
+  } else if(phase==='green'){
+    if(gasHeld()){
+      reaction=(performance.now()-greenAt)/1000;
+      phase='racing';
+      raceTime=0;
+    }
+  } else if(phase==='racing'){
+    raceTime += dt;
+    if(gasHeld()){
+      stepCar(you, dt, false, ts);
+    } else {
+      you.kmh *= Math.pow(0.4, dt);
+      you.dist += you.kmh/3.6*dt;
+      if(you.dist>=TRACK && !you.et){ you.dist=TRACK; you.et=raceTime; }
+    }
+    stepCar(rival, dt, true, ts);
+    finishCheck();
+  }
+  hud(); draw();
+  if(phase!=='idle' && phase!=='done') rafId=requestAnimationFrame(loop);
+}
+var greenAt=0;
+function gasHeld(){ return !!(keys.KeyW || keys.ArrowUp || keys.__gas); }
+document.addEventListener('keydown', function(e){
+  if(e.code==='Space'){
+    e.preventDefault();
+    if(phase==='racing') doShift();
+    return;
+  }
+  keys[e.code]=true;
+  if(phase==='staging' && (e.code==='KeyW' || e.code==='ArrowUp')){
+    phase='red';
+    el('msg').textContent='🔴 You jumped the light! Press STAGE to try again.';
+    beep(160,0.25,'sawtooth',0.08);
+    draw();
+  }
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){
+    keys[prop]=true;
+    if(phase==='staging'){ phase='red'; el('msg').textContent='🔴 You jumped the light! Press STAGE to try again.'; beep(160,0.25,'sawtooth',0.08); draw(); }
+    e.preventDefault();
+  };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas');
+el('shiftBtn').addEventListener('click', doShift);
+el('stageBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  phase='staging';
+  stageT=0;
+  lastTick=performance.now();
+  el('msg').textContent='🟡🟡🟡 Tree is lit… wait for GREEN!';
+  rafId=requestAnimationFrame(loop);
+  draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ GEAR_TOP:GEAR_TOP, shiftQuality:shiftQuality, accelFor:accelFor, gearForSpeed:gearForSpeed };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

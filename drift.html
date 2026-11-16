@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Drift Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play drift racing free online. Slide a top-down drift car around the arena, hold long drifts through the zones and chain combos. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#333d52; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏎️💨 DRIFT RACING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱️ <b id="time">90</b></div>
+  <div class="stat">DRIFT <b id="driftNow">0</b></div>
+  <div class="stat">CHAIN <b id="chain">×1</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Build speed, then steer hard and hold GAS — the rear steps out. Long slides in the yellow zones pay double!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START ENGINE</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">W/↑ gas · S/↓ brake · A/D steer — drifting = car pointing one way, sliding another · hitting a cone breaks the chain</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Drift Racing</h2>
+  <p>Ninety seconds in a walled drift arena. Points come from one thing only: sliding. The bigger your drift angle and the faster you're moving, the faster the counter climbs — and drifts chained within 2.5 seconds multiply everything you bank.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Accelerate with W/↑ or GAS, steer with A/D, brake with S/↓. Enter a corner fast, steer hard, and the rear of the car steps out — keep the slide alive with throttle and opposite steering. Yellow zones double drift points. Banking a drift adds its score × your chain multiplier; spinning out or smacking a cone resets the chain.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>True drift physics — velocity and heading tracked separately with a grip model</li>
+    <li>Chain multiplier system with double-score drift zones</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+var ZONES=[ {x:150,y:105,r:64}, {x:490,y:105,r:64}, {x:150,y:295,r:64}, {x:490,y:295,r:64}, {x:320,y:200,r:56} ];
+var CONES=[ [320,80],[320,320],[90,200],[550,200],[220,200],[420,200] ];
+/* ---------- pure logic (testable) ---------- */
+function driftAngle(heading, velAng){
+  var d=Math.abs(((velAng - heading + Math.PI*3) % (Math.PI*2)) - Math.PI);
+  return d;
+}
+function isDrifting(heading, vx, vy){
+  var sp=Math.hypot(vx, vy);
+  if(sp < 55) return false;
+  return driftAngle(heading, Math.atan2(vy, vx)) > 0.32;
+}
+function driftRate(heading, vx, vy, inZone){
+  var sp=Math.hypot(vx, vy);
+  var a=driftAngle(heading, Math.atan2(vy, vx));
+  var rate= a * sp * 0.62;
+  return inZone ? rate*2 : rate;
+}
+function inAnyZone(x, y){
+  for(var i=0;i<ZONES.length;i++){
+    if(Math.hypot(x-ZONES[i].x, y-ZONES[i].y) < ZONES[i].r) return true;
+  }
+  return false;
+}
+function chainFor(gapSeconds){
+  return gapSeconds <= 2.5;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, car, timeLeft, score, driftPts, chain, sinceBank, smoke, over, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenDriftBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('time').textContent=Math.max(0, Math.ceil(timeLeft));
+  el('driftNow').textContent=Math.floor(driftPts);
+  el('chain').textContent='×'+chain;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenDriftBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false; over=false;
+  car={ x:320, y:330, ang:-Math.PI/2, vx:0, vy:0 };
+  timeLeft=90; score=0; driftPts=0; chain=1; sinceBank=99;
+  smoke=[];
+  keys={};
+  hud(); draw();
+}
+function draw(){
+  /* arena floor + border */
+  ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=5;
+  ctx.strokeRect(14, 14, W-28, H-28);
+  ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(W/2, 14); ctx.lineTo(W/2, H-14); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2, H/2, 44, 0, Math.PI*2); ctx.stroke();
+  /* zones */
+  ZONES.forEach(function(z){
+    ctx.fillStyle='rgba(250,204,21,0.14)';
+    ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(250,204,21,0.55)'; ctx.setLineDash([7,7]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  });
+  /* cones */
+  ctx.font='16px Arial'; ctx.textAlign='center';
+  CONES.forEach(function(c){ ctx.fillText('🔶', c[0], c[1]+5); });
+  /* smoke */
+  smoke.forEach(function(s){
+    ctx.fillStyle='rgba(230,230,230,'+(s.life*0.35)+')';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 5+(1-s.life)*11, 0, Math.PI*2); ctx.fill();
+  });
+  /* car */
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.ang);
+  ctx.fillStyle='#7c3aed';
+  ctx.fillRect(-19, -10, 38, 20);
+  ctx.fillStyle='#1f2937'; ctx.fillRect(-4, -8, 15, 16);
+  ctx.fillStyle='#bae6fd'; ctx.fillRect(7, -7, 4, 14);
+  ctx.fillStyle='#facc15'; ctx.fillRect(17, -8, 2.4, 4.6); ctx.fillRect(17, 3.4, 2.4, 4.6);
+  ctx.fillStyle='#111827';
+  ctx.fillRect(-16, -12.4, 11, 4); ctx.fillRect(-16, 8.4, 11, 4);
+  ctx.fillRect(6, -12.4, 11, 4); ctx.fillRect(6, 8.4, 11, 4);
+  ctx.restore();
+  var drifting=isDrifting(car.ang, car.vx, car.vy);
+  if(drifting && playing){
+    ctx.fillStyle= inAnyZone(car.x, car.y) ? '#facc15' : '#fff';
+    ctx.font='bold 17px Arial'; ctx.textAlign='center';
+    ctx.fillText('💨 DRIFT +'+Math.floor(driftPts)+'  ×'+chain, car.x, car.y-30);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? '⏱️ TIME UP!' : '🏎️💨 DRIFT RACING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Final score '+score+' — press START ENGINE to slide again' : 'Press START ENGINE — 90 seconds of sliding', W/2, H/2+18);
+  }
+}
+function bankDrift(){
+  if(driftPts>=12){
+    var gained=Math.floor(driftPts)*chain;
+    score += gained;
+    if(chainFor(sinceBank)) chain=Math.min(6, chain+1);
+    el('msg').textContent='💰 Banked '+gained+' pts! Chain now ×'+chain+'.';
+    beep(920,0.09,'sine',0.06);
+  }
+  driftPts=0;
+  sinceBank=0;
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    bankDrift();
+    playing=false; over=true;
+    el('msg').textContent='⏱️ Time! Final drift score: '+score+'.';
+    beep(700,0.2,'sine',0.07);
+    hud(); draw();
+    return;
+  }
+  sinceBank+=dt;
+  if(sinceBank>2.5 && chain>1 && driftPts===0){
+    chain=1;
+  }
+  var gas=keys.KeyW || keys.ArrowUp || keys.__gas;
+  var brake=keys.KeyS || keys.ArrowDown;
+  var steer=0;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) steer=-1;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) steer=1;
+  var sp=Math.hypot(car.vx, car.vy);
+  /* steering scales with speed */
+  car.ang += steer * (0.9 + sp/130) * dt * (sp>4 ? 1 : 0);
+  var fx=Math.cos(car.ang), fy=Math.sin(car.ang);
+  if(gas){ car.vx += fx*250*dt; car.vy += fy*250*dt; }
+  if(brake){ car.vx -= fx*170*dt; car.vy -= fy*170*dt; }
+  /* grip: pull velocity toward heading; less grip at big angles = drift */
+  var velAng=Math.atan2(car.vy, car.vx);
+  var da=driftAngle(car.ang, velAng);
+  var grip= da > 0.5 ? 2.1 : 6.5;
+  if(sp>1){
+    var targetA=car.ang;
+    var diff=((targetA - velAng + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    var newA=velAng + diff * Math.min(1, grip*dt);
+    var drag=Math.pow(0.62, dt);
+    car.vx=Math.cos(newA)*sp*drag;
+    car.vy=Math.sin(newA)*sp*drag;
+  }
+  car.x += car.vx*dt;
+  car.y += car.vy*dt;
+  /* walls */
+  if(car.x<30){ car.x=30; car.vx=Math.abs(car.vx)*0.4; }
+  if(car.x>W-30){ car.x=W-30; car.vx=-Math.abs(car.vx)*0.4; }
+  if(car.y<30){ car.y=30; car.vy=Math.abs(car.vy)*0.4; }
+  if(car.y>H-30){ car.y=H-30; car.vy=-Math.abs(car.vy)*0.4; }
+  /* cones */
+  CONES.forEach(function(c){
+    if(Math.hypot(car.x-c[0], car.y-c[1]) < 17 && sp>30){
+      if(driftPts>12 || chain>1){
+        el('msg').textContent='🔶 Cone smashed — drift chain broken!';
+        beep(130,0.14,'sawtooth',0.07);
+      }
+      driftPts=0; chain=1; sinceBank=99;
+      car.vx*=0.55; car.vy*=0.55;
+    }
+  });
+  /* drifting? */
+  if(isDrifting(car.ang, car.vx, car.vy)){
+    driftPts += driftRate(car.ang, car.vx, car.vy, inAnyZone(car.x, car.y)) * dt;
+    if(Math.random()<0.6) smoke.push({ x:car.x - fx*16, y:car.y - fy*16, life:1 });
+    if(driftPts>0 && Math.floor(driftPts)%50===0) beep(500+driftPts%300, 0.04, 'sine', 0.03);
+  } else if(driftPts>0){
+    bankDrift();
+  }
+  smoke=smoke.filter(function(s){ s.life-=dt*1.4; return s.life>0; });
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🏎️💨 GO! 90 seconds — slide everything!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ ZONES:ZONES, driftAngle:driftAngle, isDrifting:isDrifting, driftRate:driftRate, inAnyZone:inAnyZone, chainFor:chainFor };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
