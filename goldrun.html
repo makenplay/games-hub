@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gold Run Chase Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a gold-run chase game free online. Sprint through the city, dodge cars and barriers, scoop up gold bars and catch the robber. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .catchwrap { width:min(640px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .catchwrap i { display:block; height:100%; background:linear-gradient(90deg,#f59e0b,#ef4444); transition:width .15s; }
+  canvas#cv { background:#1e293b; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .pad { display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px; gap:5px; justify-content:center; padding:2px 0 8px; }
+  .btn { padding:11px 0; font-size:16px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.94); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-size:12px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏃 GOLD RUN CHASE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">📏 <b id="dist">0m</b></div>
+  <div class="stat">🥇 GOLD <b id="gold">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">🦹 CAUGHT <b id="caught">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+<div class="catchwrap"><i id="catchBar" style="width:0%"></i></div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">◀ ▶ switch lanes · ⬆ jump the barriers · ⬇ slide under signs. Fill the catch meter to grab the robber!</div>
+<div class="pad">
+  <span></span><button class="btn" id="upBtn">⬆</button><span></span>
+  <button class="btn" id="leftBtn">◀</button><button class="btn primary" id="startBtn">▶ START</button><button class="btn" id="rightBtn">▶</button>
+  <span></span><button class="btn" id="downBtn">⬇</button><span></span>
+</div>
+<div class="row" style="display:flex;gap:8px;justify-content:center;padding-bottom:8px;">
+  <button class="btn" id="soundBtn" style="padding:11px 16px;">🔊</button>
+</div>
+<div class="keys">Cars block a whole lane — never jump them, switch lanes · gold bars fill the catch meter fastest</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Gold Run Chase</h2>
+  <p>The robber just emptied the vault and he's sprinting through downtown with your gold. Chase him across three lanes of traffic — leap the barriers, slide under the signs, dodge the cars — scooping up the gold bars he drops. Fill the catch meter and he's yours… then his faster brother takes off.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Switch lanes with ◀ ▶, jump with ⬆ and slide with ⬇ (arrow keys, WASD or the pad). Gold bars add score and fill the red catch meter; distance fills it slowly too. When the meter fills you catch the robber for a +500 bonus and the chase restarts faster. One crash ends the run.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A chase, not just a run — catch robbers for escalating bonuses</li>
+    <li>City traffic: cars, barriers and overhead signs in 3 lanes</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, HORIZON=118, GROUND=H-26;
+var LANES=[-1, 0, 1];
+/* ---------- pure logic (testable) ---------- */
+function project(z){
+  /* z: 0 (at player) .. 1 (horizon) */
+  var scale=1 - z*0.86;
+  var y=GROUND - (GROUND-HORIZON)*(1 - Math.pow(1-z, 1.6)) * 1 - 0;
+  return { scale:scale, y: y };
+}
+function laneX(lane, scale){
+  return W/2 + lane*168*scale;
+}
+function catchGain(kind){
+  return kind==='gold' ? 6.5 : 0.055;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, lane, lanePos, jumpT, slideT, dist, gold, score, caught, catchMeter, speed, obstacles, golds, spawnZ, rafId, lastTick, dead, robberBob;
+var best=+(localStorage.getItem('makenGoldBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('dist').textContent=Math.floor(dist)+'m';
+  el('gold').textContent=gold;
+  el('score').textContent=score;
+  el('caught').textContent=caught;
+  el('catchBar').style.width=Math.min(100, catchMeter)+'%';
+  if(score>best){ best=score; localStorage.setItem('makenGoldBest', best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false; dead=false;
+  lane=0; lanePos=0;
+  jumpT=0; slideT=0;
+  dist=0; gold=0; score=0; caught=0; catchMeter=0;
+  speed=0.34;
+  obstacles=[]; golds=[];
+  spawnZ=0.55; robberBob=0;
+  hud(); draw();
+}
+function spawnPattern(){
+  var roll=Math.random();
+  if(roll<0.34){
+    obstacles.push({ lane:LANES[Math.floor(Math.random()*3)], z:1, kind:'barrier' });
+  } else if(roll<0.58){
+    obstacles.push({ lane:LANES[Math.floor(Math.random()*3)], z:1, kind:'sign' });
+  } else if(roll<0.8){
+    obstacles.push({ lane:LANES[Math.floor(Math.random()*3)], z:1, kind:'car' });
+  } else {
+    var gl=LANES[Math.floor(Math.random()*3)];
+    for(var i=0;i<5;i++) golds.push({ lane:gl, z:1 - i*0.055, taken:false });
+  }
+  if(Math.random()<0.4){
+    var gl2=LANES[Math.floor(Math.random()*3)];
+    for(var j=0;j<4;j++) golds.push({ lane:gl2, z:1 - j*0.055, taken:false });
+  }
+}
+function drawRunner(cx, baseY, s, shirt, pants, isRobber, slide, jumpLift){
+  var y=baseY - jumpLift;
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.ellipse(cx, baseY+3*s, 15*s, 4.4*s, 0, 0, Math.PI*2); ctx.fill();
+  var bodyH= slide ? 20*s : 30*s;
+  ctx.fillStyle=shirt;
+  ctx.fillRect(cx-8.4*s, y-bodyH, 16.8*s, bodyH*0.62);
+  ctx.fillStyle=pants;
+  if(slide){
+    ctx.fillRect(cx-4*s, y-8*s, 20*s, 6*s);
+  } else {
+    var legSwing=Math.sin(performance.now()/90)*5*s;
+    ctx.fillRect(cx-7.4*s, y-bodyH*0.38, 6*s, bodyH*0.38 + legSwing*0.3);
+    ctx.fillRect(cx+1.6*s, y-bodyH*0.38, 6*s, bodyH*0.38 - legSwing*0.3);
+  }
+  ctx.fillStyle='#fbbf24';
+  ctx.beginPath(); ctx.arc(cx, y-bodyH-6.4*s, 7*s, 0, Math.PI*2); ctx.fill();
+  if(isRobber){
+    ctx.fillStyle='#111827';
+    ctx.fillRect(cx-7*s, y-bodyH-9.4*s, 14*s, 4.4*s);
+    ctx.font=Math.max(9, 15*s)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText('💰', cx+14*s, y-bodyH*0.7);
+  }
+}
+function draw(){
+  /* city sky + street */
+  var grad=ctx.createLinearGradient(0, 0, 0, HORIZON);
+  grad.addColorStop(0, '#0ea5e9');
+  grad.addColorStop(1, '#bae6fd');
+  ctx.fillStyle=grad; ctx.fillRect(0, 0, W, HORIZON);
+  ctx.fillStyle='#64748b';
+  var bh=[64, 88, 52, 96, 70, 84, 58, 90];
+  for(var i=0;i<8;i++){
+    var bx=i*82 - (dist*7 % 82);
+    ctx.fillRect(bx, HORIZON-bh[i], 62, bh[i]);
+    ctx.fillStyle='rgba(250,204,21,0.5)';
+    for(var wy=HORIZON-bh[i]+9; wy<HORIZON-8; wy+=13) for(var wx=bx+7; wx<bx+52; wx+=14){
+      if((wx*3+wy)%4!==0) ctx.fillRect(wx, wy, 6, 7);
+    }
+    ctx.fillStyle='#64748b';
+  }
+  ctx.fillStyle='#475569'; ctx.fillRect(0, HORIZON, W, GROUND-HORIZON+4);
+  ctx.fillStyle='#334155';
+  ctx.beginPath();
+  ctx.moveTo(W/2-56, HORIZON); ctx.lineTo(W/2+56, HORIZON); ctx.lineTo(W/2+268, GROUND); ctx.lineTo(W/2-268, GROUND); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=2.4;
+  [-0.5, 0.5].forEach(function(off){
+    ctx.beginPath();
+    ctx.moveTo(W/2 + off*112, HORIZON);
+    ctx.lineTo(W/2 + off*336, GROUND);
+    ctx.stroke();
+  });
+  ctx.strokeStyle='rgba(250,204,21,0.7)';
+  ctx.setLineDash([16, 22]);
+  ctx.lineDashOffset= dist*30 % 38;
+  [0].forEach(function(off){
+    ctx.beginPath();
+    ctx.moveTo(W/2, HORIZON);
+    ctx.lineTo(W/2, GROUND);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  /* robber ahead */
+  var rz=0.52 - Math.min(0.3, catchMeter*0.0032);
+  var rp=project(rz);
+  var robberX=laneX(Math.sin(dist*0.014)*0.7, rp.scale);
+  drawRunner(robberX, rp.y, rp.scale*0.94, '#111827', '#111827', true, false, Math.abs(Math.sin(performance.now()/120))*3);
+  /* golds + obstacles sorted far to near */
+  var items=[];
+  golds.forEach(function(g){ items.push({ z:g.z, g:g }); });
+  obstacles.forEach(function(o){ items.push({ z:o.z, o:o }); });
+  items.sort(function(a, b){ return b.z-a.z; });
+  items.forEach(function(it){
+    var p=project(it.z);
+    if(it.g){
+      if(it.g.taken) return;
+      var gx=laneX(it.g.lane, p.scale);
+      ctx.fillStyle='#f59e0b';
+      ctx.fillRect(gx-9*p.scale, p.y-26*p.scale, 18*p.scale, 10*p.scale);
+      ctx.fillStyle='#fbbf24';
+      ctx.fillRect(gx-9*p.scale, p.y-26*p.scale, 18*p.scale, 3.4*p.scale);
+      return;
+    }
+    var o=it.o;
+    var ox=laneX(o.lane, p.scale);
+    if(o.kind==='barrier'){
+      ctx.fillStyle='#f97316';
+      ctx.fillRect(ox-30*p.scale, p.y-24*p.scale, 60*p.scale, 15*p.scale);
+      ctx.fillStyle='#fff';
+      for(var s2=0;s2<3;s2++) ctx.fillRect(ox-30*p.scale + s2*22*p.scale, p.y-24*p.scale, 11*p.scale, 15*p.scale);
+      ctx.fillStyle='#7c2d12';
+      ctx.fillRect(ox-30*p.scale, p.y-9*p.scale, 60*p.scale, 4*p.scale);
+    } else if(o.kind==='sign'){
+      ctx.fillStyle='#475569';
+      ctx.fillRect(ox-32*p.scale, p.y-64*p.scale, 4*p.scale, 64*p.scale);
+      ctx.fillRect(ox+28*p.scale, p.y-64*p.scale, 4*p.scale, 64*p.scale);
+      ctx.fillStyle='#dc2626';
+      ctx.fillRect(ox-34*p.scale, p.y-64*p.scale, 68*p.scale, 17*p.scale);
+      ctx.fillStyle='#fff'; ctx.font='bold '+Math.max(7, 11*p.scale)+'px Arial'; ctx.textAlign='center';
+      ctx.fillText('DANGER', ox, p.y-52*p.scale);
+    } else {
+      /* car */
+      ctx.fillStyle='#7c3aed';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(ox-32*p.scale, p.y-30*p.scale, 64*p.scale, 26*p.scale, 5*p.scale); else ctx.rect(ox-32*p.scale, p.y-30*p.scale, 64*p.scale, 26*p.scale);
+      ctx.fill();
+      ctx.fillStyle='#a78bfa';
+      ctx.fillRect(ox-20*p.scale, p.y-40*p.scale, 40*p.scale, 13*p.scale);
+      ctx.fillStyle='#e0f2fe';
+      ctx.fillRect(ox-16*p.scale, p.y-38*p.scale, 14*p.scale, 9*p.scale);
+      ctx.fillRect(ox+3*p.scale, p.y-38*p.scale, 14*p.scale, 9*p.scale);
+      ctx.fillStyle='#111827';
+      ctx.beginPath(); ctx.arc(ox-19*p.scale, p.y-3*p.scale, 6.4*p.scale, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ox+19*p.scale, p.y-3*p.scale, 6.4*p.scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fde68a';
+      ctx.fillRect(ox-29*p.scale, p.y-16*p.scale, 7*p.scale, 4.6*p.scale);
+      ctx.fillRect(ox+22*p.scale, p.y-16*p.scale, 7*p.scale, 4.6*p.scale);
+    }
+  });
+  /* player */
+  var pl=project(0.02);
+  var px=laneX(lanePos, pl.scale);
+  var jumpLift= jumpT>0 ? Math.sin((0.62-jumpT)/0.62*Math.PI)*44 : 0;
+  drawRunner(px, GROUND-6, 1.28, '#dc2626', '#1e3a8a', false, slideT>0, jumpLift);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(dead ? '💥 CRASHED!' : '🏃 GOLD RUN CHASE', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(dead ? 'Score '+score+' · gold '+gold+' · robbers caught '+caught : 'Press START — catch the robber!', W/2, H/2+18);
+  }
+}
+function crash(what){
+  dead=true; playing=false;
+  el('msg').textContent=what+' Run over — score '+score+', robbers caught: '+caught+'.';
+  beep(130,0.3,'sawtooth',0.08);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  dist += speed*dt*26;
+  score += Math.floor(speed*dt*26);
+  catchMeter += catchGain('run')*speed*dt*10;
+  speed += dt*0.0035;
+  lanePos += (lane - lanePos)*Math.min(1, dt*11);
+  if(Math.abs(lane-lanePos)<0.02) lanePos=lane;
+  if(jumpT>0) jumpT-=dt;
+  if(slideT>0) slideT-=dt;
+  spawnZ -= speed*dt;
+  if(spawnZ<=0){ spawnPattern(); spawnZ=0.34+Math.random()*0.2; }
+  obstacles.forEach(function(o){ o.z -= speed*dt; });
+  golds.forEach(function(g){ g.z -= speed*dt; });
+  obstacles=obstacles.filter(function(o){ return o.z > -0.06; });
+  golds=golds.filter(function(g){ return g.z > -0.06; });
+  /* gold pickup */
+  golds.forEach(function(g){
+    if(!g.taken && g.z<0.09 && g.z>-0.03 && Math.abs(g.lane-lanePos)<0.5){
+      g.taken=true; gold++;
+      score+=25;
+      catchMeter += catchGain('gold');
+      beep(1250,0.05,'sine',0.045);
+    }
+  });
+  /* caught the robber */
+  if(catchMeter>=100){
+    catchMeter=0;
+    caught++;
+    score+=500;
+    speed+=0.045;
+    el('msg').textContent='🦹 GOT HIM! Robber #'+caught+' caught — +500! A faster one takes off…';
+    beep(1180,0.16,'sine',0.06);
+  }
+  /* collisions at z near 0 */
+  for(var i=0;i<obstacles.length;i++){
+    var o=obstacles[i];
+    if(o.z<0.075 && o.z>-0.03 && Math.abs(o.lane-lanePos)<0.5){
+      if(o.kind==='barrier' && jumpT>0.14){ /* cleared */ }
+      else if(o.kind==='sign' && slideT>0){ /* ducked */ }
+      else if(o.kind==='barrier'){ crash('🚧 You smashed into a barrier at '+Math.floor(dist)+'m!'); return; }
+      else if(o.kind==='sign'){ crash('🪧 You clipped the overhead sign at '+Math.floor(dist)+'m!'); return; }
+      else { crash('🚗 You ran into a car at '+Math.floor(dist)+'m!'); return; }
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function doLeft(){ if(lane>-1) lane--; }
+function doRight(){ if(lane<1) lane++; }
+function doJump(){ if(jumpT<=0 && slideT<=0){ jumpT=0.62; beep(340,0.05,'square',0.03); } }
+function doSlide(){ if(slideT<=0 && jumpT<=0){ slideT=0.55; beep(220,0.05,'square',0.03); } }
+document.addEventListener('keydown', function(e){
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+  if(!playing) return;
+  if(e.code==='ArrowLeft' || e.code==='KeyA') doLeft();
+  if(e.code==='ArrowRight' || e.code==='KeyD') doRight();
+  if(e.code==='ArrowUp' || e.code==='KeyW' || e.code==='Space') doJump();
+  if(e.code==='ArrowDown' || e.code==='KeyS') doSlide();
+});
+function tapBtn(id, fn){
+  var b=el(id);
+  b.addEventListener('click', function(){ if(playing) fn(); });
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); if(playing) fn(); }, {passive:false});
+}
+tapBtn('leftBtn', doLeft); tapBtn('rightBtn', doRight); tapBtn('upBtn', doJump); tapBtn('downBtn', doSlide);
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🏃 The chase is on — grab that gold!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ project:project, laneX:laneX, catchGain:catchGain, LANES:LANES };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
