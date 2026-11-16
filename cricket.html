@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cricket Batting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play cricket batting free online. Face 10 balls — pace, swing and spin — time your shot for sixes and chase the target. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#14532d 0%,#166534 60%,#15803d 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.swing { background:linear-gradient(90deg,#dc2626,#f59e0b); color:#fff; font-size:16px; padding:12px 30px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏏 CRICKET BATTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">BALL <b id="ballNo">– / 10</b></div>
+  <div class="stat">TARGET <b id="target">–</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">WICKETS <b id="wkts">3</b></div>
+  <div class="stat">THIS OVER <b id="over">–</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Press START INNINGS, wait for the ball, and click / tap / SPACE to swing as it reaches you!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START INNINGS</button>
+  <button class="btn swing" id="swingBtn">🏏 SWING!</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Perfect timing = SIX · good = FOUR · mistime it and you are bowled · swing balls curve late — watch them all the way in</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Cricket Batting</h2>
+  <p>Ten balls, three wickets, one target to chase. The bowler mixes express pace, late swing and turning spin — your only job is to watch the ball onto the bat and swing at exactly the right moment.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Click, tap, or press SPACE to swing as the ball reaches the crease. Dead-centre timing sends it for six; slightly early or late gives fours, twos or singles — and a wild miss means the stumps are shattered and a wicket falls. Beat the target before the balls or wickets run out.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three ball types — pace, late swing and spin — each with its own timing</li>
+    <li>A real chase: target, wickets and balls all counting down together</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, BAT_Y=322, BALL_START_Y=64, CONTACT_Y=306;
+/* ---------- pure logic (testable) ---------- */
+var BALL_TYPES={
+  pace:{ speed:340, curve:0, label:'⚡ PACE' },
+  swing:{ speed:285, curve:52, label:'🌀 SWING' },
+  spin:{ speed:225, curve:-38, label:'🎯 SPIN' }
+};
+function pickBallType(r){
+  return r<0.4 ? 'pace' : r<0.72 ? 'swing' : 'spin';
+}
+function shotResult(ballY){
+  /* returns runs: 6,4,2,1,0(dot),-1(bowled) by distance from contact point */
+  var d=Math.abs(ballY - CONTACT_Y);
+  if(d <= 9) return 6;
+  if(d <= 20) return 4;
+  if(d <= 33) return 2;
+  if(d <= 46) return 1;
+  return -1;
+}
+function ballXAt(ball, y){
+  /* lateral position as the ball travels: curve grows near the batsman */
+  var t=(y - BALL_START_Y) / (CONTACT_Y - BALL_START_Y);
+  t=Math.max(0, Math.min(1, t));
+  return ball.x0 + ball.curve * t * t;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, phase, ball, ballsBowled, score, wkts, target, overLog, result, hitAnim, waitT, rafId, lastTick;
+var best=+(localStorage.getItem('makenCricketBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('ballNo').textContent=(playing||ballsBowled>0 ? Math.min(10, ballsBowled+ (phase==='ball'?1:0)) : '–')+' / 10';
+  el('target').textContent=target || '–';
+  el('score').textContent=score;
+  el('wkts').textContent=wkts;
+  el('over').textContent=overLog.length ? overLog.join(' ') : '–';
+  if(score>best){ best=score; localStorage.setItem('makenCricketBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false; phase='idle'; ball=null;
+  ballsBowled=0; score=0; wkts=3; target=0; overLog=[]; result=''; hitAnim=null; waitT=0;
+  hud(); draw();
+}
+function newBall(){
+  var type=pickBallType(Math.random());
+  var t=BALL_TYPES[type];
+  ball={ type:type, y:BALL_START_Y, x0:W/2 + (Math.random()*36-18), curve:t.curve*(Math.random()<0.5?1:-1)*(type==='pace'?0:1), speed:t.speed*(0.92+Math.random()*0.16) };
+  phase='ball';
+  el('msg').textContent=BALL_TYPES[type].label+' ball coming — watch it onto the bat…';
+  hud();
+}
+function draw(){
+  /* outfield rings + pitch */
+  ctx.fillStyle='rgba(255,255,255,0.07)';
+  ctx.beginPath(); ctx.arc(W/2, 190, 150, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(W/2, 190, 105, 0, Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.06)'; ctx.fill();
+  ctx.fillStyle='#d6c08a'; ctx.fillRect(W/2-34, 40, 68, 310);
+  ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(W/2-34, CONTACT_Y-4, 68, 3);
+  /* crowd dots */
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  for(var i=0;i<26;i++){ ctx.fillRect((i*53)%W, 8+(i%3)*7, 3, 3); }
+  /* bowler */
+  ctx.font='34px Arial'; ctx.textAlign='center';
+  ctx.fillText('🧍', W/2, 58);
+  /* stumps + batsman at bottom */
+  ctx.fillStyle='#fbbf24';
+  [-9,0,9].forEach(function(dx){ ctx.fillRect(W/2+dx-2, BAT_Y, 4, 30); });
+  ctx.fillStyle='#f59e0b'; ctx.fillRect(W/2-13, BAT_Y, 26, 4);
+  ctx.font='44px Arial';
+  ctx.fillText('🏏', W/2+52, BAT_Y+40);
+  ctx.fillText('🧍', W/2-44, BAT_Y+42);
+  /* ball */
+  if(ball && phase==='ball'){
+    var bx=ballXAt(ball, ball.y);
+    var r=5 + (ball.y-BALL_START_Y)/(CONTACT_Y-BALL_START_Y)*4;
+    ctx.fillStyle='#dc2626';
+    ctx.beginPath(); ctx.arc(bx, ball.y, r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(bx, ball.y, r*0.6, 0.4, 2.2); ctx.stroke();
+  }
+  /* hit animation */
+  if(hitAnim){
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(hitAnim.x, hitAnim.y, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fbbf24'; ctx.font='bold 30px Arial'; ctx.textAlign='center';
+    ctx.fillText(hitAnim.text, W/2, 130);
+  }
+  if(!playing && result){
+    ctx.fillStyle='rgba(7,11,24,0.66)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 27px Arial'; ctx.textAlign='center';
+    ctx.fillText(result, W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Final score '+score+' (target '+target+') — press START INNINGS to play again', W/2, H/2+18);
+  } else if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.5)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText('🏏 CRICKET BATTING', W/2, H/2-8);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Press START INNINGS — chase the target in 10 balls', W/2, H/2+18);
+  }
+}
+function endInnings(won){
+  playing=false; phase='idle'; ball=null;
+  result= won ? '🏆 YOU WIN THE CHASE!' : (wkts<=0 ? '💥 ALL OUT!' : '⏰ BALLS FINISHED — SHORT OF THE TARGET');
+  el('msg').textContent= won ? '🏆 Target chased with '+(10-ballsBowled)+' balls to spare! Final: '+score+'/'+(3-wkts)+'.'
+    : 'Innings over — you scored '+score+', target was '+target+'.';
+  beep(won?980:220, 0.18, 'sine', 0.06);
+  hud(); draw();
+}
+function swing(){
+  if(!playing || phase!=='ball' || !ball) return;
+  var runs=shotResult(ball.y);
+  ballsBowled++;
+  if(runs===-1){
+    wkts--;
+    overLog.push('W');
+    hitAnim={ x:ballXAt(ball, ball.y), y:ball.y, text:'BOWLED! 😱', t:1 };
+    el('msg').textContent='😱 BOWLED! You swung and missed completely. '+(wkts>0 ? wkts+' wickets left.' : '');
+    beep(140,0.3,'sawtooth',0.08);
+  } else if(runs===0){
+    overLog.push('•');
+    hitAnim=null;
+    el('msg').textContent='Dot ball — beaten by the delivery!';
+  } else {
+    score+=runs;
+    overLog.push(''+runs);
+    hitAnim={ x:ballXAt(ball, ball.y), y:ball.y-10, text: runs===6 ? 'SIX! 🚀' : runs===4 ? 'FOUR! 💥' : runs+' RUN'+(runs>1?'S':''), t:1 };
+    el('msg').textContent= runs===6 ? '🚀 MASSIVE SIX! Perfect timing!' : runs===4 ? '💥 FOUR! Crunched away!' : 'Good shot — '+runs+' run'+(runs>1?'s':'')+'.';
+    beep(runs>=4?920:640, 0.1, 'sine', 0.06);
+  }
+  ball=null;
+  phase='wait'; waitT=1.05;
+  hud(); draw();
+  if(score>=target){ endInnings(true); return; }
+  if(wkts<=0){ endInnings(false); return; }
+  if(ballsBowled>=10){ endInnings(false); return; }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(hitAnim){ hitAnim.t-=dt*0.8; hitAnim.y-=dt*36; if(hitAnim.t<=0) hitAnim=null; }
+  if(phase==='wait'){
+    waitT-=dt;
+    if(waitT<=0){ newBall(); }
+  } else if(phase==='ball' && ball){
+    ball.y += ball.speed*dt;
+    if(ball.y >= BAT_Y+16){
+      /* no shot offered — bowled */
+      ballsBowled++;
+      wkts--;
+      overLog.push('W');
+      el('msg').textContent='😱 BOWLED! You offered no shot and the stumps are gone. '+(wkts>0 ? wkts+' wickets left.' : '');
+      beep(140,0.3,'sawtooth',0.08);
+      ball=null; phase='wait'; waitT=1.05;
+      hud();
+      if(wkts<=0){ endInnings(false); return; }
+      if(ballsBowled>=10){ endInnings(false); return; }
+    }
+  }
+  draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+cvs.addEventListener('mousedown', swing);
+cvs.addEventListener('touchstart', function(e){ swing(); e.preventDefault(); }, {passive:false});
+document.addEventListener('keydown', function(e){
+  if(e.code==='Space'){ swing(); e.preventDefault(); }
+});
+el('swingBtn').addEventListener('click', swing);
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  target=26 + Math.floor(Math.random()*16);
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🎯 Chase '+target+' in 10 balls with 3 wickets. First ball coming…';
+  phase='wait'; waitT=0.9;
+  hud();
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ BALL_TYPES:BALL_TYPES, pickBallType:pickBallType, shotResult:shotResult, ballXAt:ballXAt, CONTACT_Y:CONTACT_Y };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

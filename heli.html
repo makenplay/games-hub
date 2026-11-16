@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Helicopter Shooting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play helicopter shooting free online. Hold to climb, dodge the canyon walls and blast enemy turrets and choppers. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#f59e0b33 0%,#7c2d12 0%,#1e293b 0%,#0f2038 55%,#1a2e22 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🚁 HELICOPTER SHOOTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LIVES <b id="lives">3</b></div>
+  <div class="stat">DISTANCE <b id="dist">0m</b></div>
+  <div class="stat">KILLS <b id="kills">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Hold mouse / finger / W to climb, release to sink. Press F or the FIRE button to shoot!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START MISSION</button>
+  <button class="btn" id="fireBtn">🔥 FIRE (F)</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Hold = climb · release = descend · do not scrape the ceiling or the ground · turrets and enemy choppers shoot back</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Helicopter Shooting</h2>
+  <p>A side-scrolling combat flight through a hostile valley. Your chopper sinks when you let go and climbs when you hold — thread it between the rock ceiling and the ground while enemy turrets and helicopters try to bring you down.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Hold the mouse button, your finger, or W/↑ to climb; release to descend. Fire with F, SPACE, or the FIRE button. Ground turrets take one missile, enemy choppers two. Distance and kills both score — survive as far as you can with 3 lives.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>One-touch lift physics that are easy to learn and hard to master</li>
+    <li>Ground turrets and enemy helicopters with return fire</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* ---------- pure logic (testable) ---------- */
+function heliStep(h, holding, dt){
+  h.vy += (holding ? -1060 : 580) * dt;
+  h.vy = Math.max(-218, Math.min(248, h.vy));
+  h.y += h.vy * dt;
+  return h;
+}
+function terrainAt(cols, x){
+  /* cols: array of {top, bottom} heights sampled every 32px, linear interp */
+  var i=Math.floor(x/32);
+  var f=(x - i*32)/32;
+  var a=cols[Math.max(0, Math.min(cols.length-1, i))];
+  var b=cols[Math.max(0, Math.min(cols.length-1, i+1))];
+  return { top: a.top + (b.top-a.top)*f, bottom: a.bottom + (b.bottom-a.bottom)*f };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, heli, bullets, foes, lives, dist, score, kills, worldX, cols, spawnT, fireCool, holding, rafId, lastTick;
+var best=+(localStorage.getItem('makenHeliBest')||0);
+el('best').textContent=best;
+function genCols(n, from){
+  var out=[];
+  var top=from ? from.top : 46, bottom=from ? from.bottom : 52;
+  for(var i=0;i<n;i++){
+    top=Math.max(26, Math.min(120, top + (Math.random()*44-22)));
+    bottom=Math.max(30, Math.min(130, bottom + (Math.random()*44-22)));
+    out.push({ top:top, bottom:bottom });
+  }
+  return out;
+}
+function hud(){
+  el('lives').textContent=lives;
+  el('dist').textContent=Math.floor(dist)+'m';
+  el('kills').textContent=kills;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenHeliBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false;
+  heli={ x:110, y:190, vy:0, invuln:0 };
+  bullets=[]; foes=[]; lives=3; dist=0; score=0; kills=0; worldX=0;
+  cols=genCols(60, null);
+  spawnT=1.2; fireCool=0; holding=false;
+  hud(); draw();
+}
+function groundY(x){ return H - terrainAt(cols, x + worldX).bottom; }
+function ceilY(x){ return terrainAt(cols, x + worldX).top; }
+function draw(){
+  /* sky */
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#f59e0b'); g.addColorStop(0.25,'#7c2d12'); g.addColorStop(0.55,'#1e3a5f'); g.addColorStop(1,'#0f2038');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fde68a'; ctx.beginPath(); ctx.arc(566, 54, 22, 0, Math.PI*2); ctx.fill();
+  /* terrain */
+  ctx.fillStyle='#3f2d20';
+  ctx.beginPath(); ctx.moveTo(0,0);
+  for(var x=0;x<=W;x+=16) ctx.lineTo(x, ceilY(x));
+  ctx.lineTo(W,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#2c4232';
+  ctx.beginPath(); ctx.moveTo(0,H);
+  for(var x2=0;x2<=W;x2+=16) ctx.lineTo(x2, groundY(x2));
+  ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  for(var x3=0;x3<=W;x3+=16){ var gy=groundY(x3); ctx.moveTo(x3, gy); ctx.lineTo(x3, gy+4); }
+  ctx.stroke();
+  /* foes */
+  foes.forEach(function(f){
+    ctx.font=(f.kind==='turret'?30:34)+'px Arial'; ctx.textAlign='center';
+    if(f.kind==='turret') ctx.fillText('🛡️', f.x, groundY(f.x)+4);
+    else { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(-1,1); ctx.fillText('🚁', 0, 10); ctx.restore(); }
+    if(f.hp < f.maxHp){
+      ctx.fillStyle='#111827'; ctx.fillRect(f.x-15, (f.kind==='turret'? groundY(f.x)-44 : f.y-26), 30, 4);
+      ctx.fillStyle='#4ade80'; ctx.fillRect(f.x-15, (f.kind==='turret'? groundY(f.x)-44 : f.y-26), 30*(f.hp/f.maxHp), 4);
+    }
+  });
+  /* bullets */
+  bullets.forEach(function(b){
+    ctx.fillStyle= b.enemy ? '#f87171' : '#fde047';
+    ctx.beginPath(); ctx.arc(b.x, b.y, 3.2, 0, Math.PI*2); ctx.fill();
+  });
+  /* player heli */
+  if(heli.invuln<=0 || Math.floor(performance.now()/90)%2===0){
+    ctx.save();
+    ctx.translate(heli.x, heli.y);
+    ctx.font='38px Arial'; ctx.textAlign='center';
+    ctx.fillText('🚁', 0, 12);
+    ctx.restore();
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(lives<=0 ? '💥 MISSION FAILED' : '🚁 HELICOPTER SHOOTING', W/2, H/2-12);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(lives<=0 ? 'You flew '+Math.floor(dist)+'m · score '+score+' — press START to fly again' : 'Press START MISSION — hold to climb, F to fire', W/2, H/2+16);
+  }
+}
+function crash(why){
+  lives--;
+  beep(120,0.3,'sawtooth',0.08);
+  if(lives<=0){
+    playing=false;
+    el('msg').textContent='💥 '+why+' Final score: '+score+' ('+Math.floor(dist)+'m).';
+  } else {
+    el('msg').textContent='💥 '+why+' '+lives+' lives left — keep flying!';
+    heli.y=H/2; heli.vy=0; heli.invuln=1.8;
+    foes=foes.filter(function(f){ return f.x > heli.x+150; });
+  }
+  hud();
+}
+function fire(){
+  if(!playing || fireCool>0) return;
+  fireCool=0.22;
+  bullets.push({ x:heli.x+24, y:heli.y+4, vx:430, vy:26, enemy:false });
+  beep(240,0.05,'square',0.04);
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var speed=118 + dist*0.012;
+  worldX += speed*dt;
+  dist += speed*dt/9;
+  score = Math.floor(dist) + kills*100;
+  /* extend terrain */
+  while(cols.length*32 < worldX + W + 200){
+    var more=genCols(24, cols[cols.length-1]);
+    cols=cols.concat(more);
+  }
+  if(worldX > 32*20){ /* recycle */
+    cols.splice(0, 20);
+    worldX -= 32*20;
+    foes.forEach(function(f){ f.wx -= 32*20; });
+  }
+  heliStep(heli, holding, dt);
+  if(heli.invuln>0) heli.invuln-=dt;
+  if(fireCool>0) fireCool-=dt;
+  /* terrain collision */
+  var gy=groundY(heli.x), cy=ceilY(heli.x);
+  if(heli.invuln<=0 && (heli.y+13 >= gy || heli.y-13 <= cy)){
+    crash(heli.y+13>=gy ? 'You hit the ground!' : 'You scraped the ceiling!');
+    if(!playing){ draw(); return; }
+  }
+  heli.y=Math.max(14, Math.min(H-14, heli.y));
+  /* spawns */
+  spawnT-=dt;
+  if(spawnT<=0){
+    spawnT=1.1+Math.random()*1.1;
+    var wx=worldX + W + 60;
+    if(Math.random()<0.55){
+      foes.push({ kind:'turret', wx:wx, x:0, hp:1, maxHp:1, fireT:0.8+Math.random() });
+    } else {
+      foes.push({ kind:'chopper', wx:wx, x:0, y:60+Math.random()*180, hp:2, maxHp:2, fireT:1+Math.random() });
+    }
+  }
+  foes.forEach(function(f){
+    f.x = f.wx - worldX;
+    if(f.kind==='chopper') f.y += Math.sin((worldX+f.wx)/160)*14*dt;
+    f.fireT-=dt;
+    if(f.fireT<=0 && f.x < W && f.x > heli.x+40){
+      f.fireT=1.6+Math.random()*1.2;
+      var fy= f.kind==='turret' ? groundY(f.x)-26 : f.y;
+      var dx=heli.x-f.x, dy=heli.y-fy, len=Math.hypot(dx,dy)||1;
+      bullets.push({ x:f.x-10, y:fy, vx:dx/len*250, vy:dy/len*250, enemy:true });
+    }
+  });
+  foes=foes.filter(function(f){ return f.x > -50; });
+  /* bullets */
+  var keep=[];
+  bullets.forEach(function(b){
+    b.x += b.vx*dt;
+    b.y += b.vy*dt;
+    if(b.x<-14 || b.x>W+24 || b.y<0 || b.y>H) return;
+    if(b.enemy){
+      if(heli.invuln<=0 && Math.hypot(b.x-heli.x, b.y-heli.y) < 19){
+        crash('Shot down by enemy fire!');
+        return;
+      }
+      keep.push(b);
+      return;
+    }
+    var hit=false;
+    for(var i=0;i<foes.length;i++){
+      var f=foes[i];
+      var fy= f.kind==='turret' ? groundY(f.x)-14 : f.y;
+      if(Math.abs(b.x-f.x)<19 && Math.abs(b.y-fy)<17){
+        hit=true;
+        f.hp--;
+        if(f.hp<=0){
+          kills++;
+          el('msg').textContent= f.kind==='turret' ? '💥 Turret destroyed! +100' : '💥 Enemy chopper down! +100';
+          beep(740,0.09,'sine',0.06);
+          foes.splice(i,1);
+        }
+        break;
+      }
+    }
+    if(!hit) keep.push(b);
+  });
+  bullets=keep;
+  /* chopper body collision */
+  if(heli.invuln<=0){
+    for(var j=0;j<foes.length;j++){
+      var f2=foes[j];
+      if(f2.kind==='chopper' && Math.hypot(f2.x-heli.x, f2.y-heli.y) < 30){
+        foes.splice(j,1);
+        crash('Mid-air collision!');
+        break;
+      }
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function setHold(v){ holding=v; }
+cvs.addEventListener('mousedown', function(){ setHold(true); });
+document.addEventListener('mouseup', function(){ setHold(false); });
+cvs.addEventListener('touchstart', function(e){ setHold(true); e.preventDefault(); }, {passive:false});
+cvs.addEventListener('touchend', function(){ setHold(false); });
+document.addEventListener('keydown', function(e){
+  if(e.code==='KeyW' || e.code==='ArrowUp' || e.code==='Space') setHold(true);
+  if(e.code==='KeyF') fire();
+  if(['ArrowUp','ArrowDown','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){
+  if(e.code==='KeyW' || e.code==='ArrowUp' || e.code==='Space') setHold(false);
+});
+el('fireBtn').addEventListener('click', fire);
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🚁 Airborne! Hold to climb — watch the valley walls.';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ heliStep:heliStep, terrainAt:terrainAt };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
