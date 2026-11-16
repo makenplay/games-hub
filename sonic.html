@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fast Runner Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a sonic-style fast runner free online. Build blistering speed, grab rings, blast through the loop-de-loop and hit the goal. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#2563eb 0%,#38bdf8 55%,#7dd3fc 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.jump { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>💨 FAST RUNNER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">ZONE <b id="zone">1 / 2</b></div>
+  <div class="stat">💍 <b id="rings">0</b></div>
+  <div class="stat">SPEED <b id="speed">0</b></div>
+  <div class="stat">⏱️ <b id="time">0.0s</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Hold ▶ to build speed. Rings protect you: get hit with rings and you drop them — get hit with none and it's over!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="rightBtn">▶ RUN</button>
+  <button class="btn jump" id="jumpBtn">⬆ JUMP</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Speed is life: the loop-de-loop only works FAST (300+) · springs bounce you up · spikes and crabs cost rings</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Fast Runner</h2>
+  <p>A momentum runner in the classic hedgehog style: rolling green hills, golden rings, spring pads — and a full loop-de-loop that only works if you hit it at serious speed. Two zones, one goal post, zero brakes.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Hold ▶ (D) to accelerate — speed builds gradually and hills feed it. Jump with SPACE/W. Collect rings: they are your shield, and taking a hit scatters them instead of ending the run; a hit with zero rings ends it. Springs launch you to high routes full of rings. Reach the goal post to clear the zone.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Momentum physics — downhill speed, uphill drag, airborne control</li>
+    <li>A working loop-de-loop with a minimum entry speed</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* zone terrain polylines + features */
+var ZONES=[
+  {
+    pts:[[0,320],[420,320],[560,268],[760,268],[900,320],[1250,320],[1400,262],[1620,262],[1760,320],[2150,320],[2300,272],[2480,320],[2900,320]],
+    loop:{ x:1020, r:74 },
+    rings:[300,520,700,960,1200,1500,1900,2050,2350,2600],
+    springs:[{x:1330}],
+    hazards:[{x:1980,type:'spike'},{x:2240,type:'crab'}],
+    goal:2820
+  },
+  {
+    pts:[[0,320],[360,320],[500,252],[700,320],[980,320],[1130,258],[1330,258],[1480,320],[1850,320],[1990,246],[2180,320],[2560,320],[2700,262],[2900,320],[3300,320]],
+    loop:{ x:1560, r:74 },
+    rings:[260,620,880,1180,1700,2080,2400,2780,3050],
+    springs:[{x:760},{x:2280}],
+    hazards:[{x:900,type:'spike'},{x:1650,type:'crab'},{x:2450,type:'spike'}],
+    goal:3220
+  }
+];
+var LOOP_MIN_SPEED=295;
+/* ---------- pure logic (testable) ---------- */
+function groundYAt(zone, x){
+  var pts=zone.pts;
+  /* inside the loop span, the ground dips out (loop takes over) */
+  if(x<=pts[0][0]) return pts[0][1];
+  for(var i=0;i<pts.length-1;i++){
+    var a=pts[i], b=pts[i+1];
+    if(x>=a[0] && x<=b[0]){
+      var t=(x-a[0])/((b[0]-a[0])||1);
+      return a[1] + (b[1]-a[1])*t;
+    }
+  }
+  return pts[pts.length-1][1];
+}
+function canLoop(speed){
+  return Math.abs(speed) >= LOOP_MIN_SPEED;
+}
+function ringLossOnHit(rings){
+  return rings>0 ? 0 : -1; /* -1 = run over */
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, zoneIdx, zone, player, camX, rings, score, timeMs, finished, keys, invulnT, loopState, scattered, rafId, lastTick;
+var best=+(localStorage.getItem('makenSonicBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('zone').textContent=Math.min(2, zoneIdx+1)+' / 2';
+  el('rings').textContent=rings;
+  el('speed').textContent=Math.abs(Math.round(player.vx));
+  el('time').textContent=(timeMs/1000).toFixed(1)+'s';
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenSonicBest',best); }
+  el('best').textContent=best;
+}
+function loadZone(){
+  zone=ZONES[zoneIdx];
+  player={ x:60, y:groundYAt(zone, 60)-16, vx:0, vy:0, grounded:true, spin:0 };
+  camX=0; loopState=null; scattered=[];
+  zone._rings=zone.rings.map(function(x){ return { x:x, y:groundYAt(zone, x)-44, taken:false }; });
+  zone._hazards=zone.hazards.map(function(h){ return { x:h.x, type:h.type, y:groundYAt(zone, h.x), hit:false }; });
+}
+function reset(){
+  playing=false; finished=false;
+  zoneIdx=0; rings=0; score=0; timeMs=0; invulnT=0;
+  keys={};
+  loadZone();
+  hud(); draw();
+}
+function draw(){
+  /* checkered hills backdrop */
+  ctx.fillStyle='#22c55e';
+  ctx.beginPath(); ctx.moveTo(0, 330);
+  for(var bx=0; bx<=W; bx+=32){
+    var wx=bx + camX*0.4;
+    ctx.lineTo(bx, 286 - Math.abs(Math.sin(wx/280))*54);
+  }
+  ctx.lineTo(W, 400); ctx.lineTo(0, 400); ctx.closePath(); ctx.fill();
+  /* ground */
+  ctx.fillStyle='#d97706';
+  ctx.beginPath();
+  ctx.moveTo(-4, groundYAt(zone, camX-4));
+  for(var x=0;x<=W;x+=8) ctx.lineTo(x, groundYAt(zone, camX+x));
+  ctx.lineTo(W+4, H); ctx.lineTo(-4, H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#4ade80';
+  ctx.beginPath();
+  ctx.moveTo(-4, groundYAt(zone, camX-4)-4);
+  for(var x2=0;x2<=W;x2+=8) ctx.lineTo(x2, groundYAt(zone, camX+x2)-4);
+  for(var x3=W;x3>=0;x3-=8) ctx.lineTo(x3, groundYAt(zone, camX+x3)+7);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(120,60,10,0.35)';
+  for(var cx=Math.floor(camX/44)*44; cx<camX+W+44; cx+=44){
+    ctx.fillRect(cx-camX, groundYAt(zone, cx)+16, 20, 12);
+  }
+  /* loop ring */
+  var lp=zone.loop, lx=lp.x-camX, lgy=groundYAt(zone, lp.x);
+  if(lx>-180 && lx<W+180){
+    ctx.strokeStyle='#9ca3af'; ctx.lineWidth=13;
+    ctx.beginPath(); ctx.arc(lx, lgy-lp.r, lp.r, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(lx, lgy-lp.r, lp.r+7, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+    ctx.fillText('LOOP', lx, lgy-lp.r*2-14);
+  }
+  /* springs */
+  zone.springs.forEach(function(s){
+    var sx=s.x-camX;
+    if(sx<-20 || sx>W+20) return;
+    var gy=groundYAt(zone, s.x);
+    ctx.fillStyle='#dc2626'; ctx.fillRect(sx-11, gy-9, 22, 9);
+    ctx.fillStyle='#facc15'; ctx.fillRect(sx-11, gy-12, 22, 4);
+  });
+  /* rings */
+  zone._rings.forEach(function(r){
+    if(r.taken) return;
+    var sx=r.x-camX;
+    if(sx<-20 || sx>W+20) return;
+    ctx.strokeStyle='#facc15'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(sx, r.y + Math.sin(performance.now()/260 + r.x)*2.4, 8, 0, Math.PI*2); ctx.stroke();
+  });
+  scattered.forEach(function(r){
+    var sx=r.x-camX;
+    ctx.strokeStyle='rgba(250,204,21,0.8)'; ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.arc(sx, r.y, 7, 0, Math.PI*2); ctx.stroke();
+  });
+  /* hazards */
+  zone._hazards.forEach(function(h){
+    var sx=h.x-camX;
+    if(sx<-30 || sx>W+30) return;
+    if(h.type==='spike'){
+      ctx.fillStyle='#e5e7eb';
+      for(var i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.moveTo(sx-12+i*9, h.y);
+        ctx.lineTo(sx-7.5+i*9, h.y-17);
+        ctx.lineTo(sx-3+i*9, h.y);
+        ctx.closePath(); ctx.fill();
+      }
+    } else {
+      ctx.fillStyle='#ef4444';
+      ctx.beginPath(); ctx.arc(sx, h.y-10, 11, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(sx-4, h.y-13, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx+4, h.y-13, 3, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#ef4444'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(sx-11, h.y-6); ctx.lineTo(sx-17, h.y-14); ctx.moveTo(sx+11, h.y-6); ctx.lineTo(sx+17, h.y-14); ctx.stroke();
+    }
+  });
+  /* goal post */
+  var gx=zone.goal-camX;
+  if(gx>-30 && gx<W+40){
+    var gy=groundYAt(zone, zone.goal);
+    ctx.fillStyle='#6b7280'; ctx.fillRect(gx-3, gy-86, 6, 86);
+    ctx.fillStyle='#facc15';
+    ctx.beginPath(); ctx.arc(gx, gy-92, 12, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111827'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+    ctx.fillText('★', gx, gy-88);
+  }
+  /* player: blue blur ball when fast, runner when slow */
+  var px=player.x-camX, py=player.y;
+  var sp=Math.abs(player.vx);
+  if(sp>150 || !player.grounded){
+    player.spin += sp*0.0022;
+    ctx.save();
+    ctx.translate(px, py-2);
+    ctx.rotate(player.spin);
+    ctx.fillStyle='#2563eb';
+    ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fcd9b8';
+    ctx.beginPath(); ctx.arc(0, 0, 6.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#93c5fd';
+    ctx.fillRect(-15, -3, 7, 6); ctx.fillRect(8, -3, 7, 6);
+    ctx.restore();
+  } else {
+    ctx.fillStyle='#2563eb';
+    ctx.beginPath(); ctx.arc(px, py-12, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fcd9b8';
+    ctx.beginPath(); ctx.arc(px+3, py-11, 5.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1d4ed8';
+    [-8,-3,3,8].forEach(function(o){
+      ctx.beginPath(); ctx.moveTo(px-2, py-19); ctx.lineTo(px+o, py-27-Math.abs(o)); ctx.lineTo(px+2, py-18); ctx.closePath(); ctx.fill();
+    });
+    ctx.fillStyle='#dc2626';
+    var runPh=Math.floor(performance.now()/90)%2===0;
+    ctx.fillRect(px-8, py-1, 7, 3.4); ctx.fillRect(px+2, py-1, 7, 3.4);
+    if(runPh){ ctx.fillRect(px-9, py-3, 7, 3.4); } else { ctx.fillRect(px+3, py-3, 7, 3.4); }
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(finished ? '🏆 TOO FAST — YOU WIN!' : '💨 FAST RUNNER', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'Final score '+score+' in '+(timeMs/1000).toFixed(1)+'s — press START to run again' : 'Press START — 2 zones, one loop-de-loop each', W/2, H/2+18);
+  }
+}
+function hitHazard(){
+  if(invulnT>0) return;
+  if(ringLossOnHit(rings) === -1){
+    playing=false;
+    el('msg').textContent='💥 Hit with no rings — run over! Score: '+score+'.';
+    beep(140,0.3,'sawtooth',0.08);
+    draw();
+    return;
+  }
+  var lost=Math.min(rings, 12);
+  for(var i=0;i<lost;i++){
+    scattered.push({ x:player.x, y:player.y-16, vx:(Math.random()*2-1)*130, vy:-160-Math.random()*130, t:2.6 });
+  }
+  el('msg').textContent='💍 Ouch! You dropped '+lost+' rings — grab them back!';
+  rings=0;
+  invulnT=1.4;
+  player.vx = -player.vx*0.3;
+  beep(700,0.16,'square',0.06);
+  hud();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeMs += dt*1000;
+  if(invulnT>0) invulnT-=dt;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var jump=keys.Space || keys.KeyW || keys.ArrowUp || keys.__jump;
+  var lp=zone.loop;
+  if(loopState){
+    /* ride the loop: pos = centre + r*(sin t, cos t); t=0 is the bottom of the circle, t=2PI completes it */
+    var t=loopState.t + (player.vx/lp.r)*dt;
+    loopState.t=t;
+    var cxp=lp.x + Math.sin(t)*lp.r;
+    var cyp=(groundYAt(zone, lp.x)-lp.r) + Math.cos(t)*lp.r;
+    player.x=cxp;
+    player.y=cyp-2;
+    if(t >= Math.PI*2){
+      loopState=null;
+      player.x = lp.x + lp.r + 6;
+      player.y = groundYAt(zone, player.x)-16;
+      player.grounded=true;
+      score += 100;
+      el('msg').textContent='🌀 LOOP-DE-LOOP! +100 pts!';
+      beep(990,0.14,'sine',0.07);
+    }
+    camX=Math.max(0, Math.min(zone.goal-W+120, player.x-210));
+    hud(); draw();
+    if(playing) rafId=requestAnimationFrame(loop);
+    return;
+  }
+  var gy=groundYAt(zone, player.x);
+  var slope=Math.atan2(groundYAt(zone, player.x+16) - groundYAt(zone, player.x-16), 32);
+  if(player.grounded){
+    if(right) player.vx += 300*dt;
+    if(left) player.vx -= 340*dt;
+    player.vx += Math.sin(slope)*260*dt;   /* hills feed speed */
+    player.vx *= Math.pow(0.55, dt);
+    player.vx=Math.max(-190, Math.min(430, player.vx));
+    player.x += player.vx*dt;
+    player.y = groundYAt(zone, player.x)-16;
+    /* launch off crest */
+    var ahead=groundYAt(zone, player.x+18);
+    if(ahead - (player.y+16) > 13 && Math.abs(player.vx)>70){
+      player.grounded=false;
+      player.vy=-(ahead-(player.y+16))*1.25;
+    }
+    if(jump){
+      player.vy=-505;
+      player.grounded=false;
+      beep(540,0.06,'square',0.04);
+    }
+    /* enter loop? */
+    if(Math.abs(player.x - (lp.x - lp.r)) < 10 && player.vx > 40){
+      if(canLoop(player.vx)){
+        loopState={ t:0, a:0 };
+        el('msg').textContent='🌀 Into the loop… hold on!';
+      } else {
+        el('msg').textContent='🐌 Too slow for the loop! Build speed (300+) and try again.';
+        player.vx = -60;
+      }
+    }
+    /* springs */
+    zone.springs.forEach(function(s){
+      if(Math.abs(player.x - s.x) < 15 && Math.abs(player.y+16 - groundYAt(zone, s.x)) < 12){
+        player.vy=-690;
+        player.grounded=false;
+        el('msg').textContent='🔴 Spring!';
+        beep(760,0.09,'sine',0.06);
+      }
+    });
+  } else {
+    player.vy += 1250*dt;
+    if(right) player.vx += 130*dt;
+    if(left) player.vx -= 130*dt;
+    player.x += player.vx*dt;
+    player.y += player.vy*dt;
+    var gy2=groundYAt(zone, player.x)-16;
+    if(player.y>=gy2 && player.vy>0){
+      player.y=gy2;
+      player.grounded=true;
+      player.vy=0;
+    }
+  }
+  if(player.x<20) player.x=20;
+  /* rings */
+  zone._rings.forEach(function(r){
+    if(!r.taken && Math.hypot(player.x-r.x, (player.y-8)-r.y) < 25){
+      r.taken=true; rings++; score+=10;
+      beep(1250,0.05,'sine',0.05);
+    }
+  });
+  scattered=scattered.filter(function(r){
+    r.t-=dt;
+    r.x+=r.vx*dt; r.y+=r.vy*dt; r.vy+=700*dt;
+    var g=groundYAt(zone, r.x)-8;
+    if(r.y>g){ r.y=g; r.vy*=-0.5; }
+    if(r.t<1.9 && Math.hypot(player.x-r.x, player.y-r.y)<24){
+      rings++; score+=10;
+      return false;
+    }
+    return r.t>0;
+  });
+  /* hazards */
+  zone._hazards.forEach(function(h){
+    if(Math.abs(player.x - h.x) < 17 && Math.abs((player.y+16) - h.y) < 20 && player.grounded){
+      hitHazard();
+    } else if(h.type==='crab' && Math.abs(player.x-h.x)<15 && Math.abs(player.y-h.y)<26 && !player.grounded && player.vy<0){
+      /* rising past a crab is fine */
+    } else if(h.type==='crab' && Math.abs(player.x-h.x)<16 && Math.abs((player.y+16)-h.y)<24){
+      hitHazard();
+    }
+  });
+  /* goal */
+  if(player.x >= zone.goal){
+    score += 200 + rings*5;
+    zoneIdx++;
+    if(zoneIdx>=ZONES.length){
+      playing=false; finished=true;
+      el('msg').textContent='🏆 Both zones cleared! Score '+score+' in '+(timeMs/1000).toFixed(1)+'s.';
+      beep(980,0.2,'sine',0.07);
+    } else {
+      el('msg').textContent='🏁 Zone 1 cleared! Zone 2 — faster, spikier.';
+      beep(880,0.15,'sine',0.06);
+      loadZone();
+    }
+    hud(); draw();
+    if(playing) rafId=requestAnimationFrame(loop);
+    return;
+  }
+  camX=Math.max(0, Math.min(zone.goal-W+120, player.x-210));
+  score += dt*1.5;
+  score=Math.floor(score);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('rightBtn','__right'); holdBtn('leftBtn','__left'); holdBtn('jumpBtn','__jump');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='💨 GO! Hold ▶ and build that speed!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ ZONES:ZONES, LOOP_MIN_SPEED:LOOP_MIN_SPEED, groundYAt:groundYAt, canLoop:canLoop, ringLossOnHit:ringLossOnHit };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
