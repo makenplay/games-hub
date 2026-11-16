@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Train Driving Simulator Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play train simulator free online. Drive the express, obey the signals and stop perfectly at every station platform. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#87b5d9 0%,#bcd7ea 62%,#5d7a4a 62.2%,#4a6339 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:64px; height:50px; font-size:15px; font-weight:700; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🚆 TRAIN SIMULATOR</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SPEED <b id="speed">0</b> km/h</div>
+  <div class="stat">NEXT STATION <b id="nextst">—</b></div>
+  <div class="stat">PERFECT STOPS <b id="stops">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">RATING <b id="lives">⭐⭐⭐</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Press START — stop the train fully inside each green platform zone. Never pass a 🔴 signal!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START TRAIN</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pGas">⏫ GAS</button><button id="pBrake">⏬ BRAKE</button><button id="pStop">🛑 STOP</button>
+</div>
+<div class="keys">↑ throttle · ↓ brake · brake early — a heavy train stops slowly!</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, TRACK_Y=318, TRAIN_X=120, PX_M=2.2; /* pixels per meter on screen */
+/* ---------- pure logic (testable) ---------- */
+function stopPoints(offsetMeters){
+  var a=Math.abs(offsetMeters);
+  if(a<=4) return 300;
+  if(a<=10) return 200;
+  if(a<=18) return 100;
+  return 0; /* outside the platform = missed */
+}
+function isInsideZone(offsetMeters){ return Math.abs(offsetMeters) <= 18; }
+function scoreFor(dist, stopScore){ return Math.floor(dist/2) + stopScore; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+function whistle(){ beep(620,0.16,'sine',0.07); setTimeout(function(){ beep(780,0.22,'sine',0.07); }, 130); }
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var dist, speedKmh, throttle, events, nextIdx, stops, stopScore, stars, running, lastTs, stoppedAtStation, gameOverFlag;
+var best=+(localStorage.getItem('makenTrainBest')||0);
+el('best').textContent=best;
+function buildRoute(){
+  events=[]; var d=260;
+  for(var i=0;i<40;i++){
+    events.push({ type:'station', at:d, done:false });
+    if(i%2===0) events.push({ type:'signal', at:d+120+Math.random()*60, redUntil:0, passed:false, cycle:Math.random()*4000 });
+    if(i%3===2) events.push({ type:'crossing', at:d+190+Math.random()*40, passed:false, carPhase:Math.random()*3000 });
+    d += 300 + Math.random()*160;
+  }
+  events.sort(function(a,b){ return a.at-b.at; });
+  nextIdx=0;
+}
+function reset(){
+  dist=0; speedKmh=0; throttle=0; stops=0; stopScore=0; stars=3;
+  stoppedAtStation=false; gameOverFlag=false;
+  buildRoute();
+}
+function hud(){
+  el('speed').textContent=Math.round(speedKmh);
+  var nx=null;
+  for(var i=0;i<events.length;i++){ if(events[i].type==='station' && !events[i].done){ nx=events[i]; break; } }
+  el('nextst').textContent = nx ? Math.max(0, Math.round(nx.at - dist))+'m' : '—';
+  el('stops').textContent=stops;
+  el('lives').textContent='⭐'.repeat(Math.max(0,stars));
+  var sc=scoreFor(dist, stopScore);
+  el('score').textContent=sc;
+  if(sc>best){ best=sc; localStorage.setItem('makenTrainBest',best); }
+  el('best').textContent=best;
+}
+function sx(worldDist){ return TRAIN_X + (worldDist - dist) * PX_M; }
+function draw(now){
+  /* hills + trees */
+  ctx.fillStyle='#6d9c52';
+  for(var i=0;i<7;i++){ var hx=((i*140 - (dist*PX_M*0.3)%140)+W)%W - 40; ctx.beginPath(); ctx.arc(hx, TRACK_Y-72, 52, Math.PI, 0); ctx.fill(); }
+  ctx.font='26px Arial'; ctx.textAlign='center';
+  for(var t=0;t<6;t++){ var tx=((t*128 - (dist*PX_M)%128)+W)%W; ctx.fillText('🌲', tx, TRACK_Y-64); }
+  /* ground + track */
+  ctx.fillStyle='#7a6248'; ctx.fillRect(0, TRACK_Y+16, W, H-TRACK_Y);
+  ctx.fillStyle='#555'; ctx.fillRect(0, TRACK_Y+8, W, 6);
+  ctx.fillStyle='#8a8a8a';
+  for(var s=0;s<16;s++){ var slx=((s*44 - (dist*PX_M)%44)+W)%W; ctx.fillRect(slx, TRACK_Y+16, 26, 5); }
+  /* events */
+  events.forEach(function(ev){
+    var x=sx(ev.at);
+    if(x < -90 || x > W+90) return;
+    if(ev.type==='station'){
+      var zx1=sx(ev.at-18), zx2=sx(ev.at+18);
+      ctx.fillStyle = ev.done ? 'rgba(148,163,184,0.5)' : 'rgba(74,222,128,0.4)';
+      ctx.fillRect(zx1, TRACK_Y-4, zx2-zx1, 12);
+      ctx.fillStyle='#334155'; ctx.fillRect(x-46, TRACK_Y-64, 92, 46);
+      ctx.fillStyle='#f1f5f9'; ctx.font='bold 11px Arial'; ctx.fillText('STATION', x, TRACK_Y-44);
+      ctx.font='20px Arial'; ctx.fillText('🧍🧍', x, TRACK_Y-24);
+      ctx.fillStyle='#4ade80'; ctx.font='bold 10px Arial'; ctx.fillText('▼ STOP ZONE ▼', x, TRACK_Y-70);
+    } else if(ev.type==='signal'){
+      var red = signalIsRed(ev, now);
+      ctx.fillStyle='#1f2937'; ctx.fillRect(x-3, TRACK_Y-58, 6, 58);
+      ctx.fillStyle = red ? '#ef4444' : '#22c55e';
+      ctx.beginPath(); ctx.arc(x, TRACK_Y-64, 9, 0, Math.PI*2); ctx.fill();
+      ctx.font='13px Arial'; ctx.fillText(red ? '🔴' : '🟢', x, TRACK_Y-80);
+    } else if(ev.type==='crossing'){
+      ctx.fillStyle='#fbbf24'; ctx.font='18px Arial'; ctx.fillText('⚠️', x, TRACK_Y-70);
+      var carOn = crossingCarOn(ev, now);
+      if(carOn){ ctx.font='30px Arial'; ctx.fillText('🚗', x, TRACK_Y+2); }
+    }
+  });
+  /* the train */
+  ctx.font='64px Arial'; ctx.textAlign='center';
+  ctx.fillText('🚆', TRAIN_X, TRACK_Y+6);
+  ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.font='bold 11px Arial';
+  ctx.fillText(Math.round(speedKmh)+' km/h', TRAIN_X, TRACK_Y-52);
+}
+function signalIsRed(ev, now){
+  /* red for 2.6s, green for 3.4s, repeating */
+  var cyc = (now + ev.cycle) % 6000;
+  return cyc < 2600;
+}
+function crossingCarOn(ev, now){
+  var cyc = (now + ev.carPhase) % 3600;
+  return cyc < 900; /* car on the crossing briefly */
+}
+function loseStar(reason, now){
+  stars--; hud(); beep(150,0.35,'sawtooth',0.08);
+  if(stars<=0){
+    running=false; gameOverFlag=true;
+    el('msg').textContent='⭐ Rating lost! '+reason+' Final score '+scoreFor(dist,stopScore)+' — press START to drive again.';
+    el('startBtn').textContent='▶ DRIVE AGAIN';
+    draw(now); return false;
+  }
+  el('msg').textContent='⭐ Lost a star — '+reason;
+  return true;
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  /* physics: throttle accelerates, brake + drag slow */
+  speedKmh += throttle * 14 * (dt/1000) * 3.2;
+  speedKmh -= speedKmh * 0.12 * (dt/1000);
+  if(throttle < 0) speedKmh += throttle * 30 * (dt/1000) * 3.2; /* extra braking */
+  speedKmh = Math.max(0, Math.min(95, speedKmh));
+  var distDelta = speedKmh * 0.028 * step;
+  dist += distDelta;
+  /* station handling */
+  var st=null;
+  for(var i=0;i<events.length;i++){ if(events[i].type==='station' && !events[i].done){ st=events[i]; break; } }
+  if(st){
+    var offset = dist - st.at;
+    if(speedKmh < 0.6 && isInsideZone(offset) && !stoppedAtStation){
+      stoppedAtStation=true; st.done=true;
+      var pts=stopPoints(offset);
+      stopScore += pts;
+      if(pts>=200){ stops++; }
+      el('msg').textContent = pts===300 ? '🎯 PERFECT STOP! +300' : (pts>0 ? '✅ Stopped at the platform. +'+pts : '😐 Stopped at the very edge. +0');
+      if(pts===300) whistle(); else beep(700,0.1,'sine',0.06);
+      hud();
+    }
+    if(offset > 18 && !st.done){
+      st.done=true;
+      if(!loseStar('you rolled past the station without stopping!', now)) return;
+    }
+    if(Math.abs(offset) > 30) stoppedAtStation=false;
+  }
+  /* signals + crossings */
+  for(var j=0;j<events.length;j++){
+    var ev=events[j];
+    if(ev.passed) continue;
+    if(dist >= ev.at){
+      ev.passed=true;
+      if(ev.type==='signal' && signalIsRed(ev, now) && speedKmh > 4){
+        if(!loseStar('you passed a RED signal!', now)) return;
+      }
+      if(ev.type==='crossing' && crossingCarOn(ev, now) && speedKmh > 10){
+        if(!loseStar('you smashed through a crossing car!', now)) return;
+      }
+    }
+  }
+  hud(); draw(now);
+  requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp'){ throttle=1; e.preventDefault(); }
+  if(e.key==='ArrowDown'){ throttle=-1; e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e){
+  if(e.key==='ArrowUp' && throttle>0) throttle=0;
+  if(e.key==='ArrowDown' && throttle<0) throttle=0;
+});
+function holdBtn(id, val){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); throttle=val; }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); throttle=0; }, {passive:false});
+  b.addEventListener('mousedown', function(){ throttle=val; });
+  b.addEventListener('mouseup', function(){ throttle=0; });
+}
+holdBtn('pGas', 1); holdBtn('pBrake', -1);
+el('pStop').addEventListener('click', function(){ throttle=-1; setTimeout(function(){ if(throttle<0) throttle=0; }, 900); });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='🚆 All aboard! First station in 260m.';
+  hud(); whistle();
+  requestAnimationFrame(loop);
+});
+reset(); draw(0);
+if(typeof module!=='undefined') module.exports={ stopPoints:stopPoints, isInsideZone:isInsideZone, scoreFor:scoreFor };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

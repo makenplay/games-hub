@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Airplane Flight Simulator Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play flight simulator free online. Pilot your plane through the rings, grab stars, dodge the birds and never clip the mountains. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#7ec3ee 0%,#a8d4f5 55%,#d8ecfa 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:64px; height:50px; font-size:15px; font-weight:700; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>✈️ FLIGHT SIMULATOR</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">DISTANCE <b id="dist">0m</b></div>
+  <div class="stat">RINGS <b id="rings">0</b></div>
+  <div class="stat">STARS <b id="stars">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">LIVES <b id="lives">❤️❤️❤️</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Press TAKE OFF — fly through the ⭕ rings, grab ⭐ stars, dodge 🦅 birds!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ TAKE OFF</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pUp">⬆ CLIMB</button><button id="pDown">⬇ DIVE</button>
+</div>
+<div class="keys">Hold ↑ / W or touch CLIMB to climb · ↓ / S to dive · hitting a mountain ends the flight</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, PLANE_X=110;
+/* ---------- pure logic (testable) ---------- */
+function groundHeightAt(worldX){
+  /* deterministic rolling terrain: returns the y of the ground surface */
+  var h = 318
+    - Math.sin(worldX*0.004)*36
+    - Math.sin(worldX*0.0013+2)*44
+    - Math.sin(worldX*0.011+5)*10;
+  return h;
+}
+function ringPass(planeY, ringY){ return Math.abs(planeY - ringY) <= 34; }
+function hitTest(ax, ay, bx, by, r){ var dx=ax-bx, dy=ay-by; return dx*dx + dy*dy < r*r; }
+function scoreFor(dist, rings, stars){ return Math.floor(dist/3) + rings*100 + stars*25; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var planeY, vy, worldX, rings, stars, lives, items, running, lastTs, climb, dive, invincibleUntil, spawnX;
+var best=+(localStorage.getItem('makenPlaneBest')||0);
+el('best').textContent=best;
+function reset(){
+  planeY=170; vy=0; worldX=0; rings=0; stars=0; lives=3;
+  items=[]; climb=false; dive=false; invincibleUntil=0; spawnX=420;
+}
+function hud(){
+  el('dist').textContent=Math.floor(worldX)+'m';
+  el('rings').textContent=rings;
+  el('stars').textContent=stars;
+  el('lives').textContent='❤️'.repeat(Math.max(0,lives));
+  var sc=scoreFor(worldX, rings, stars);
+  el('score').textContent=sc;
+  if(sc>best){ best=sc; localStorage.setItem('makenPlaneBest',best); }
+  el('best').textContent=best;
+}
+function spawnAhead(){
+  while(spawnX < worldX + W + 300){
+    var roll=Math.random();
+    if(roll < 0.38){
+      var gy=groundHeightAt(spawnX);
+      items.push({ type:'ring', x:spawnX, y: 70 + Math.random()*Math.max(60, gy-150), done:false });
+    } else if(roll < 0.68){
+      items.push({ type:'star', x:spawnX, y: 60 + Math.random()*220, done:false });
+    } else {
+      items.push({ type:'bird', x:spawnX, y: 60 + Math.random()*230, done:false, flap:Math.random()*6 });
+    }
+    spawnX += 190 + Math.random()*170;
+  }
+}
+function draw(now){
+  /* clouds */
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  for(var i=0;i<6;i++){
+    var cx=((i*173 - (worldX*0.4)%173)+W)%W, cy=36+((i*53)%110);
+    ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI*2); ctx.arc(cx+18, cy+3, 13, 0, Math.PI*2); ctx.arc(cx-18, cy+4, 12, 0, Math.PI*2); ctx.fill();
+  }
+  /* terrain */
+  ctx.fillStyle='#5d7a4a';
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for(var x=0;x<=W;x+=8){ ctx.lineTo(x, groundHeightAt(worldX + x)); }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#48603a';
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for(var x2=0;x2<=W;x2+=8){ ctx.lineTo(x2, groundHeightAt(worldX + x2)+14); }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  /* items */
+  items.forEach(function(it){
+    var sx=it.x - worldX;
+    if(sx < -50 || sx > W+50) return;
+    ctx.textAlign='center';
+    if(it.type==='ring'){
+      ctx.strokeStyle = it.done ? 'rgba(74,222,128,0.9)' : 'rgba(239,68,68,0.9)';
+      ctx.lineWidth=5;
+      ctx.beginPath(); ctx.arc(sx, it.y, 34, 0, Math.PI*2); ctx.stroke();
+    } else if(it.type==='star'){
+      ctx.font='26px Arial'; ctx.fillText('⭐', sx, it.y+8);
+    } else {
+      ctx.font='28px Arial';
+      ctx.fillText('🦅', sx, it.y + Math.sin(now/160 + it.flap)*4 + 8);
+    }
+  });
+  /* plane */
+  var blink = running && now < invincibleUntil && Math.floor(now/120)%2===0;
+  if(!blink){
+    ctx.save();
+    ctx.translate(PLANE_X, planeY);
+    ctx.rotate(Math.max(-0.35, Math.min(0.35, vy*0.045)));
+    ctx.font='44px Arial'; ctx.textAlign='center';
+    ctx.fillText('✈️', 0, 14);
+    ctx.restore();
+  }
+}
+function endFlight(reason, now){
+  running=false;
+  el('msg').textContent=reason+' Final score '+scoreFor(worldX,rings,stars)+' — press TAKE OFF to fly again.';
+  el('startBtn').textContent='▶ FLY AGAIN';
+  draw(now);
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  var speed = 3.1 + Math.min(1.6, worldX/2600);
+  worldX += speed*step;
+  if(climb) vy -= 0.55*step;
+  else if(dive) vy += 0.55*step;
+  else vy *= 0.90;
+  vy = Math.max(-6.4, Math.min(6.4, vy));
+  planeY += vy*step;
+  if(planeY < 26){ planeY=26; vy=Math.max(0, vy); }
+  /* terrain collision = crash */
+  if(planeY + 16 >= groundHeightAt(worldX + PLANE_X)){
+    beep(110,0.5,'sawtooth',0.09);
+    endFlight('💥 You clipped the mountain!', now);
+    hud(); return;
+  }
+  spawnAhead();
+  for(var i=items.length-1;i>=0;i--){
+    var it=items[i], sx=it.x - worldX;
+    if(sx < -60){ items.splice(i,1); continue; }
+    if(it.done) continue;
+    if(it.type==='ring'){
+      if(Math.abs(sx - PLANE_X) < 6){
+        it.done=true;
+        if(ringPass(planeY, it.y)){ rings++; el('msg').textContent='⭕ Through the ring! +100'; beep(920,0.08,'sine',0.06); hud(); }
+        else { el('msg').textContent='😬 Missed the ring — line up your altitude!'; }
+      }
+    } else if(it.type==='star'){
+      if(hitTest(PLANE_X, planeY, sx, it.y, 30)){
+        it.done=true; items.splice(i,1); stars++; beep(1180,0.07,'sine',0.06); hud(); continue;
+      }
+    } else if(it.type==='bird'){
+      if(hitTest(PLANE_X, planeY, sx, it.y, 30) && now>=invincibleUntil){
+        it.done=true; items.splice(i,1);
+        lives--; beep(220,0.25,'sawtooth',0.07); hud();
+        if(lives<=0){ endFlight('🦅 Too many bird strikes — the plane went down!', now); return; }
+        el('msg').textContent='🦅 Bird strike! '+lives+' lives left.';
+        invincibleUntil=now+2000;
+        continue;
+      }
+    }
+  }
+  hud(); draw(now);
+  requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp' || e.key==='w' || e.key==='W'){ climb=true; e.preventDefault(); }
+  if(e.key==='ArrowDown' || e.key==='s' || e.key==='S'){ dive=true; e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e){
+  if(e.key==='ArrowUp' || e.key==='w' || e.key==='W') climb=false;
+  if(e.key==='ArrowDown' || e.key==='s' || e.key==='S') dive=false;
+});
+function holdBtn(id, set){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); set(true); }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); set(false); }, {passive:false});
+  b.addEventListener('mousedown', function(){ set(true); });
+  b.addEventListener('mouseup', function(){ set(false); });
+}
+holdBtn('pUp', function(v){ climb=v; });
+holdBtn('pDown', function(v){ dive=v; });
+cvs.addEventListener('touchstart', function(e){ climb=true; }, {passive:true});
+cvs.addEventListener('touchend', function(){ climb=false; }, {passive:true});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='✈️ Wheels up! Mind the mountains.';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); draw(0);
+if(typeof module!=='undefined') module.exports={ groundHeightAt:groundHeightAt, ringPass:ringPass, hitTest:hitTest, scoreFor:scoreFor };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
