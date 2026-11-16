@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sudoku — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Sudoku free online. Fresh unique-solution puzzles on Easy, Medium and Hard, with a timer, mistake counter and number pad. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .stat b.bad { color:#f87171; }
+  #board { display:grid; grid-template-columns:repeat(9, 46px); gap:0; justify-content:center; margin:4px 0; background:#0d1330; padding:6px; border:2px solid #26335f; border-radius:12px; }
+  .scell { width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-size:21px; font-weight:700; color:#dbe6ff; background:#131c42; border:1px solid #26335f; cursor:pointer; user-select:none; }
+  .scell.given { color:#7dd3fc; font-weight:900; background:#0e1738; cursor:default; }
+  .scell.sel { background:#3a2b07; box-shadow:inset 0 0 0 2px #facc15; }
+  .scell.peer { background:#1d2a5e; }
+  .scell.same { background:#14532d; color:#86efac; }
+  .scell.wrong { background:#7f1d1d; color:#fca5a5; }
+  .scell.br { border-right:2.5px solid #5b6b96; }
+  .scell.bb { border-bottom:2.5px solid #5b6b96; }
+  #pad { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin:5px 0; }
+  #pad button { width:46px; height:48px; font-size:19px; font-weight:800; border:none; border-radius:8px; background:#1e2a4a; color:#dbe6ff; cursor:pointer; }
+  #pad button:active { transform:scale(.93); }
+  #pad button.wide { width:97px; font-size:14px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔢 SUDOKU</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">❌ MISTAKES <b id="mistakes">0/3</b></div>
+  <div class="stat">FILLED <b id="filled">0/81</b></div>
+  <div class="stat">BEST (EASY) <b id="best">—</b></div>
+</div>
+
+<div id="board"></div>
+<div id="msg">Pick a difficulty and press NEW GAME. Every puzzle here has exactly one solution.</div>
+<div id="pad"></div>
+<div class="row">
+  <button class="btn diff" data-d="easy">😊 EASY</button>
+  <button class="btn diff" data-d="medium">😐 MEDIUM</button>
+  <button class="btn diff" data-d="hard">😤 HARD</button>
+</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW GAME</button>
+  <button class="btn" id="hintBtn">💡 HINT</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Tap a cell, then a number · wrong numbers flash red — 3 mistakes ends the game · keyboard 1-9 works too</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Sudoku</h2>
+  <p>The world's favourite number puzzle, generated fresh every game — and every puzzle is verified to have exactly one solution, so logic alone always wins. Fill the 9×9 grid so that every row, column and 3×3 box contains the digits 1 to 9 exactly once.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Choose Easy, Medium or Hard and press NEW GAME. Tap any empty cell, then tap a number on the pad (or type 1–9). A correct number locks in; a wrong one flashes red and counts as a mistake — three mistakes end the game. HINT fills one correct cell when you're stuck. Beat your best time on each difficulty.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Fresh unique-solution puzzles on three difficulties, generated on the spot</li>
+    <li>Row, column and box highlighting plus same-number tracking</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* ---------- pure logic (testable) ---------- */
+function isValidPlacement(grid, r, c, v){
+  for(var i=0;i<9;i++){
+    if(grid[r][i]===v && i!==c) return false;
+    if(grid[i][c]===v && i!==r) return false;
+  }
+  var br=r-r%3, bc=c-c%3;
+  for(var dr=0;dr<3;dr++) for(var dc=0;dc<3;dc++){
+    if((br+dr!==r || bc+dc!==c) && grid[br+dr][bc+dc]===v) return false;
+  }
+  return true;
+}
+function findEmpty(grid){
+  for(var r=0;r<9;r++) for(var c=0;c<9;c++) if(grid[r][c]===0) return [r, c];
+  return null;
+}
+function solve(grid){
+  var pos=findEmpty(grid);
+  if(!pos) return true;
+  for(var v=1;v<=9;v++){
+    if(isValidPlacement(grid, pos[0], pos[1], v)){
+      grid[pos[0]][pos[1]]=v;
+      if(solve(grid)) return true;
+      grid[pos[0]][pos[1]]=0;
+    }
+  }
+  return false;
+}
+function countSolutions(grid, cap){
+  var pos=findEmpty(grid);
+  if(!pos) return 1;
+  var total=0;
+  for(var v=1;v<=9;v++){
+    if(isValidPlacement(grid, pos[0], pos[1], v)){
+      grid[pos[0]][pos[1]]=v;
+      total+=countSolutions(grid, cap);
+      grid[pos[0]][pos[1]]=0;
+      if(total>=cap) return total;
+    }
+  }
+  return total;
+}
+function shuffled(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+function fillRandom(grid){
+  var pos=findEmpty(grid);
+  if(!pos) return true;
+  var order=shuffled([1,2,3,4,5,6,7,8,9]);
+  for(var i=0;i<9;i++){
+    var v=order[i];
+    if(isValidPlacement(grid, pos[0], pos[1], v)){
+      grid[pos[0]][pos[1]]=v;
+      if(fillRandom(grid)) return true;
+      grid[pos[0]][pos[1]]=0;
+    }
+  }
+  return false;
+}
+var GIVENS={ easy:40, medium:32, hard:27 };
+function generate(difficulty){
+  var full=[];
+  for(var r=0;r<9;r++){ full.push([]); for(var c=0;c<9;c++) full[r].push(0); }
+  fillRandom(full);
+  var solution=full.map(function(row){ return row.slice(); });
+  var puzzle=full.map(function(row){ return row.slice(); });
+  var target=81-GIVENS[difficulty];
+  var cells=[];
+  for(var i=0;i<81;i++) cells.push(i);
+  cells=shuffled(cells);
+  var removed=0;
+  for(var k=0;k<cells.length && removed<target;k++){
+    var rr=Math.floor(cells[k]/9), cc=cells[k]%9;
+    if(puzzle[rr][cc]===0) continue;
+    var backup=puzzle[rr][cc];
+    puzzle[rr][cc]=0;
+    var copy=puzzle.map(function(row){ return row.slice(); });
+    if(countSolutions(copy, 2)!==1){
+      puzzle[rr][cc]=backup;
+    } else removed++;
+  }
+  return { puzzle:puzzle, solution:solution, givens:81-removed };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var difficulty='easy', puzzle=null, solution=null, entries=null, given=null, sel=null, mistakes, playing, startTime, timerId, wrongFlash=null;
+function fmtTime(s){
+  return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+}
+function bestKey(){ return 'makenSudokuBest_'+difficulty; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? fmtTime(+b) : '—';
+  el('best').parentNode.firstChild.textContent='BEST ('+difficulty.toUpperCase()+') ';
+}
+function elapsed(){
+  return playing ? Math.floor((Date.now()-startTime)/1000) : 0;
+}
+function filledCount(){
+  var n=0;
+  for(var r=0;r<9;r++) for(var c=0;c<9;c++) if(entries[r][c]!==0) n++;
+  return n;
+}
+function hud(){
+  el('mistakes').textContent=mistakes+'/3';
+  el('mistakes').className= mistakes>0 ? 'bad' : '';
+  el('filled').textContent=(puzzle ? filledCount() : 0)+'/81';
+}
+function render(){
+  var board=el('board');
+  board.innerHTML='';
+  if(!puzzle){
+    for(var i=0;i<81;i++){
+      var d0=document.createElement('div');
+      d0.className='scell given'+(((i%9)===2||(i%9)===5)?' br':'')+((Math.floor(i/9)===2||Math.floor(i/9)===5)?' bb':'');
+      d0.textContent='';
+      board.appendChild(d0);
+    }
+    return;
+  }
+  var selVal= sel ? entries[sel[0]][sel[1]] : 0;
+  for(var r=0;r<9;r++) for(var c=0;c<9;c++){
+    var d=document.createElement('div');
+    d.className='scell'+(given[r][c] ? ' given' : '')+((c===2||c===5)?' br':'')+((r===2||r===5)?' bb':'');
+    if(sel){
+      if(sel[0]===r && sel[1]===c) d.className+=' sel';
+      else if(sel[0]===r || sel[1]===c || (Math.floor(sel[0]/3)===Math.floor(r/3) && Math.floor(sel[1]/3)===Math.floor(c/3))) d.className+=' peer';
+      if(selVal!==0 && entries[r][c]===selVal && !(sel[0]===r && sel[1]===c)) d.className+=' same';
+    }
+    if(wrongFlash && wrongFlash[0]===r && wrongFlash[1]===c) d.className+=' wrong';
+    d.textContent= entries[r][c]===0 ? '' : entries[r][c];
+    (function(rr, cc){
+      d.addEventListener('click', function(){
+        if(!playing || given[rr][cc]) return;
+        sel=[rr, cc];
+        render();
+      });
+    })(r, c);
+    board.appendChild(d);
+  }
+}
+function newGame(){
+  var gen=generate(difficulty);
+  puzzle=gen.puzzle; solution=gen.solution;
+  entries=puzzle.map(function(row){ return row.slice(); });
+  given=puzzle.map(function(row){ return row.map(function(v){ return v!==0; }); });
+  sel=null; mistakes=0; wrongFlash=null;
+  playing=true;
+  startTime=Date.now();
+  if(timerId) clearInterval(timerId);
+  timerId=setInterval(function(){ el('time').textContent=fmtTime(elapsed()); }, 500);
+  el('time').textContent='0:00';
+  el('msg').textContent='🔢 '+difficulty.toUpperCase()+' puzzle — '+gen.givens+' numbers given. Good luck!';
+  showBest();
+  hud(); render();
+}
+function placeNumber(v){
+  if(!playing || !sel) return;
+  var r=sel[0], c=sel[1];
+  if(given[r][c] || entries[r][c]===solution[r][c] && entries[r][c]!==0) return;
+  if(v===0){ entries[r][c]=0; render(); hud(); return; }
+  if(v===solution[r][c]){
+    entries[r][c]=v;
+    wrongFlash=null;
+    beep(760,0.05,'sine',0.045);
+    render(); hud();
+    if(filledCount()===81){
+      playing=false;
+      clearInterval(timerId);
+      var t=elapsed();
+      var prev=localStorage.getItem(bestKey());
+      var isBest= !prev || t<+prev;
+      if(isBest) localStorage.setItem(bestKey(), t);
+      el('msg').textContent='🎉 Sudoku solved in '+fmtTime(t)+' with '+mistakes+' mistake'+(mistakes===1?'':'s')+'!'+(isBest ? ' New best time!' : '');
+      beep(1180,0.2,'sine',0.06);
+      showBest();
+    }
+  } else {
+    mistakes++;
+    wrongFlash=[r, c];
+    entries[r][c]=v;
+    beep(160,0.14,'sawtooth',0.06);
+    render(); hud();
+    setTimeout(function(){
+      if(wrongFlash && wrongFlash[0]===r && wrongFlash[1]===c){
+        entries[r][c]=0; wrongFlash=null; render(); hud();
+      }
+    }, 650);
+    if(mistakes>=3){
+      playing=false;
+      clearInterval(timerId);
+      el('msg').textContent='💔 Three mistakes — game over! Press NEW GAME to try again.';
+      beep(130,0.3,'sawtooth',0.07);
+    } else {
+      el('msg').textContent='❌ '+v+' doesn\u2019t go there. Mistake '+mistakes+' of 3.';
+    }
+  }
+}
+/* number pad */
+(function buildPad(){
+  var pad=el('pad');
+  for(var v=1;v<=9;v++){
+    (function(n){
+      var b=document.createElement('button');
+      b.textContent=n;
+      b.addEventListener('click', function(){ placeNumber(n); });
+      pad.appendChild(b);
+    })(v);
+  }
+  var del=document.createElement('button');
+  del.textContent='⌫ ERASE';
+  del.className='wide';
+  del.addEventListener('click', function(){ placeNumber(0); });
+  pad.appendChild(del);
+})();
+document.addEventListener('keydown', function(e){
+  if(/^[1-9]$/.test(e.key)) placeNumber(+e.key);
+  else if(e.key==='Backspace' || e.key==='Delete'){ e.preventDefault(); placeNumber(0); }
+  else if(sel && e.key.indexOf('Arrow')===0){
+    e.preventDefault();
+    var r=sel[0], c=sel[1];
+    if(e.key==='ArrowUp') r=Math.max(0, r-1);
+    if(e.key==='ArrowDown') r=Math.min(8, r+1);
+    if(e.key==='ArrowLeft') c=Math.max(0, c-1);
+    if(e.key==='ArrowRight') c=Math.min(8, c+1);
+    sel=[r, c];
+    render();
+  }
+});
+document.querySelectorAll('.diff').forEach(function(b){
+  b.addEventListener('click', function(){
+    difficulty=b.getAttribute('data-d');
+    document.querySelectorAll('.diff').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    showBest();
+    el('msg').textContent='Difficulty set to '+difficulty.toUpperCase()+' — press NEW GAME.';
+  });
+});
+el('startBtn').addEventListener('click', newGame);
+el('hintBtn').addEventListener('click', function(){
+  if(!playing) return;
+  var empties=[];
+  for(var r=0;r<9;r++) for(var c=0;c<9;c++) if(entries[r][c]!==solution[r][c]) empties.push([r, c]);
+  if(!empties.length) return;
+  var pick=empties[Math.floor(Math.random()*empties.length)];
+  entries[pick[0]][pick[1]]=solution[pick[0]][pick[1]];
+  sel=pick;
+  el('msg').textContent='💡 Filled in a '+solution[pick[0]][pick[1]]+' for you.';
+  beep(880,0.07,'sine',0.05);
+  render(); hud();
+  if(filledCount()===81) placeNumber(solution[pick[0]][pick[1]]);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+document.querySelector('.diff').classList.add('on');
+mistakes=0;
+showBest();
+hud(); render();
+if(typeof module!=='undefined') module.exports={ isValidPlacement:isValidPlacement, solve:solve, countSolutions:countSolutions, generate:generate, GIVENS:GIVENS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

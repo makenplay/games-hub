@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Crossword Mini — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Crossword Mini free online. Three hand-made mini crosswords with clues — tap a clue, type the letters, check your grid. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #grid { display:grid; grid-template-columns:repeat(6, 52px); gap:3px; justify-content:center; margin:4px 0; }
+  .cell { width:52px; height:52px; border-radius:7px; position:relative; }
+  .cell.block { background:transparent; }
+  .cell.open { background:#131c42; border:2px solid #2c3d75; cursor:pointer; }
+  .cell.open.active { border-color:#facc15; background:#3a2b07; }
+  .cell.open.wordhl { background:#1d2a5e; }
+  .cell.open.locked { background:#14532d; border-color:#22c55e; }
+  .cell.open.wrong { background:#7f1d1d; border-color:#ef4444; }
+  .cell .num { position:absolute; top:2px; left:5px; font-size:9.5px; color:#7dd3fc; font-weight:700; }
+  .cell .ltr { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:800; color:#fff; padding-top:6px; }
+  .cell.locked .ltr { color:#86efac; }
+  #clues { max-width:560px; width:94vw; display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin:6px 0; text-align:left; }
+  .cluecol { flex:1; min-width:240px; }
+  .cluecol h4 { color:#7dd3fc; font-size:13px; letter-spacing:2px; margin-bottom:4px; }
+  .clue { font-size:13.5px; color:#b9c4de; padding:4px 8px; border-radius:6px; cursor:pointer; line-height:1.45; }
+  .clue b { color:#fff; }
+  .clue.active { background:#3a2b07; color:#fde68a; }
+  .clue.solved { color:#86efac; text-decoration:line-through; }
+  #kb { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; max-width:560px; width:94vw; margin:4px 0; }
+  #kb button { width:38px; height:42px; font-size:16px; font-weight:800; border:none; border-radius:7px; background:#1e2a4a; color:#dbe6ff; cursor:pointer; }
+  #kb button:active { transform:scale(.93); }
+  #kb button.wide { width:80px; font-size:13px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>✏️ CROSSWORD MINI</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">PUZZLE <b id="puz">1/3</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">LETTERS <b id="prog">0/0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<div id="grid"></div>
+<div id="msg">Tap a clue (or a square), then type the letters. CHECK locks in the correct ones.</div>
+<div id="kb"></div>
+<div id="clues"></div>
+<div class="row">
+  <button class="btn primary" id="checkBtn">✔ CHECK</button>
+  <button class="btn" id="hintBtn">💡 HINT (-15)</button>
+  <button class="btn" id="nextBtn">⏭ NEXT PUZZLE</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Works with your real keyboard too · correct letters lock green at +10 each · finish all three puzzles for the full score</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Crossword Mini</h2>
+  <p>All the pleasure of a crossword, none of the Sunday-paper marathon. Three hand-made 6×6 mini puzzles — the sky, the sea and the kitchen — each with interlocking across and down clues. Fill the grid, hit CHECK to lock in your correct letters, and clear all three for the full score.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap a clue in the list (or any white square) to select that word — it glows gold. Type with the on-screen keyboard or your real one; the cursor walks along the word as you type, and tapping a crossing square again switches direction. CHECK scores every correct letter +10 and locks it green; wrong letters flash red and clear. HINT reveals one letter for 15 points.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three hand-crafted interlocking puzzles with fair, friendly clues</li>
+    <li>Tap-to-switch direction at crossings, just like a real crossword</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var SIZE=6;
+/* words: [row, col, dir('A'|'D'), word, clue] — crossings hand-verified */
+var PUZZLES=[
+  { name:'The Sky 🌌', words:[
+    [1,0,'A','PLANET','Earth is one of these'],
+    [4,2,'A','LOT','A parking ___; also a large amount'],
+    [5,0,'A','ICE','Frozen water'],
+    [1,2,'D','APPLE','Fruit that keeps the doctor away'],
+    [1,4,'D','EARTH','Our home planet'],
+    [1,5,'D','TREE','Oak or pine, for example']
+  ]},
+  { name:'The Sea 🌊', words:[
+    [1,0,'A','OCEAN','The Pacific is one'],
+    [3,0,'A','CROWN','A king wears it on his head'],
+    [5,2,'A','SAND','Tiny grains on a beach'],
+    [1,1,'D','CORAL','Reef-building sea creature'],
+    [3,5,'D','END','The finish or conclusion']
+  ]},
+  { name:'The Kitchen 🍕', words:[
+    [1,0,'A','BREAD','Toast is made from it'],
+    [3,1,'A','PIZZA','Cheesy Italian pie'],
+    [4,0,'A','EGGS','Scrambled breakfast staple'],
+    [5,2,'A','MILK','Cereal\u2019s best friend'],
+    [1,0,'D','BAKER','Person who makes bread']
+  ]}
+];
+/* ---------- pure logic (testable) ---------- */
+function buildSolution(puzzle){
+  var grid=[], r, c, i;
+  for(r=0;r<SIZE;r++){ grid.push([]); for(c=0;c<SIZE;c++) grid[r].push(null); }
+  var conflict=false;
+  puzzle.words.forEach(function(w){
+    var dr= w[2]==='D' ? 1 : 0, dc= w[2]==='A' ? 1 : 0;
+    for(i=0;i<w[3].length;i++){
+      var rr=w[0]+dr*i, cc=w[1]+dc*i;
+      if(grid[rr][cc]!==null && grid[rr][cc]!==w[3][i]) conflict=true;
+      grid[rr][cc]=w[3][i];
+    }
+  });
+  return { grid:grid, conflict:conflict };
+}
+function wordCells(w){
+  var dr= w[2]==='D' ? 1 : 0, dc= w[2]==='A' ? 1 : 0;
+  var out=[];
+  for(var i=0;i<w[3].length;i++) out.push([w[0]+dr*i, w[1]+dc*i]);
+  return out;
+}
+function gradeAll(solution, entries){
+  var correct=0, total=0, wrong=[];
+  for(var r=0;r<SIZE;r++) for(var c=0;c<SIZE;c++){
+    if(solution[r][c]===null) continue;
+    total++;
+    if(entries[r][c]===solution[r][c]) correct++;
+    else if(entries[r][c]) wrong.push([r, c]);
+  }
+  return { correct:correct, total:total, wrong:wrong };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var puzIdx, solution, entries, locked, activeWord, activePos, score, finished;
+var best=+(localStorage.getItem('makenCrossBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('puz').textContent=(puzIdx+1)+'/'+PUZZLES.length+' · '+PUZZLES[puzIdx].name;
+  el('score').textContent=score;
+  var g=gradeAll(solution, entries);
+  var lockedCount=0;
+  locked.forEach(function(row){ row.forEach(function(v){ if(v) lockedCount++; }); });
+  el('prog').textContent=lockedCount+'/'+g.total;
+  if(score>best){ best=score; localStorage.setItem('makenCrossBest', best); }
+  el('best').textContent=best;
+}
+function loadPuzzle(idx){
+  puzIdx=idx;
+  var built=buildSolution(PUZZLES[idx]);
+  solution=built.grid;
+  entries=[]; locked=[];
+  for(var r=0;r<SIZE;r++){
+    entries.push([]); locked.push([]);
+    for(var c=0;c<SIZE;c++){ entries[r].push(''); locked[r].push(false); }
+  }
+  activeWord=0; activePos=0;
+  finished=false;
+  render();
+  hud();
+}
+function cellWordIndices(r, c){
+  var out=[];
+  PUZZLES[puzIdx].words.forEach(function(w, wi){
+    wordCells(w).forEach(function(cell){
+      if(cell[0]===r && cell[1]===c) out.push(wi);
+    });
+  });
+  return out;
+}
+function render(){
+  var gridEl=el('grid');
+  gridEl.innerHTML='';
+  var activeCells={};
+  if(activeWord!=null){
+    wordCells(PUZZLES[puzIdx].words[activeWord]).forEach(function(cell, i){
+      activeCells[cell[0]+','+cell[1]]=i;
+    });
+  }
+  var startNums={};
+  PUZZLES[puzIdx].words.forEach(function(w, wi){
+    startNums[w[0]+','+w[1]]=wi+1;
+  });
+  for(var r=0;r<SIZE;r++) for(var c=0;c<SIZE;c++){
+    var d=document.createElement('div');
+    if(solution[r][c]===null){ d.className='cell block'; }
+    else {
+      d.className='cell open';
+      var k=r+','+c;
+      if(activeCells[k]!=null) d.className+= (activeCells[k]===activePos ? ' active' : ' wordhl');
+      if(locked[r][c]) d.className+=' locked';
+      var html='';
+      if(startNums[k]) html+='<span class="num">'+startNums[k]+'</span>';
+      html+='<span class="ltr">'+(entries[r][c]||'')+'</span>';
+      d.innerHTML=html;
+      (function(rr, cc){
+        d.addEventListener('click', function(){ selectCell(rr, cc); });
+      })(r, c);
+    }
+    gridEl.appendChild(d);
+  }
+  var cluesEl=el('clues');
+  cluesEl.innerHTML='';
+  ['A','D'].forEach(function(dir){
+    var col=document.createElement('div');
+    col.className='cluecol';
+    var h=document.createElement('h4');
+    h.textContent= dir==='A' ? 'ACROSS' : 'DOWN';
+    col.appendChild(h);
+    PUZZLES[puzIdx].words.forEach(function(w, wi){
+      if(w[2]!==dir) return;
+      var cells=wordCells(w);
+      var solved=cells.every(function(cell){ return locked[cell[0]][cell[1]]; });
+      var p=document.createElement('div');
+      p.className='clue'+(wi===activeWord ? ' active' : '')+(solved ? ' solved' : '');
+      p.innerHTML='<b>'+(wi+1)+'.</b> '+w[4]+' ('+w[3].length+')';
+      p.addEventListener('click', function(){
+        activeWord=wi; activePos=0;
+        render(); hud();
+      });
+      col.appendChild(p);
+    });
+    cluesEl.appendChild(col);
+  });
+}
+function selectCell(r, c){
+  if(solution[r][c]===null || finished) return;
+  var wis=cellWordIndices(r, c);
+  if(!wis.length) return;
+  if(wis.indexOf(activeWord)>=0 && wis.length>1){
+    /* tapping the active word's crossing switches to the other word */
+    var others=wis.filter(function(wi){ return wi!==activeWord; });
+    if(others.length && cellIsCurrent(r, c)) activeWord=others[0];
+    else if(others.length && activeWord===wis[0] && wis.length>1 && lastTap===r+','+c) activeWord=others[0];
+  }
+  if(wis.indexOf(activeWord)<0) activeWord=wis[0];
+  var cells=wordCells(PUZZLES[puzIdx].words[activeWord]);
+  for(var i=0;i<cells.length;i++) if(cells[i][0]===r && cells[i][1]===c) activePos=i;
+  lastTap=r+','+c;
+  render(); hud();
+}
+var lastTap='';
+function cellIsCurrent(r, c){
+  if(activeWord==null) return false;
+  var cells=wordCells(PUZZLES[puzIdx].words[activeWord]);
+  var cur=cells[activePos];
+  return cur && cur[0]===r && cur[1]===c;
+}
+function typeLetter(ch){
+  if(finished || activeWord==null) return;
+  var cells=wordCells(PUZZLES[puzIdx].words[activeWord]);
+  /* find current or next unlocked cell from activePos */
+  var i=activePos;
+  while(i<cells.length && locked[cells[i][0]][cells[i][1]]) i++;
+  if(i>=cells.length) return;
+  activePos=i;
+  entries[cells[i][0]][cells[i][1]]=ch;
+  beep(620,0.035,'square',0.03);
+  if(i<cells.length-1) activePos=i+1;
+  render(); hud();
+}
+function backspace(){
+  if(finished || activeWord==null) return;
+  var cells=wordCells(PUZZLES[puzIdx].words[activeWord]);
+  var i=activePos;
+  if(locked[cells[i][0]][cells[i][1]] || !entries[cells[i][0]][cells[i][1]]) i--;
+  while(i>=0 && locked[cells[i][0]][cells[i][1]]) i--;
+  if(i<0) return;
+  entries[cells[i][0]][cells[i][1]]='';
+  activePos=i;
+  render(); hud();
+}
+/* on-screen keyboard */
+(function buildKb(){
+  var kb=el('kb');
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function(ch){
+    var b=document.createElement('button');
+    b.textContent=ch;
+    b.addEventListener('click', function(){ typeLetter(ch); });
+    kb.appendChild(b);
+  });
+  var del=document.createElement('button');
+  del.textContent='⌫ DEL';
+  del.className='wide';
+  del.addEventListener('click', backspace);
+  kb.appendChild(del);
+})();
+document.addEventListener('keydown', function(e){
+  if(/^[a-zA-Z]$/.test(e.key)) typeLetter(e.key.toUpperCase());
+  else if(e.key==='Backspace'){ e.preventDefault(); backspace(); }
+  else if(e.key==='ArrowRight' || e.key==='ArrowDown' || e.key==='ArrowLeft' || e.key==='ArrowUp'){
+    if(activeWord==null) return;
+    var cells=wordCells(PUZZLES[puzIdx].words[activeWord]);
+    if((e.key==='ArrowRight' || e.key==='ArrowDown') && activePos<cells.length-1) activePos++;
+    if((e.key==='ArrowLeft' || e.key==='ArrowUp') && activePos>0) activePos--;
+    render();
+  }
+});
+el('checkBtn').addEventListener('click', function(){
+  if(finished) return;
+  var g=gradeAll(solution, entries);
+  var newly=0;
+  for(var r=0;r<SIZE;r++) for(var c=0;c<SIZE;c++){
+    if(solution[r][c]!==null && entries[r][c]===solution[r][c] && !locked[r][c]){
+      locked[r][c]=true; newly++;
+    }
+  }
+  score+=newly*10;
+  /* clear wrong entries */
+  g.wrong.forEach(function(cell){ entries[cell[0]][cell[1]]=''; });
+  if(newly>0) beep(980,0.1,'sine',0.055);
+  else beep(200,0.09,'sawtooth',0.05);
+  var g2=gradeAll(solution, locked.map(function(row, r){ return row.map(function(v, c){ return v ? solution[r][c] : ''; }); }));
+  if(g2.correct===g2.total){
+    finished=true;
+    score+=50;
+    el('msg').textContent='🎉 "'+PUZZLES[puzIdx].name+'" solved! +50 bonus. '+(puzIdx<PUZZLES.length-1 ? 'Press NEXT PUZZLE.' : 'All 3 puzzles done — final score '+score+'! NEXT restarts.');
+    beep(1180,0.18,'sine',0.06);
+  } else {
+    el('msg').textContent='✔ '+newly+' new letter'+(newly===1?'':'s')+' locked in. '+(g2.total-g2.correct)+' to go.';
+  }
+  render(); hud();
+});
+el('hintBtn').addEventListener('click', function(){
+  if(finished) return;
+  for(var r=0;r<SIZE;r++) for(var c=0;c<SIZE;c++){
+    if(solution[r][c]!==null && !locked[r][c]){
+      entries[r][c]=solution[r][c];
+      locked[r][c]=true;
+      score=Math.max(0, score-15);
+      el('msg').textContent='💡 Revealed '+solution[r][c]+' at row '+(r+1)+', column '+(c+1)+' (-15).';
+      beep(760,0.07,'sine',0.05);
+      render(); hud();
+      return;
+    }
+  }
+});
+el('nextBtn').addEventListener('click', function(){
+  loadPuzzle((puzIdx+1)%PUZZLES.length);
+  el('msg').textContent='✏️ Puzzle '+(puzIdx+1)+': '+PUZZLES[puzIdx].name+' — good luck!';
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+score=0;
+loadPuzzle(0);
+if(typeof module!=='undefined') module.exports={ buildSolution:buildSolution, wordCells:wordCells, gradeAll:gradeAll, PUZZLES:PUZZLES, SIZE:SIZE };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
