@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bubble Pop Mania — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Bubble Pop Mania free online. Aim, bounce and pop matching bubbles, clear every level before your shots run out and earn 3 stars. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#101736; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🫧 BUBBLE POP MANIA</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">🎯 SHOTS LEFT <b id="shots">18</b></div>
+  <div class="stat">🫧 LEFT <b id="left">0</b></div>
+  <div class="stat">⭐ <b id="stars">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="440" height="560"></canvas>
+<div id="msg">Move the mouse (or drag) to aim, click to shoot. Pop every bubble before your shots run out!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START LEVEL</button>
+  <button class="btn" id="swapBtn">🔄 SWAP</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Match 3+ of a colour to pop · bubbles cut off from the top DROP for double points · clear the board with shots to spare for 3 stars</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Bubble Pop Mania</h2>
+  <p>A level-based bubble shooter with a shot budget. Each level hangs a fresh pattern of bubbles from the ceiling and gives you a limited number of shots — clear every last bubble to advance, and the more shots you save, the more stars you earn. Bank shots off the walls, aim for the clusters that hold everything else up, and watch whole branches rain down.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move the mouse or drag on the board to aim the dotted guide line, then click or release to fire. Your bubble sticks where it lands; if it touches 2 or more bubbles of the same colour, the whole group pops. Any bubbles left hanging with no connection to the ceiling drop for double points. Run out of shots with bubbles remaining and the level is lost. SWAP trades your loaded bubble for the next one.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless levels with growing patterns, more colours and tighter shot budgets</li>
+    <li>Drop bonuses, wall bounces and a 3-star rating on every level</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=440, H=560, R=20, COLS=11, ROWH=34, TOPY=44, SHOOTY=H-46;
+var COLORS=['#ef4444','#3b82f6','#22c55e','#facc15','#a855f7','#f97316','#ec4899'];
+/* ---------- pure logic (testable) ---------- */
+function cellCenter(r, c){
+  var x=R + c*(R*2) + (r%2 ? R : 0);
+  var y=TOPY + r*ROWH;
+  return { x:x, y:y };
+}
+function neighbors(r, c){
+  var odd=r%2===1;
+  var d= odd ? [[0,-1],[0,1],[-1,-1],[-1,0],[1,-1],[1,0]] : [[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+  var out=[];
+  for(var i=0;i<d.length;i++) out.push([r+d[i][0], c+d[i][1]]);
+  return out;
+}
+function cluster(grid, r, c){
+  var color=grid[r] && grid[r][c];
+  if(color==null || color<0) return [];
+  var seen={}, stack=[[r,c]], out=[];
+  seen[r+','+c]=true;
+  while(stack.length){
+    var cur=stack.pop();
+    out.push(cur);
+    var ns=neighbors(cur[0], cur[1]);
+    for(var i=0;i<ns.length;i++){
+      var nr=ns[i][0], nc=ns[i][1], k=nr+','+nc;
+      if(!seen[k] && grid[nr] && grid[nr][nc]===color){ seen[k]=true; stack.push([nr,nc]); }
+    }
+  }
+  return out;
+}
+function floating(grid){
+  /* bubbles not connected to row 0 */
+  var seen={}, stack=[];
+  for(var c=0;c<COLS;c++) if(grid[0] && grid[0][c]>=0){ seen['0,'+c]=true; stack.push([0,c]); }
+  while(stack.length){
+    var cur=stack.pop();
+    var ns=neighbors(cur[0], cur[1]);
+    for(var i=0;i<ns.length;i++){
+      var nr=ns[i][0], nc=ns[i][1], k=nr+','+nc;
+      if(!seen[k] && grid[nr] && grid[nr][nc]>=0){ seen[k]=true; stack.push([nr,nc]); }
+    }
+  }
+  var out=[];
+  for(var r=0;r<grid.length;r++) for(var cc=0;cc<COLS;cc++){
+    if(grid[r][cc]>=0 && !seen[r+','+cc]) out.push([r,cc]);
+  }
+  return out;
+}
+function countBubbles(grid){
+  var n=0;
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++) if(grid[r][c]>=0) n++;
+  return n;
+}
+function levelSpec(level){
+  return {
+    rows: Math.min(9, 4 + Math.ceil(level*0.8)),
+    colors: Math.min(7, 3 + Math.ceil(level*0.7)),
+    shots: Math.max(12, 20 - level)
+  };
+}
+function starsFor(shotsLeft, shotsTotal){
+  var frac=shotsLeft/shotsTotal;
+  if(frac>=0.35) return 3;
+  if(frac>=0.15) return 2;
+  return 1;
+}
+function popScore(popped, dropped){
+  return popped*10 + dropped*20;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var grid, level, score, shots, shotsTotal, totalStars, playing, flying, aimAngle, cur, nxt;
+var best=+(localStorage.getItem('makenBubblePopBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('level').textContent=level;
+  el('score').textContent=score;
+  el('shots').textContent=shots;
+  el('left').textContent=countBubbles(grid);
+  el('stars').textContent=totalStars;
+  if(score>best){ best=score; localStorage.setItem('makenBubblePopBest', best); }
+  el('best').textContent=best;
+}
+function colorsInPlay(){
+  var set={};
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++) if(grid[r][c]>=0) set[grid[r][c]]=true;
+  var arr=Object.keys(set).map(Number);
+  return arr.length ? arr : [0];
+}
+function pickColor(){
+  var arr=colorsInPlay();
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function buildLevel(){
+  var spec=levelSpec(level);
+  grid=[];
+  for(var r=0;r<spec.rows;r++){
+    var row=[];
+    for(var c=0;c<COLS;c++){
+      if(r%2===1 && c===COLS-1) row.push(-1);
+      else row.push(Math.random()<0.12 ? -1 : Math.floor(Math.random()*spec.colors));
+    }
+    grid.push(row);
+  }
+  shotsTotal=spec.shots + Math.ceil(countBubbles(grid)/6);
+  shots=shotsTotal;
+  cur=pickColor();
+  nxt=pickColor();
+  flying=null;
+}
+function reset(){
+  playing=false;
+  level=1; score=0; totalStars=0;
+  aimAngle=-Math.PI/2;
+  buildLevel();
+  hud(); draw();
+}
+function drawBubble(x, y, color, rad){
+  ctx.fillStyle=COLORS[color];
+  ctx.beginPath(); ctx.arc(x, y, rad||R-1.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.45)';
+  ctx.beginPath(); ctx.arc(x-5.5, y-6, 5, 0, Math.PI*2); ctx.fill();
+}
+function draw(){
+  ctx.fillStyle='#101736'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1e2a52'; ctx.fillRect(0, 0, W, TOPY-14);
+  ctx.strokeStyle='#3b4a7a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0, TOPY-14); ctx.lineTo(W, TOPY-14); ctx.stroke();
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++){
+    if(grid[r][c]>=0){
+      var p=cellCenter(r, c);
+      drawBubble(p.x, p.y, grid[r][c]);
+    }
+  }
+  /* shooter base */
+  ctx.fillStyle='#26335f';
+  ctx.fillRect(W/2-52, SHOOTY+8, 104, 34);
+  ctx.fillStyle='#7dd3fc'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText('NEXT', W/2+78, SHOOTY+4);
+  drawBubble(W/2+78, SHOOTY+22, nxt, 12);
+  /* aim guide */
+  if(playing && !flying){
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.setLineDash([4, 7]);
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    var gx=W/2, gy=SHOOTY, dx=Math.cos(aimAngle), dy=Math.sin(aimAngle);
+    ctx.moveTo(gx, gy);
+    for(var s=0;s<26;s++){
+      gx+=dx*16; gy+=dy*16;
+      if(gx<R){ gx=R; dx=-dx; }
+      if(gx>W-R){ gx=W-R; dx=-dx; }
+      if(gy<TOPY-10) break;
+    }
+    ctx.lineTo(gx, gy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if(flying) drawBubble(flying.x, flying.y, flying.color);
+  else if(playing || true) drawBubble(W/2, SHOOTY, cur);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 23px Arial'; ctx.textAlign='center';
+    ctx.fillText(level>1 || score>0 ? '🫧 BUBBLE POP MANIA' : '🫧 BUBBLE POP MANIA', W/2, H/2-8);
+    ctx.font='14.5px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Press START LEVEL — clear all bubbles in '+shotsTotal+' shots', W/2, H/2+20);
+  }
+}
+function nearestCell(x, y){
+  var bestCell=null, bestD=1e9;
+  var maxR=grid.length+2;
+  for(var r=0;r<maxR;r++){
+    for(var c=0;c<COLS;c++){
+      if(r%2===1 && c===COLS-1) continue;
+      if(grid[r] && grid[r][c]>=0) continue;
+      var p=cellCenter(r, c);
+      var d=(p.x-x)*(p.x-x)+(p.y-y)*(p.y-y);
+      if(d<bestD){ bestD=d; bestCell=[r, c]; }
+    }
+  }
+  return bestCell;
+}
+function settle(){
+  var cell=nearestCell(flying.x, flying.y);
+  flying=null;
+  if(!cell){ endLevel(false); return; }
+  var r=cell[0], c=cell[1];
+  while(grid.length<=r) grid.push(new Array(COLS).fill(-1));
+  grid[r][c]=settleColor;
+  var cl=cluster(grid, r, c);
+  var popped=0, dropped=0;
+  if(cl.length>=3){
+    popped=cl.length;
+    for(var i=0;i<cl.length;i++) grid[cl[i][0]][cl[i][1]]=-1;
+    var fl=floating(grid);
+    dropped=fl.length;
+    for(var j=0;j<fl.length;j++) grid[fl[j][0]][fl[j][1]]=-1;
+    score+=popScore(popped, dropped);
+    beep(660,0.08,'sine',0.055);
+    if(dropped>0) beep(880,0.1,'sine',0.05);
+    el('msg').textContent='💥 Popped '+popped+(dropped ? ' and dropped '+dropped+' more!' : '!');
+  } else {
+    beep(240,0.05,'square',0.035);
+  }
+  /* trim empty bottom rows */
+  while(grid.length>1 && countBubbles([grid[grid.length-1]])===0) grid.pop();
+  shots--;
+  cur=nxt; nxt=pickColor();
+  if(countBubbles(grid)===0){ endLevel(true); return; }
+  if(shots<=0){ endLevel(false); return; }
+  hud(); draw();
+}
+var settleColor=0;
+function endLevel(won){
+  playing=false;
+  if(won){
+    var st=starsFor(shots, shotsTotal);
+    totalStars+=st;
+    score+=shots*15;
+    el('msg').textContent='🎉 Level '+level+' cleared — '+'⭐'.repeat(st)+' +'+(shots*15)+' shot bonus! Press START LEVEL for level '+(level+1)+'.';
+    beep(1180,0.18,'sine',0.06);
+    level++;
+    buildLevel();
+  } else {
+    el('msg').textContent='💔 Out of shots on level '+level+'! Final score '+score+'. Press START LEVEL to play again.';
+    beep(150,0.26,'sawtooth',0.07);
+    level=1; score=0; totalStars=0;
+    buildLevel();
+  }
+  hud(); draw();
+}
+var lastTick=0;
+function loop(ts){
+  if(!flying) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  flying.x+=flying.dx*620*dt;
+  flying.y+=flying.dy*620*dt;
+  if(flying.x<R){ flying.x=R; flying.dx=-flying.dx; }
+  if(flying.x>W-R){ flying.x=W-R; flying.dx=-flying.dx; }
+  var hit = flying.y <= TOPY+R-8;
+  if(!hit){
+    for(var r=0;r<grid.length && !hit;r++) for(var c=0;c<COLS;c++){
+      if(grid[r][c]>=0){
+        var p=cellCenter(r, c);
+        var d2=(p.x-flying.x)*(p.x-flying.x)+(p.y-flying.y)*(p.y-flying.y);
+        if(d2 < (R*2-3)*(R*2-3)){ hit=true; break; }
+      }
+    }
+  }
+  if(hit){ settleColor=flying.color; settle(); draw(); return; }
+  draw();
+  requestAnimationFrame(loop);
+}
+function shoot(){
+  if(!playing || flying || shots<=0) return;
+  flying={ x:W/2, y:SHOOTY, dx:Math.cos(aimAngle), dy:Math.sin(aimAngle), color:cur };
+  beep(420,0.05,'square',0.04);
+  lastTick=performance.now();
+  requestAnimationFrame(loop);
+}
+function aimFromEvent(e){
+  var r=cvs.getBoundingClientRect();
+  var x=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var y=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  x*= (W/r.width); y*= (H/r.height);
+  var ang=Math.atan2(y-SHOOTY, x-W/2);
+  if(ang>-Math.PI+0.22 && ang<-Math.PI/2-0.0) ang=-Math.PI+0.22;
+  if(ang>-0.22 && ang<0) ang=-0.22;
+  if(ang>=0) ang = (x<W/2) ? -Math.PI+0.22 : -0.22;
+  aimAngle=ang;
+}
+cvs.addEventListener('mousemove', function(e){ if(playing && !flying){ aimFromEvent(e); draw(); } });
+cvs.addEventListener('mousedown', function(e){ if(playing){ aimFromEvent(e); shoot(); } });
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); if(playing && !flying){ aimFromEvent(e); draw(); } }, {passive:false});
+cvs.addEventListener('touchend', function(e){ e.preventDefault(); if(playing) shoot(); }, {passive:false});
+document.addEventListener('keydown', function(e){
+  if(!playing) return;
+  if(e.code==='ArrowLeft'){ aimAngle=Math.max(-Math.PI+0.22, aimAngle-0.07); draw(); }
+  if(e.code==='ArrowRight'){ aimAngle=Math.min(-0.22, aimAngle+0.07); draw(); }
+  if(e.code==='Space'){ e.preventDefault(); shoot(); }
+});
+el('swapBtn').addEventListener('click', function(){
+  if(!playing || flying) return;
+  var t=cur; cur=nxt; nxt=t;
+  draw();
+});
+el('startBtn').addEventListener('click', function(){
+  playing=true;
+  el('msg').textContent='🫧 Level '+level+' — pop them all in '+shots+' shots!';
+  hud(); draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ cluster:cluster, floating:floating, countBubbles:countBubbles, levelSpec:levelSpec, starsFor:starsFor, popScore:popScore, neighbors:neighbors, cellCenter:cellCenter, COLS:COLS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

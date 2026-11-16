@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Word Search Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Word Search free online. Hunt hidden words in the letter grid — across, down and diagonal — against the clock. Three themes, endless rounds. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #words { max-width:480px; width:94vw; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:4px 0; }
+  #words span { background:#16224a; border:1px solid #2c3d75; border-radius:14px; padding:3px 11px; font-size:13px; font-weight:700; letter-spacing:1px; }
+  #words span.done { background:#14532d; border-color:#22c55e; color:#86efac; text-decoration:line-through; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔤 WORD SEARCH</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">ROUND <b id="round">1</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">FOUND <b id="found">0/8</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+<div id="words"></div>
+
+<canvas id="cv" width="440" height="440"></canvas>
+<div id="msg">Press START, then drag across the letters of a hidden word — across, down or diagonal.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START ROUND</button>
+  <button class="btn" id="hintBtn">💡 HINT</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Words can run forwards or backwards · each found word scores its length × 10 plus a speed bonus · finish fast for more</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Word Search</h2>
+  <p>The classic pencil-and-paper hunt, against the clock. Eight themed words hide in every 10×10 grid — across, down and diagonal, forwards and backwards. Drag across a word's letters to claim it; the list above the grid ticks each one off. Finish the round and a fresh theme deals in.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press START ROUND, read the word list, then press and drag from a word's first letter to its last (mouse or touch). A correct drag locks the word in green and scores its length × 10 plus whatever is left of your speed bonus. Stuck? HINT flashes a word's first letter for 40 points. Themes rotate: animals, space, food, sports, the sea and more.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Six rotating word themes with a fresh generated grid every round</li>
+    <li>Words hide in 4 directions, forwards and backwards</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var N=10, CELL=44;
+var THEMES=[
+  { name:'Animals 🐾', words:['ELEPHANT','GIRAFFE','DOLPHIN','PENGUIN','LEOPARD','OCTOPUS','BUFFALO','KOALA'] },
+  { name:'Space 🚀', words:['ROCKET','PLANET','GALAXY','ASTEROID','NEBULA','ORBIT','COMET','LUNAR'] },
+  { name:'Food 🍕', words:['PIZZA','BURGER','PASTA','SALAD','MANGO','BREAD','CURRY','LEMON'] },
+  { name:'Sports ⚽', words:['CRICKET','FOOTBALL','TENNIS','BOXING','HOCKEY','GOLF','RUGBY','SKATE'] },
+  { name:'Sea 🌊', words:['ANCHOR','SAILOR','ISLAND','CORAL','WHALE','SHELL','WAVE','TIDE'] },
+  { name:'Nature 🌳', words:['FOREST','RIVER','MOUNTAIN','DESERT','FLOWER','CLOUD','RAIN','LEAF'] }
+];
+var DIRS=[[0,1],[1,0],[1,1],[1,-1]];
+/* ---------- pure logic (testable) ---------- */
+function canPlace(grid, word, r, c, dr, dc){
+  for(var i=0;i<word.length;i++){
+    var rr=r+dr*i, cc=c+dc*i;
+    if(rr<0 || cc<0 || rr>=N || cc>=N) return false;
+    if(grid[rr][cc]!=='' && grid[rr][cc]!==word[i]) return false;
+  }
+  return true;
+}
+function placeWords(words){
+  var grid=[];
+  for(var r=0;r<N;r++){ grid.push([]); for(var c=0;c<N;c++) grid[r].push(''); }
+  var placed=[];
+  for(var w=0;w<words.length;w++){
+    var word=words[w];
+    var done=false;
+    for(var tries=0;tries<300 && !done;tries++){
+      var d=DIRS[Math.floor(Math.random()*DIRS.length)];
+      var rev=Math.random()<0.35;
+      var dr=d[0]*(rev?-1:1), dc=d[1]*(rev?-1:1);
+      var r0=Math.floor(Math.random()*N), c0=Math.floor(Math.random()*N);
+      if(canPlace(grid, word, r0, c0, dr, dc)){
+        for(var i=0;i<word.length;i++) grid[r0+dr*i][c0+dc*i]=word[i];
+        placed.push({ word:word, r:r0, c:c0, dr:dr, dc:dc });
+        done=true;
+      }
+    }
+    if(!done) return null;
+  }
+  var letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for(var r2=0;r2<N;r2++) for(var c2=0;c2<N;c2++){
+    if(grid[r2][c2]==='') grid[r2][c2]=letters[Math.floor(Math.random()*26)];
+  }
+  return { grid:grid, placed:placed };
+}
+function selectionWord(grid, r1, c1, r2, c2){
+  var dr=r2-r1, dc=c2-c1;
+  if(dr!==0 && dc!==0 && Math.abs(dr)!==Math.abs(dc)) return null;
+  var len=Math.max(Math.abs(dr), Math.abs(dc))+1;
+  if(len<3) return null;
+  var sr=dr===0?0:dr/Math.abs(dr), sc=dc===0?0:dc/Math.abs(dc);
+  var s='';
+  for(var i=0;i<len;i++) s+=grid[r1+sr*i][c1+sc*i];
+  return { text:s, len:len, sr:sr, sc:sc };
+}
+function wordScore(len, secondsLeft){
+  return len*10 + Math.max(0, secondsLeft);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var grid, placed, foundSet, round, score, playing, startTime, timerId, selStart, selEnd, hintKey, themeIdx;
+var best=+(localStorage.getItem('makenWordBest')||0);
+el('best').textContent=best;
+function fmtTime(s){
+  return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+}
+function elapsed(){
+  return playing ? Math.floor((Date.now()-startTime)/1000) : 0;
+}
+function hud(){
+  el('round').textContent=round;
+  el('time').textContent=fmtTime(elapsed());
+  el('found').textContent=foundSet.size+'/'+placed.length;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenWordBest', best); }
+  el('best').textContent=best;
+  var box=el('words');
+  box.innerHTML='';
+  placed.forEach(function(p){
+    var sp=document.createElement('span');
+    sp.textContent=p.word;
+    if(foundSet.has(p.word)) sp.className='done';
+    box.appendChild(sp);
+  });
+}
+function buildRound(){
+  themeIdx=(round-1)%THEMES.length;
+  var theme=THEMES[themeIdx];
+  var res=null;
+  for(var attempt=0; attempt<12 && !res; attempt++) res=placeWords(theme.words.slice());
+  if(!res){ res=placeWords(theme.words.slice(0, 6)); }
+  grid=res.grid;
+  placed=res.placed;
+  foundSet=new Set();
+  selStart=null; selEnd=null; hintKey=null;
+  el('msg').textContent='🎯 Theme: '+theme.name+' — find all '+placed.length+' words!';
+}
+function reset(){
+  playing=false;
+  round=1; score=0;
+  if(timerId) clearInterval(timerId);
+  buildRound();
+  hud(); draw();
+}
+function foundCells(){
+  var set={};
+  placed.forEach(function(p){
+    if(!foundSet.has(p.word)) return;
+    for(var i=0;i<p.word.length;i++) set[(p.r+p.dr*i)+','+(p.c+p.dc*i)]=true;
+  });
+  return set;
+}
+function selCells(){
+  var set={};
+  if(selStart && selEnd){
+    var sw=selectionWord(grid, selStart[0], selStart[1], selEnd[0], selEnd[1]);
+    if(sw){
+      for(var i=0;i<sw.len;i++) set[(selStart[0]+sw.sr*i)+','+(selStart[1]+sw.sc*i)]=true;
+    }
+  }
+  return set;
+}
+function draw(){
+  ctx.fillStyle='#0d1330'; ctx.fillRect(0, 0, 440, 440);
+  var fc=foundCells(), sc=selCells();
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var x=c*CELL, y=r*CELL, k=r+','+c;
+    if(fc[k]){ ctx.fillStyle='#14532d'; ctx.fillRect(x+1.5, y+1.5, CELL-3, CELL-3); }
+    else if(sc[k]){ ctx.fillStyle='#7c2d12'; ctx.fillRect(x+1.5, y+1.5, CELL-3, CELL-3); }
+    else { ctx.fillStyle= (r+c)%2===0 ? '#131c42' : '#101736'; ctx.fillRect(x+1.5, y+1.5, CELL-3, CELL-3); }
+    if(hintKey===k){
+      ctx.strokeStyle='#22d3ee'; ctx.lineWidth=3;
+      ctx.strokeRect(x+3, y+3, CELL-6, CELL-6);
+    }
+    ctx.fillStyle= fc[k] ? '#86efac' : '#e8ecf8';
+    ctx.font='bold 19px Arial'; ctx.textAlign='center';
+    ctx.fillText(grid[r][c], x+CELL/2, y+CELL/2+7);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0, 0, 440, 440);
+    ctx.fillStyle='#fff'; ctx.font='bold 23px Arial'; ctx.textAlign='center';
+    ctx.fillText(round>1 ? '🎉 ROUND '+(round-1)+' COMPLETE!' : '🔤 WORD SEARCH', 220, 208);
+    ctx.font='14.5px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(round>1 ? 'Press START ROUND for round '+round : 'Press START ROUND — theme: '+THEMES[themeIdx].name, 220, 236);
+  }
+}
+function cellFromEvent(e){
+  var r=cvs.getBoundingClientRect();
+  var x=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var y=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  var c=Math.floor(x*(440/r.width)/CELL), rr=Math.floor(y*(440/r.height)/CELL);
+  if(rr<0 || c<0 || rr>=N || c>=N) return null;
+  return [rr, c];
+}
+function finishSelection(){
+  if(!selStart || !selEnd){ selStart=null; selEnd=null; draw(); return; }
+  var sw=selectionWord(grid, selStart[0], selStart[1], selEnd[0], selEnd[1]);
+  if(sw){
+    var rev=sw.text.split('').reverse().join('');
+    for(var i=0;i<placed.length;i++){
+      var p=placed[i];
+      if(foundSet.has(p.word)) continue;
+      if(sw.text===p.word || rev===p.word){
+        foundSet.add(p.word);
+        var bonus=Math.max(0, 180-elapsed());
+        var gain=wordScore(p.word.length, bonus>0 ? Math.floor(bonus/6) : 0);
+        score+=gain;
+        el('msg').textContent='✅ '+p.word+' found! +'+gain+' points. '+(placed.length-foundSet.size)+' to go.';
+        beep(880,0.09,'sine',0.055);
+        hintKey=null;
+        break;
+      }
+    }
+  }
+  selStart=null; selEnd=null;
+  hud(); draw();
+  if(foundSet.size===placed.length && playing){
+    playing=false;
+    clearInterval(timerId);
+    var timeBonus=Math.max(0, 300-elapsed());
+    score+=timeBonus;
+    el('msg').textContent='🎉 Round '+round+' complete in '+fmtTime(elapsed())+'! Time bonus +'+timeBonus+'. Press START ROUND for round '+(round+1)+'.';
+    beep(1180,0.18,'sine',0.06);
+    round++;
+    buildRound();
+    hud(); draw();
+  }
+}
+var dragging=false;
+cvs.addEventListener('mousedown', function(e){
+  if(!playing) return;
+  var cell=cellFromEvent(e);
+  if(cell){ dragging=true; selStart=cell; selEnd=cell; draw(); }
+});
+cvs.addEventListener('mousemove', function(e){
+  if(!playing || !dragging) return;
+  var cell=cellFromEvent(e);
+  if(cell){ selEnd=cell; draw(); }
+});
+document.addEventListener('mouseup', function(){
+  if(dragging){ dragging=false; finishSelection(); }
+});
+cvs.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  if(!playing) return;
+  var cell=cellFromEvent(e);
+  if(cell){ dragging=true; selStart=cell; selEnd=cell; draw(); }
+}, {passive:false});
+cvs.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  if(!playing || !dragging) return;
+  var cell=cellFromEvent(e);
+  if(cell){ selEnd=cell; draw(); }
+}, {passive:false});
+cvs.addEventListener('touchend', function(e){
+  e.preventDefault();
+  if(dragging){ dragging=false; finishSelection(); }
+}, {passive:false});
+el('hintBtn').addEventListener('click', function(){
+  if(!playing) return;
+  for(var i=0;i<placed.length;i++){
+    if(!foundSet.has(placed[i].word)){
+      hintKey=placed[i].r+','+placed[i].c;
+      score=Math.max(0, score-40);
+      el('msg').textContent='💡 The glowing letter starts the word '+placed[i].word+' (-40 pts).';
+      hud(); draw();
+      return;
+    }
+  }
+});
+el('startBtn').addEventListener('click', function(){
+  if(foundSet.size<placed.length && round>1){ /* continuing after completion already rebuilt */ }
+  playing=true;
+  startTime=Date.now();
+  if(timerId) clearInterval(timerId);
+  timerId=setInterval(function(){ el('time').textContent=fmtTime(elapsed()); }, 500);
+  el('msg').textContent='🔤 Round '+round+' — theme: '+THEMES[themeIdx].name+'. Drag across a word!';
+  hud(); draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ canPlace:canPlace, placeWords:placeWords, selectionWord:selectionWord, wordScore:wordScore, THEMES:THEMES, N:N };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
