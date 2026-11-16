@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sniper Shooting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play sniper shooting free online. Look through the scope, control your breathing, and hit the targets before they duck away. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#1c2733; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:none; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔭 SNIPER SHOOTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">TIME <b id="time">90</b></div>
+  <div class="stat">AMMO <b id="ammo">6 / 6</b></div>
+  <div class="stat">HITS <b id="hits">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Move the scope over a target and click to fire. Hold still to steady your aim!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START MISSION</button>
+  <button class="btn" id="reloadBtn">⟳ RELOAD (R)</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Headshot = 150 · body hit = 100 · targets duck away fast — and keep your crosshair still for a moment to stop the sway</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Sniper Shooting</h2>
+  <p>Ninety seconds, six windows, one rifle. Enemy targets pop up across the building opposite and duck away in a heartbeat — your job is to spot them through the scope, settle your breathing and make every shot count.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move the mouse (or drag on mobile) to aim the scope — the lens magnifies whatever it covers. Click or tap to fire: headshots score 150, body hits 100. Your crosshair sways while you move; hold it still for a moment and the sway fades for a clean shot. Six rounds per magazine — press R or the RELOAD button when empty.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A real magnifying scope with breathing sway and a hold-steady mechanic</li>
+    <li>Headshot bonuses and accuracy pressure against the clock</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, SCOPE_R=104, ZOOM=1.7;
+var WINDOWS=[
+  {x:120,y:96},{x:320,y:96},{x:520,y:96},
+  {x:120,y:216},{x:320,y:216},{x:520,y:216}
+];
+/* ---------- pure logic (testable) ---------- */
+function hitZone(dx, dy){
+  /* relative to target centre: head circle above, body below */
+  if(dy >= -30 && dy <= -13 && Math.abs(dx) <= 8) return 'head';
+  if(dy > -13 && dy <= 18 && Math.abs(dx) <= 12) return 'body';
+  return 'miss';
+}
+function scoreFor(zone){ return zone==='head' ? 150 : zone==='body' ? 100 : 0; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var off=document.createElement('canvas'); off.width=W; off.height=H;
+var octx=off.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, timeLeft, ammo, reloading, targets, score, hits, shots, mouse, stillSince, lastMove, spawnTimer, rafId, lastTick, flash;
+var best=+(localStorage.getItem('makenSniperBest')||0);
+el('best').textContent=best;
+function reset(){
+  playing=false; timeLeft=90; ammo=6; reloading=false;
+  targets=[]; score=0; hits=0; shots=0;
+  mouse={x:W/2, y:H/2}; stillSince=0; lastMove=0; spawnTimer=0; flash=0;
+  hud(); drawScene(); draw();
+}
+function hud(){
+  el('time').textContent=Math.ceil(timeLeft);
+  el('ammo').textContent=ammo+' / 6';
+  el('hits').textContent=hits;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenSniperBest',best); }
+  el('best').textContent=best;
+}
+function drawScene(){
+  var g=octx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#2b3a4a'); g.addColorStop(0.7,'#3d5266'); g.addColorStop(0.71,'#22262b'); g.addColorStop(1,'#17191d');
+  octx.fillStyle=g; octx.fillRect(0,0,W,H);
+  /* distant skyline */
+  octx.fillStyle='#232f3c';
+  octx.fillRect(0,150,90,140); octx.fillRect(560,140,80,150); octx.fillRect(240,120,60,170);
+  /* main building */
+  octx.fillStyle='#5b4a3a'; octx.fillRect(60,52,520,238);
+  octx.fillStyle='#6e5942'; octx.fillRect(60,52,520,14);
+  /* windows */
+  WINDOWS.forEach(function(w){
+    octx.fillStyle='#141c26'; octx.fillRect(w.x-34, w.y-42, 68, 84);
+    octx.fillStyle='#9db8cc'; octx.globalAlpha=0.25; octx.fillRect(w.x-34, w.y-42, 68, 40); octx.globalAlpha=1;
+    octx.strokeStyle='#2c2119'; octx.lineWidth=4; octx.strokeRect(w.x-34, w.y-42, 68, 84);
+    octx.beginPath(); ctx.lineWidth=2; octx.moveTo(w.x, w.y-42); octx.lineTo(w.x, w.y+42); octx.stroke();
+  });
+  /* ground floor door */
+  octx.fillStyle='#33291f'; octx.fillRect(292,238,56,52);
+  /* targets */
+  targets.forEach(function(t){
+    var w=WINDOWS[t.win];
+    octx.save();
+    octx.translate(w.x + t.offX, w.y + 8);
+    /* body */
+    octx.fillStyle='#8c2f2f';
+    octx.beginPath(); octx.ellipse(0, 6, 12, 15, 0, 0, Math.PI*2); octx.fill();
+    /* head */
+    octx.beginPath(); octx.arc(0, -20, 8.5, 0, Math.PI*2);
+    octx.fillStyle='#d9a066'; octx.fill();
+    /* cap */
+    octx.fillStyle='#5b1f1f'; octx.fillRect(-8.5, -28, 17, 6);
+    octx.restore();
+    if(t.hitFlash>0){
+      octx.fillStyle='rgba(250,204,21,'+(t.hitFlash*0.5)+')';
+      octx.beginPath(); octx.arc(w.x+t.offX, w.y-4, 26, 0, Math.PI*2); octx.fill();
+    }
+  });
+  /* street props */
+  octx.fillStyle='#101216'; octx.fillRect(0, 290, W, 6);
+  octx.font='26px Arial'; octx.textAlign='center';
+  octx.fillText('🚗', 90, 330); octx.fillText('🚙', 556, 336); octx.fillText('🌳', 210, 332); octx.fillText('🌳', 448, 328);
+}
+function swayOffset(now){
+  var still = now - lastMove > 550;
+  var amp = still ? 1.2 : 5.5;
+  return { x:Math.sin(now/340)*amp, y:Math.cos(now/271)*amp*0.8, steady:still };
+}
+function draw(){
+  /* darkened unscoped view */
+  ctx.drawImage(off, 0, 0);
+  ctx.fillStyle='rgba(4,8,14,0.78)'; ctx.fillRect(0,0,W,H);
+  var now=performance.now();
+  var sw=swayOffset(now);
+  var cx=mouse.x+sw.x, cy=mouse.y+sw.y;
+  /* scope lens */
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, SCOPE_R, 0, Math.PI*2); ctx.clip();
+  var sw2=SCOPE_R*2/ZOOM;
+  ctx.drawImage(off, cx-sw2/2, cy-sw2/2, sw2, sw2, cx-SCOPE_R, cy-SCOPE_R, SCOPE_R*2, SCOPE_R*2);
+  ctx.restore();
+  /* scope ring + crosshair */
+  ctx.beginPath(); ctx.arc(cx, cy, SCOPE_R, 0, Math.PI*2);
+  ctx.strokeStyle='#0b0e13'; ctx.lineWidth=10; ctx.stroke();
+  ctx.strokeStyle= sw.steady ? 'rgba(74,222,128,0.9)' : 'rgba(248,113,113,0.85)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(cx-SCOPE_R+8, cy); ctx.lineTo(cx-14, cy); ctx.moveTo(cx+14, cy); ctx.lineTo(cx+SCOPE_R-8, cy);
+  ctx.moveTo(cx, cy-SCOPE_R+8); ctx.lineTo(cx, cy-14); ctx.moveTo(cx, cy+14); ctx.lineTo(cx, cy+SCOPE_R-8); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, Math.PI*2); ctx.fillStyle='#f8fafc'; ctx.fill();
+  ctx.fillStyle= sw.steady ? '#4ade80' : '#94a3b8';
+  ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText(sw.steady ? '● STEADY' : '○ hold still…', cx, cy+SCOPE_R-12);
+  if(flash>0){
+    ctx.fillStyle='rgba(255,240,180,'+(flash*0.5)+')'; ctx.fillRect(0,0,W,H);
+  }
+  if(reloading){
+    ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fbbf24'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
+    ctx.fillText('⟳ RELOADING…', W/2, H/2);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(timeLeft<90 ? '🎯 MISSION OVER' : '🔭 SNIPER SHOOTING', W/2, H/2-14);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(timeLeft<90 ? 'Score '+score+' · hits '+hits+' / '+shots+' shots — press START for another mission' : 'Press START MISSION — 90 seconds on the clock', W/2, H/2+16);
+  }
+}
+function spawnTarget(){
+  var used={};
+  targets.forEach(function(t){ used[t.win]=true; });
+  var free=WINDOWS.map(function(_, i){ return i; }).filter(function(i){ return !used[i]; });
+  if(!free.length) return;
+  var win=free[Math.floor(Math.random()*free.length)];
+  targets.push({ win:win, offX:(Math.random()*16-8), ttl:1.4+Math.random()*1.1, hitFlash:0 });
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.05, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    timeLeft=0; playing=false;
+    el('msg').textContent='🎯 Mission over! Final score '+score+' — accuracy '+(shots? Math.round(hits/shots*100):0)+'%.';
+    beep(880,0.14,'sine',0.06);
+    hud(); drawScene(); draw();
+    return;
+  }
+  spawnTimer-=dt;
+  if(spawnTimer<=0 && targets.length<2){ spawnTarget(); spawnTimer=0.5+Math.random()*0.7; }
+  targets.forEach(function(t){ t.ttl-=dt; if(t.hitFlash>0) t.hitFlash-=dt*3; });
+  targets=targets.filter(function(t){ return t.ttl>0; });
+  if(flash>0) flash-=dt*4;
+  hud();
+  drawScene(); draw();
+  rafId=requestAnimationFrame(loop);
+}
+function fire(){
+  if(!playing || reloading) return;
+  if(ammo<=0){
+    el('msg').textContent='🔫 Out of ammo — press R or RELOAD!';
+    beep(180,0.08,'square',0.05);
+    return;
+  }
+  ammo--; shots++; flash=1;
+  beep(140,0.16,'sawtooth',0.07);
+  var now=performance.now();
+  var sw=swayOffset(now);
+  var cx=mouse.x+sw.x, cy=mouse.y+sw.y;
+  var hitDone=false;
+  for(var i=0;i<targets.length;i++){
+    var t=targets[i], w=WINDOWS[t.win];
+    var dx=cx-(w.x+t.offX), dy=cy-(w.y+8);
+    var zone=hitZone(dx, dy);
+    if(zone!=='miss'){
+      var pts=scoreFor(zone);
+      score+=pts; hits++;
+      t.hitFlash=1;
+      targets.splice(i,1);
+      el('msg').textContent= zone==='head' ? '🎯 HEADSHOT! +150' : '🎯 Hit! +100';
+      beep(zone==='head'?1046:760, 0.09, 'sine', 0.06);
+      hitDone=true;
+      break;
+    }
+  }
+  if(!hitDone) el('msg').textContent='Missed. Settle the sway — hold still before you fire.';
+  if(ammo===0) el('msg').textContent+=' Magazine empty — RELOAD (R).';
+  hud(); drawScene(); draw();
+}
+function reload(){
+  if(reloading || ammo===6 || !playing) return;
+  reloading=true;
+  beep(320,0.07,'square',0.05);
+  draw();
+  setTimeout(function(){
+    ammo=6; reloading=false;
+    beep(520,0.07,'square',0.05);
+    el('msg').textContent='Magazine loaded — back on scope!';
+    hud(); draw();
+  }, 1100);
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+cvs.addEventListener('mousemove', function(e){
+  var p=posOf(e);
+  if(Math.hypot(p.x-mouse.x, p.y-mouse.y) > 2.5) lastMove=performance.now();
+  mouse=p;
+  if(!playing){ drawScene(); draw(); }
+});
+cvs.addEventListener('mousedown', function(){ fire(); });
+cvs.addEventListener('touchstart', function(e){
+  var p=posOf(e); mouse=p; lastMove=performance.now()-600;
+  drawScene(); draw();
+  e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchmove', function(e){
+  mouse=posOf(e); lastMove=performance.now();
+  if(!playing){ drawScene(); draw(); }
+  e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchend', function(e){ fire(); e.preventDefault(); }, {passive:false});
+document.addEventListener('keydown', function(e){
+  if(e.key==='r' || e.key==='R') reload();
+});
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='Mission live — targets incoming. Make them count!';
+  rafId=requestAnimationFrame(loop);
+});
+el('reloadBtn').addEventListener('click', reload);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ hitZone:hitZone, scoreFor:scoreFor, WINDOWS:WINDOWS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

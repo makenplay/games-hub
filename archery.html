@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Archery Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play archery free online. Draw the bow, judge the wind, and hit the gold — 10 arrows, moving target rounds. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#7ec8f7 0%,#bfe6fb 55%,#8fce6e 55.2%,#6db356 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏹 ARCHERY</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">ARROW <b id="arrowNo">1 / 10</b></div>
+  <div class="stat">WIND <b id="wind">→ 0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">LAST <b id="last">—</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Drag back from the bow to aim and set power — release to loose the arrow!</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW ROUND</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Gold centre = 10 · rings score 8 / 6 / 4 / 2 · watch the wind flag — it pushes your arrow sideways · from arrow 6 the target starts to move</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Archery</h2>
+  <p>The ancient sport of kings, distilled into ten arrows. Stand on the range, draw your bow against a shifting wind and put every shaft as close to the gold as you can — then do it again when the target itself starts to move.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and drag back from the bow to set your angle and power (the dotted line shows the arc), then release to shoot. The wind reading at the top pushes the arrow left or right in flight, so aim off to compensate. You have 10 arrows per round; the rings score 10, 8, 6, 4 and 2 from the centre out.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real projectile physics with gravity and a changing wind</li>
+    <li>A moving-target second half that separates the true marksmen</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, BOW={x:84, y:236}, TARGET_X=548, TARGET_R=58, GRAV=0.22;
+/* ---------- pure logic (testable) ---------- */
+function ringScore(dist){
+  if(dist <= 8) return 10;
+  if(dist <= 20) return 8;
+  if(dist <= 32) return 6;
+  if(dist <= 45) return 4;
+  if(dist <= TARGET_R) return 2;
+  return 0;
+}
+function arrowStep(a, wind){
+  a.vy += GRAV;
+  a.vx += wind * 0.012;
+  a.x += a.vx; a.y += a.vy;
+  return a;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var arrowsUsed, score, arrow, dragging, dragPos, stuck, wind, targetPhase, rafId, roundOver;
+var best=+(localStorage.getItem('makenArcheryBest')||0);
+el('best').textContent=best;
+function targetY(){ return 218 + (arrowsUsed>=5 ? Math.sin(targetPhase)*34 : 0); }
+function newWind(){ return Math.round((Math.random()*6-3)*10)/10; }
+function reset(){
+  arrowsUsed=0; score=0; arrow=null; dragging=false; dragPos=null; stuck=[]; wind=newWind(); targetPhase=0; roundOver=false;
+  hud(); draw();
+}
+function hud(){
+  el('arrowNo').textContent=Math.min(10, arrowsUsed+1)+' / 10';
+  el('wind').textContent=(wind>0?'→ ':wind<0?'← ':'')+Math.abs(wind).toFixed(1);
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenArcheryBest',best); }
+  el('best').textContent=best;
+}
+function draw(){
+  var ty=targetY();
+  /* clouds */
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  [[120,52,44],[300,36,56],[470,60,38]].forEach(function(c){
+    ctx.beginPath(); ctx.arc(c[0],c[1],c[2]*0.5,0,Math.PI*2); ctx.arc(c[0]+c[2]*0.5,c[1]+4,c[2]*0.38,0,Math.PI*2); ctx.fill();
+  });
+  /* wind flag */
+  ctx.strokeStyle='#334155'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(320, 226); ctx.lineTo(320, 262); ctx.stroke();
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath();
+  var dir=wind>=0?1:-1, len=10+Math.abs(wind)*7;
+  ctx.moveTo(320, 228); ctx.lineTo(320+dir*len, 233); ctx.lineTo(320, 238); ctx.closePath(); ctx.fill();
+  /* target stand + rings */
+  ctx.strokeStyle='#7c4a21'; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(TARGET_X-26, 340); ctx.lineTo(TARGET_X, ty+20); ctx.lineTo(TARGET_X+26, 340); ctx.stroke();
+  var rings=[[58,'#f8fafc'],[45,'#1e293b'],[32,'#38bdf8'],[20,'#ef4444'],[8,'#facc15']];
+  rings.forEach(function(r){
+    ctx.beginPath(); ctx.arc(TARGET_X, ty, r[0], 0, Math.PI*2);
+    ctx.fillStyle=r[1]; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1; ctx.stroke();
+  });
+  /* stuck arrows */
+  stuck.forEach(function(s){
+    ctx.strokeStyle='#92400e'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(s.x-26, s.y + (s.x-TARGET_X)*0 + 8); ctx.lineTo(s.x, s.y); ctx.stroke();
+    ctx.fillStyle='#f472b6';
+    ctx.beginPath(); ctx.arc(s.x-26, s.y+8, 3.5, 0, Math.PI*2); ctx.fill();
+  });
+  /* archer + bow */
+  ctx.font='44px Arial'; ctx.textAlign='center';
+  ctx.fillText('🧍', BOW.x-16, BOW.y+52);
+  ctx.strokeStyle='#7c4a21'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.arc(BOW.x+8, BOW.y, 30, -1.15, 1.15); ctx.stroke();
+  /* aim */
+  if(dragging && dragPos){
+    var dx=BOW.x-dragPos.x, dy=BOW.y-dragPos.y;
+    var power=Math.min(1, Math.hypot(dx,dy)/130);
+    var ang=Math.atan2(dy, dx);
+    ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(BOW.x+8, BOW.y-30); ctx.lineTo(dragPos.x, dragPos.y); ctx.lineTo(BOW.x+8, BOW.y+30); ctx.stroke();
+    /* trajectory preview */
+    var vx=Math.cos(ang)*power*21, vy=Math.sin(ang)*power*21;
+    var px=BOW.x+10, py=BOW.y, pvx=vx, pvy=vy;
+    ctx.fillStyle='rgba(17,24,39,0.55)';
+    for(var i=0;i<16;i++){
+      var tmp=arrowStep({x:px,y:py,vx:pvx,vy:pvy}, wind);
+      px=tmp.x; py=tmp.y; pvx=tmp.vx; pvy=tmp.vy;
+      if(i%2===0){ ctx.beginPath(); ctx.arc(px,py,2.6,0,Math.PI*2); ctx.fill(); }
+    }
+    ctx.fillStyle='#111827'; ctx.font='bold 13px Arial';
+    ctx.fillText('POWER '+Math.round(power*100)+'%', BOW.x+16, BOW.y-52);
+    /* loaded arrow */
+    ctx.strokeStyle='#92400e'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(BOW.x+10-Math.cos(ang)*30, BOW.y-Math.sin(ang)*30); ctx.lineTo(BOW.x+10+Math.cos(ang)*16, BOW.y+Math.sin(ang)*16); ctx.stroke();
+  }
+  /* flying arrow */
+  if(arrow){
+    var a2=Math.atan2(arrow.vy, arrow.vx);
+    ctx.strokeStyle='#92400e'; ctx.lineWidth=3.5;
+    ctx.beginPath(); ctx.moveTo(arrow.x-Math.cos(a2)*24, arrow.y-Math.sin(a2)*24); ctx.lineTo(arrow.x, arrow.y); ctx.stroke();
+    ctx.fillStyle='#e2e8f0';
+    ctx.beginPath(); ctx.moveTo(arrow.x+7, arrow.y); ctx.lineTo(arrow.x-3, arrow.y-4); ctx.lineTo(arrow.x-3, arrow.y+4); ctx.closePath(); ctx.fill();
+  }
+  if(roundOver){
+    ctx.fillStyle='rgba(7,11,24,0.72)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 30px Arial'; ctx.textAlign='center';
+    ctx.fillText('🏹 ROUND OVER — '+score+' / 100', W/2, H/2-8);
+    ctx.font='16px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(score>=80 ? 'Legendary shooting!' : score>=60 ? 'Superb — the gold loves you.' : score>=40 ? 'Solid round. Watch the wind!' : 'Keep practicing, Robin Hood.', W/2, H/2+24);
+  }
+}
+function resolveArrow(){
+  var ty=targetY();
+  var dist=Math.hypot(arrow.x-TARGET_X, arrow.y-ty);
+  var pts=ringScore(dist);
+  if(pts>0 && arrow.x > TARGET_X-TARGET_R-8){
+    stuck.push({ x:arrow.x, y:arrow.y });
+    el('msg').textContent= pts===10 ? '🎯 BULLSEYE! 10 points!' : '🎯 Hit! '+pts+' points.';
+    beep(pts===10?980:660, 0.1, 'sine', 0.06);
+  } else {
+    el('msg').textContent='Missed — '+(arrow.y>ty+70 ? 'too low, add power or aim higher.' : 'off target. Judge the wind and arc!');
+    beep(200,0.12,'square',0.05);
+  }
+  score+=pts;
+  el('last').textContent=pts>0 ? pts+' pts' : 'miss';
+  arrow=null; arrowsUsed++;
+  wind=newWind();
+  hud();
+  if(arrowsUsed>=10){
+    roundOver=true;
+    el('msg').textContent='Round complete — final score '+score+' / 100. Press NEW ROUND to shoot again.';
+    hud();
+  }
+  draw();
+}
+function loop(){
+  if(!arrow){ draw(); return; }
+  arrowStep(arrow, wind);
+  if(arrow.x >= TARGET_X-TARGET_R-6 && Math.abs(arrow.y-targetY()) <= TARGET_R+6 && arrow.vx>0){ resolveArrow(); return; }
+  if(arrow.x > W+10 || arrow.y > 348 || arrow.y < -20){ resolveArrow(); return; }
+  draw();
+  rafId=requestAnimationFrame(loop);
+}
+function animateTarget(){
+  targetPhase += 0.02;
+  if(!arrow && !dragging) draw();
+  requestAnimationFrame(animateTarget);
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+function startDrag(e){
+  if(arrow || roundOver) return;
+  dragging=true; dragPos=posOf(e);
+  draw(); e.preventDefault();
+}
+function moveDrag(e){
+  if(!dragging) return;
+  dragPos=posOf(e); draw(); e.preventDefault();
+}
+function endDrag(){
+  if(!dragging) return;
+  dragging=false;
+  var dx=BOW.x-dragPos.x, dy=BOW.y-dragPos.y;
+  var power=Math.min(1, Math.hypot(dx,dy)/130);
+  if(power<0.12){ dragPos=null; draw(); return; }
+  var ang=Math.atan2(dy, dx);
+  arrow={ x:BOW.x+12, y:BOW.y, vx:Math.cos(ang)*power*21, vy:Math.sin(ang)*power*21 };
+  dragPos=null;
+  beep(300,0.06,'sine',0.05);
+  cancelAnimationFrame(rafId); rafId=requestAnimationFrame(loop);
+}
+cvs.addEventListener('mousedown', startDrag);
+cvs.addEventListener('mousemove', moveDrag);
+document.addEventListener('mouseup', endDrag);
+cvs.addEventListener('touchstart', startDrag, {passive:false});
+cvs.addEventListener('touchmove', moveDrag, {passive:false});
+cvs.addEventListener('touchend', endDrag);
+el('newBtn').addEventListener('click', function(){ cancelAnimationFrame(rafId); reset(); el('msg').textContent='New round — drag back from the bow and loose!'; });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+requestAnimationFrame(animateTarget);
+if(typeof module!=='undefined') module.exports={ ringScore:ringScore, arrowStep:arrowStep };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
