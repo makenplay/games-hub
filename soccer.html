@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Soccer Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play mini soccer free online. 3v3 top-down football — dribble, shoot and beat the CPU before the clock runs out. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#15803d; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px; gap:6px; justify-content:center; margin:2px 0 8px; }
+  .pad button { font-size:20px; border-radius:10px; border:1px solid #26335f; background:#0e1530; color:#fff; cursor:pointer; }
+  .pad .fire { grid-row:1 / span 2; grid-column:3; background:linear-gradient(180deg,#dc2626,#b91c1c); font-size:14px; font-weight:800; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>⚽ SOCCER 3v3</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱️ <b id="time">2:00</b></div>
+  <div class="stat">🔵 YOU <b id="youScore">0</b></div>
+  <div class="stat">🔴 CPU <b id="cpuScore">0</b></div>
+  <div class="stat">🏆 TROPHIES <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Arrows / WASD to run (you control the ringed player), SPACE to shoot. First to more goals in 2 minutes wins!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ KICK OFF</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <span></span><button id="pUp">▲</button><button class="fire" id="pFire">SHOOT</button>
+  <button id="pLeft">◀</button><button id="pDown">▼</button>
+  <button id="pRight">▶</button>
+</div>
+<div class="keys">Run into the ball to dribble · shoot (SPACE / SHOOT) aims at goal · your keeper guards your line — help him by tracking back</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Soccer 3v3</h2>
+  <p>Two minutes of frantic top-down football. Three-a-side on a tight pitch means the ball is never far from a goal — dribble past the red shirts, shoot early, and track back fast when the CPU breaks away.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with the arrow keys, WASD or the on-screen pad — you always control the blue player with the ring. Run into the ball to dribble it; press SPACE (or SHOOT) to fire at goal. Your teammates and keeper position themselves automatically. Most goals when the 2-minute clock ends wins the trophy.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real 3v3 flow with automatic player switching and a goalkeeper</li>
+    <li>A CPU team that dribbles, shoots and defends its box</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, GOAL_W=96, BALL_R=8, P_R=13;
+/* ---------- pure logic (testable) ---------- */
+function goalAt(ball){
+  if(ball.x <= 6 && Math.abs(ball.y - H/2) < GOAL_W/2) return 'cpu-goal'; /* into left goal = CPU concedes? left is YOUR goal */
+  if(ball.x >= W-6 && Math.abs(ball.y - H/2) < GOAL_W/2) return 'you-goal';
+  return null;
+}
+function ballStep(ball, dt){
+  ball.x += ball.vx*dt;
+  ball.y += ball.vy*dt;
+  var fr=Math.pow(0.32, dt);
+  ball.vx *= fr; ball.vy *= fr;
+  if(ball.y < BALL_R){ ball.y=BALL_R; ball.vy=Math.abs(ball.vy)*0.7; }
+  if(ball.y > H-BALL_R){ ball.y=H-BALL_R; ball.vy=-Math.abs(ball.vy)*0.7; }
+  if(ball.x < BALL_R && Math.abs(ball.y-H/2) >= GOAL_W/2){ ball.x=BALL_R; ball.vx=Math.abs(ball.vx)*0.7; }
+  if(ball.x > W-BALL_R && Math.abs(ball.y-H/2) >= GOAL_W/2){ ball.x=W-BALL_R; ball.vx=-Math.abs(ball.vx)*0.7; }
+  return ball;
+}
+function kick(ball, tx, ty, power){
+  var dx=tx-ball.x, dy=ty-ball.y, len=Math.hypot(dx,dy)||1;
+  ball.vx=dx/len*power; ball.vy=dy/len*power;
+  return ball;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, timeLeft, you, cpu, ball, youScore, cpuScore, keys, activeIdx, celebrate, rafId, lastTick;
+var trophies=+(localStorage.getItem('makenSoccerTrophies')||0);
+el('best').textContent=trophies;
+function hud(){
+  var m=Math.floor(Math.max(0,timeLeft)/60), s=Math.floor(Math.max(0,timeLeft)%60);
+  el('time').textContent=m+':'+(s<10?'0':'')+s;
+  el('youScore').textContent=youScore;
+  el('cpuScore').textContent=cpuScore;
+  el('best').textContent=trophies;
+}
+function kickoff(concededBy){
+  ball={ x:W/2, y:H/2, vx:0, vy:0 };
+  you=[
+    { x:170, y:H/2, home:{x:170, y:H/2}, keeper:false },
+    { x:120, y:110, home:{x:120, y:110}, keeper:false },
+    { x:26, y:H/2, home:{x:26, y:H/2}, keeper:true }
+  ];
+  cpu=[
+    { x:W-170, y:H/2, home:{x:W-170, y:H/2}, keeper:false },
+    { x:W-120, y:H-110, home:{x:W-120, y:H-110}, keeper:false },
+    { x:W-26, y:H/2, home:{x:W-26, y:H/2}, keeper:true }
+  ];
+  activeIdx=0;
+  celebrate=0;
+}
+function reset(){
+  playing=false; timeLeft=120; youScore=0; cpuScore=0; keys={};
+  kickoff();
+  hud(); draw();
+}
+function drawPitch(){
+  ctx.fillStyle='#15803d'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#16a34a';
+  for(var i=0;i<8;i++) if(i%2===0) ctx.fillRect(i*80, 0, 80, H);
+  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=2;
+  ctx.strokeRect(10, 10, W-20, H-20);
+  ctx.beginPath(); ctx.moveTo(W/2, 10); ctx.lineTo(W/2, H-10); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2, H/2, 52, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeRect(10, H/2-80, 64, 160);
+  ctx.strokeRect(W-74, H/2-80, 64, 160);
+  /* goals */
+  ctx.fillStyle='#f8fafc';
+  ctx.fillRect(0, H/2-GOAL_W/2, 8, GOAL_W);
+  ctx.fillRect(W-8, H/2-GOAL_W/2, 8, GOAL_W);
+}
+function drawPlayer(p, color, ring){
+  ctx.beginPath(); ctx.arc(p.x, p.y, P_R, 0, Math.PI*2);
+  ctx.fillStyle=color; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillText(p.keeper ? 'GK' : '•', p.x, p.y+3.5);
+  if(ring){
+    ctx.beginPath(); ctx.arc(p.x, p.y, P_R+5, 0, Math.PI*2);
+    ctx.strokeStyle='#facc15'; ctx.lineWidth=2.5; ctx.stroke();
+  }
+}
+function draw(){
+  drawPitch();
+  cpu.forEach(function(p){ drawPlayer(p, '#dc2626', false); });
+  you.forEach(function(p, i){ drawPlayer(p, '#2563eb', i===activeIdx); });
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill();
+  ctx.strokeStyle='#111827'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(ball.x-2, ball.y-2, 2.4, 0, Math.PI*2); ctx.fill();
+  if(celebrate>0){
+    ctx.fillStyle='rgba(7,11,24,0.45)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#facc15'; ctx.font='bold 40px Arial'; ctx.textAlign='center';
+    ctx.fillText('GOAL! ⚽', W/2, H/2);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 27px Arial'; ctx.textAlign='center';
+    var done=timeLeft<=0;
+    ctx.fillText(done ? (youScore>cpuScore ? '🏆 FULL TIME — YOU WIN!' : youScore<cpuScore ? '😖 FULL TIME — CPU WINS' : '🤝 FULL TIME — DRAW') : '⚽ SOCCER 3v3', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(done ? 'Final: You '+youScore+' — '+cpuScore+' CPU — press KICK OFF to play again' : 'Press KICK OFF — 2 minutes, most goals wins', W/2, H/2+18);
+  }
+}
+function moveToward(p, tx, ty, speed, dt){
+  var dx=tx-p.x, dy=ty-p.y, len=Math.hypot(dx,dy);
+  if(len<2) return;
+  var step=Math.min(len, speed*dt);
+  p.x += dx/len*step;
+  p.y += dy/len*step;
+  p.x=Math.max(P_R, Math.min(W-P_R, p.x));
+  p.y=Math.max(P_R, Math.min(H-P_R, p.y));
+}
+function dribble(p){
+  if(Math.hypot(ball.x-p.x, ball.y-p.y) < P_R + BALL_R + 3){
+    var gx = p===you[activeIdx] || you.indexOf(p)>=0 ? W : 0;
+    var dirx = gx===W ? 1 : -1;
+    ball.x = p.x + dirx*(P_R+BALL_R-1);
+    ball.y = p.y;
+    ball.vx = dirx*40; ball.vy = 0;
+    return true;
+  }
+  return false;
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(celebrate>0){
+    celebrate-=dt;
+    draw();
+    if(celebrate<=0) kickoff();
+    rafId=requestAnimationFrame(loop);
+    return;
+  }
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    timeLeft=0; playing=false;
+    if(youScore>cpuScore){ trophies++; localStorage.setItem('makenSoccerTrophies', trophies); }
+    el('msg').textContent= youScore>cpuScore ? '🏆 You win '+youScore+'–'+cpuScore+'! Trophy earned.' : youScore<cpuScore ? '😖 CPU wins '+cpuScore+'–'+youScore+'.' : '🤝 A '+youScore+'–'+cpuScore+' draw.';
+    beep(youScore>cpuScore?980:220, 0.2, 'sine', 0.06);
+    hud(); draw();
+    return;
+  }
+  /* choose active player: nearest non-keeper to ball */
+  var bestI=0, bestD=1e9;
+  you.forEach(function(p, i){
+    if(p.keeper) return;
+    var d=Math.hypot(ball.x-p.x, ball.y-p.y);
+    if(d<bestD){ bestD=d; bestI=i; }
+  });
+  activeIdx=bestI;
+  var me=you[activeIdx];
+  var sp=168;
+  var mx=0, my=0;
+  if(keys.ArrowLeft || keys.KeyA) mx-=1;
+  if(keys.ArrowRight || keys.KeyD) mx+=1;
+  if(keys.ArrowUp || keys.KeyW) my-=1;
+  if(keys.ArrowDown || keys.KeyS) my+=1;
+  if(mx||my){
+    var l=Math.hypot(mx,my);
+    me.x=Math.max(P_R, Math.min(W-P_R, me.x + mx/l*sp*dt));
+    me.y=Math.max(P_R, Math.min(H-P_R, me.y + my/l*sp*dt));
+    me.fx=mx/l; me.fy=my/l;
+  }
+  /* your other outfielder: support position */
+  you.forEach(function(p, i){
+    if(i===activeIdx || p.keeper) return;
+    moveToward(p, p.home.x + (ball.x-W/2)*0.25, p.home.y + (ball.y-H/2)*0.3, 96, dt);
+    dribble(p);
+  });
+  /* your keeper: guard line */
+  var yk=you[2];
+  moveToward(yk, 26, Math.max(H/2-GOAL_W/2+8, Math.min(H/2+GOAL_W/2-8, ball.y)), 150, dt);
+  if(Math.hypot(ball.x-yk.x, ball.y-yk.y) < P_R+BALL_R+4){
+    kick(ball, W/2+60, ball.y + (Math.random()*80-40), 330);
+    el('msg').textContent='🧤 Your keeper clears it!';
+  }
+  /* dribble + shoot for active player */
+  var hasBall=dribble(me);
+  if(hasBall && keys.Space){
+    kick(ball, W-4, ball.y + (H/2-ball.y)*0.35 + (me.fy||0)*60, 430);
+    keys.Space=false;
+    beep(340,0.06,'square',0.05);
+  }
+  /* CPU AI */
+  var cpuHas=false;
+  cpu.forEach(function(p, i){
+    if(p.keeper) return;
+    var dBall=Math.hypot(ball.x-p.x, ball.y-p.y);
+    var iAmClosest = cpu.every(function(q){ return q.keeper || Math.hypot(ball.x-q.x, ball.y-q.y) >= dBall-1; });
+    if(iAmClosest){
+      if(dBall > P_R+BALL_R+2) moveToward(p, ball.x, ball.y, 138, dt);
+      else {
+        cpuHas=true;
+        ball.x=p.x-(P_R+BALL_R-1); ball.y=p.y; ball.vx=-40; ball.vy=0;
+        moveToward(p, 60, ball.y + Math.sin(performance.now()/500)*24, 122, dt);
+        ball.x=p.x-(P_R+BALL_R-1); ball.y=p.y;
+        if(p.x < 210 || Math.random()<dt*0.5){
+          kick(ball, 4, H/2 + (Math.random()*GOAL_W*0.7 - GOAL_W*0.35), 400);
+          cpuHas=false;
+          beep(300,0.06,'square',0.04);
+        }
+      }
+    } else {
+      moveToward(p, p.home.x + (ball.x-W/2)*0.2, p.home.y, 92, dt);
+    }
+  });
+  var ck=cpu[2];
+  moveToward(ck, W-26, Math.max(H/2-GOAL_W/2+8, Math.min(H/2+GOAL_W/2-8, ball.y)), 155, dt);
+  if(Math.hypot(ball.x-ck.x, ball.y-ck.y) < P_R+BALL_R+4){
+    kick(ball, W/2-60, ball.y + (Math.random()*80-40), 330);
+  }
+  ballStep(ball, dt);
+  var g=goalAt(ball);
+  if(g==='you-goal'){
+    youScore++; celebrate=1.4;
+    el('msg').textContent='⚽ GOAL FOR YOU! '+youScore+'–'+cpuScore;
+    beep(980,0.18,'sine',0.07);
+  } else if(g==='cpu-goal'){
+    cpuScore++; celebrate=1.4;
+    el('msg').textContent='😖 CPU scores. '+youScore+'–'+cpuScore+' — kick off again!';
+    beep(200,0.18,'sawtooth',0.06);
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+function bindPad(id, code){
+  var b=el(id);
+  var on=function(e){ keys[code]=true; e.preventDefault(); };
+  var off=function(){ keys[code]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+bindPad('pUp','ArrowUp'); bindPad('pDown','ArrowDown'); bindPad('pLeft','ArrowLeft'); bindPad('pRight','ArrowRight'); bindPad('pFire','Space');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='⚽ Kick off! You are blue — attack the right goal!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ goalAt:goalAt, ballStep:ballStep, kick:kick, GOAL_W:GOAL_W };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Basketball Hoops Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play basketball hoops free online. Sixty seconds of pure shooting — set your arc, beat the moving rim and chase the hot streak. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#78350f 0%,#92400e 45%,#b45309 45.2%,#92400e 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏀 BASKETBALL HOOPS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱️ <b id="time">60</b></div>
+  <div class="stat">SWISHES <b id="makes">0</b></div>
+  <div class="stat">STREAK <b id="streak">×0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Drag back from the ball to set your arc and power — release to shoot!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START (60s)</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Clean swish = 3 pts · off the board/rim = 2 pts · 3 makes in a row = ON FIRE (double points) · the rim starts moving at 30 seconds</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Basketball Hoops</h2>
+  <p>Sixty seconds, one ball, one hoop — and a shooting spot that keeps changing. Find your arc from everywhere on the court, bank it off the glass when you must, and when the streak catches fire every basket counts double.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and drag back from the ball to bend the dotted trajectory, then release to shoot. A clean swish scores 3, a basket off the rim or backboard scores 2. Three makes in a row puts you ON FIRE for double points — and in the second half the whole hoop starts sliding up and down.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real projectile physics with rim and backboard bounces</li>
+    <li>Random shooting spots and a moving rim in the second half</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, GRAV=620, BALL_R=11, RIM_W=46;
+/* ---------- pure logic (testable) ---------- */
+function ballStep(b, dt){
+  b.vy += GRAV*dt;
+  b.x += b.vx*dt;
+  b.y += b.vy*dt;
+  return b;
+}
+function isScore(prevY, newY, x, rim){
+  /* ball crosses rim plane downward within the rim opening */
+  return prevY <= rim.y && newY > rim.y && x > rim.x+3 && x < rim.x + RIM_W - 3;
+}
+function rimAt(t, moving){
+  var baseY=128;
+  return { x:548, y: moving ? baseY + Math.sin(t*1.4)*30 : baseY };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, timeLeft, ball, spot, dragging, dragPos, score, makes, shots, streak, touched, elapsed, rafId, lastTick;
+var best=+(localStorage.getItem('makenHoopsBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('time').textContent=Math.ceil(timeLeft);
+  el('makes').textContent=makes;
+  el('streak').textContent='×'+streak+(streak>=3 ? ' 🔥' : '');
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenHoopsBest',best); }
+  el('best').textContent=best;
+}
+function newSpot(){
+  var spots=[ {x:110, y:330}, {x:190, y:344}, {x:280, y:330}, {x:90, y:290}, {x:340, y:348}, {x:230, y:300} ];
+  spot=spots[Math.floor(Math.random()*spots.length)];
+  ball={ x:spot.x, y:spot.y, vx:0, vy:0, live:false };
+  touched=false;
+}
+function reset(){
+  playing=false; timeLeft=60; score=0; makes=0; shots=0; streak=0; elapsed=0;
+  dragging=false; dragPos=null;
+  newSpot();
+  hud(); draw();
+}
+function draw(){
+  var rim=rimAt(elapsed, playing && timeLeft<30);
+  /* court floor lines */
+  ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0, 366); ctx.lineTo(W, 366); ctx.stroke();
+  ctx.beginPath(); ctx.arc(150, 366, 60, Math.PI, 0); ctx.stroke();
+  /* pole + backboard */
+  ctx.fillStyle='#374151'; ctx.fillRect(618, 40, 10, 326);
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(586, rim.y-52, 36, 46);
+  ctx.strokeStyle='#dc2626'; ctx.lineWidth=2.5; ctx.strokeRect(592, rim.y-40, 24, 22);
+  ctx.fillStyle='#374151'; ctx.fillRect(580, rim.y-6, 8, 8);
+  /* rim + net */
+  ctx.strokeStyle='#ea580c'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(rim.x, rim.y); ctx.lineTo(rim.x+RIM_W, rim.y); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=1.4;
+  ctx.beginPath();
+  ctx.moveTo(rim.x+3, rim.y+2); ctx.lineTo(rim.x+10, rim.y+26);
+  ctx.moveTo(rim.x+RIM_W-3, rim.y+2); ctx.lineTo(rim.x+RIM_W-10, rim.y+26);
+  ctx.moveTo(rim.x+10, rim.y+26); ctx.lineTo(rim.x+RIM_W-10, rim.y+26);
+  ctx.moveTo(rim.x+16, rim.y+2); ctx.lineTo(rim.x+18, rim.y+26);
+  ctx.moveTo(rim.x+RIM_W-16, rim.y+2); ctx.lineTo(rim.x+RIM_W-18, rim.y+26);
+  ctx.stroke();
+  /* shooter */
+  ctx.font='42px Arial'; ctx.textAlign='center';
+  ctx.fillText('🧍', spot.x-24, spot.y+38);
+  /* aim */
+  if(dragging && dragPos && ball && !ball.live){
+    var dx=ball.x-dragPos.x, dy=ball.y-dragPos.y;
+    var power=Math.min(1, Math.hypot(dx,dy)/170);
+    var vx=dx*3.1, vy=dy*3.1;
+    var px=ball.x, py=ball.y, pvx=vx, pvy=vy;
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    var sim={ x:px, y:py, vx:pvx, vy:pvy };
+    for(var i=0;i<26;i++){
+      ballStep(sim, 0.045);
+      if(i%2===0){ ctx.beginPath(); ctx.arc(sim.x, sim.y, 2.6, 0, Math.PI*2); ctx.fill(); }
+      if(sim.y>H) break;
+    }
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Arial';
+    ctx.fillText('POWER '+Math.round(power*100)+'%', ball.x, ball.y-46);
+  }
+  /* ball */
+  if(ball){
+    ctx.fillStyle='#ea580c';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#7c2d12'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ball.x-BALL_R, ball.y); ctx.lineTo(ball.x+BALL_R, ball.y);
+    ctx.moveTo(ball.x, ball.y-BALL_R); ctx.lineTo(ball.x, ball.y+BALL_R); ctx.stroke();
+  }
+  if(streak>=3){
+    ctx.fillStyle='#f87171'; ctx.font='bold 17px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔥 ON FIRE — DOUBLE POINTS 🔥', W/2, 30);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(timeLeft<60 ? '🏀 TIME UP' : '🏀 BASKETBALL HOOPS', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(timeLeft<60 ? 'Score '+score+' · '+makes+'/'+shots+' shots — press START to shoot again' : 'Press START — 60 seconds of shooting', W/2, H/2+18);
+  }
+}
+function resolveShot(){
+  ball.live=false;
+  newSpot();
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  elapsed+=dt;
+  if(timeLeft<=0){
+    timeLeft=0; playing=false;
+    el('msg').textContent='🏀 Time! Final score '+score+' — '+makes+' of '+shots+' shots made.';
+    beep(880,0.14,'sine',0.06);
+    hud(); draw();
+    return;
+  }
+  if(ball && ball.live){
+    var rim=rimAt(elapsed, timeLeft<30);
+    var prevY=ball.y;
+    ballStep(ball, dt);
+    /* backboard bounce */
+    if(ball.x+BALL_R > 586 && ball.x < 600 && ball.y > rim.y-52 && ball.y < rim.y-6 && ball.vx>0){
+      ball.x=586-BALL_R; ball.vx=-Math.abs(ball.vx)*0.62; touched=true;
+    }
+    /* rim edge bounces */
+    [rim.x, rim.x+RIM_W].forEach(function(rx){
+      var d=Math.hypot(ball.x-rx, ball.y-rim.y);
+      if(d < BALL_R+2 && d>0){
+        var nx=(ball.x-rx)/d, ny=(ball.y-rim.y)/d;
+        ball.x=rx+nx*(BALL_R+2); ball.y=rim.y+ny*(BALL_R+2);
+        var dot=ball.vx*nx + ball.vy*ny;
+        if(dot<0){ ball.vx -= 1.7*dot*nx; ball.vy -= 1.7*dot*ny; ball.vx*=0.72; ball.vy*=0.72; }
+        touched=true;
+      }
+    });
+    /* score check */
+    if(ball.vy>0 && isScore(prevY, ball.y, ball.x, rim)){
+      var pts= touched ? 2 : 3;
+      if(streak>=3) pts*=2;
+      score+=pts; makes++; streak++;
+      el('msg').textContent= touched ? '🏀 Basket! +'+pts : '💦 SWISH! +'+pts+(streak>=3 ? ' (ON FIRE bonus!)' : '');
+      beep(940,0.11,'sine',0.06);
+      resolveShot();
+    } else if(ball.y > H+20 || ball.x < -20 || ball.x > W+20){
+      streak=0;
+      el('msg').textContent='No good — streak reset. Next spot!';
+      resolveShot();
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+function startDrag(e){
+  if(!playing || !ball || ball.live) return;
+  dragging=true; dragPos=posOf(e);
+  e.preventDefault();
+}
+function moveDrag(e){
+  if(!dragging) return;
+  dragPos=posOf(e); draw(); e.preventDefault();
+}
+function endDrag(){
+  if(!dragging) return;
+  dragging=false;
+  var dx=ball.x-dragPos.x, dy=ball.y-dragPos.y;
+  var power=Math.min(1, Math.hypot(dx,dy)/170);
+  if(power<0.1){ dragPos=null; draw(); return; }
+  ball.vx=dx*3.1; ball.vy=dy*3.1;
+  ball.live=true; shots++;
+  dragPos=null;
+  beep(280,0.05,'sine',0.04);
+  draw();
+}
+cvs.addEventListener('mousedown', startDrag);
+cvs.addEventListener('mousemove', moveDrag);
+document.addEventListener('mouseup', endDrag);
+cvs.addEventListener('touchstart', startDrag, {passive:false});
+cvs.addEventListener('touchmove', moveDrag, {passive:false});
+cvs.addEventListener('touchend', endDrag);
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🏀 Clock running — drag, aim, release!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ ballStep:ballStep, isScore:isScore, rimAt:rimAt, RIM_W:RIM_W };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
