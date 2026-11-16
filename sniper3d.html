@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sniper 3D Missions — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Sniper 3D Missions free online. Read the briefing, find the described target in the crowd through your scope, and take the shot. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .stat b.low { color:#f87171; }
+  #brief { width:min(94vw,440px); background:#172554; border:1px solid #3b82f6; border-radius:10px; padding:8px 14px; font-size:14px; text-align:center; margin:2px 0 6px; }
+  #brief b { color:#fbbf24; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:none; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🎯 SNIPER 3D MISSIONS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🎯 MISSION <b id="mission">1/6</b></div>
+  <div class="stat">⏱ <b id="time">45</b></div>
+  <div class="stat">⭐ SCORE <b id="score">0</b></div>
+  <div class="stat">🏆 BEST <b id="best">—</b></div>
+</div>
+<div id="brief">Press START MISSION to receive your briefing.</div>
+
+<canvas id="cv" width="440" height="400"></canvas>
+<div id="msg">Move to aim the scope — click / tap to fire. One bullet per mission.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START MISSION</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Only the described person is the target · hitting a civilian fails the mission · the clock is ticking</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Sniper 3D Missions</h2>
+  <p>Six contract missions on a busy city street. Each briefing describes exactly one person — the colour of their hat, their shirt, what they're carrying. Everyone else is an innocent civilian, and some are dressed almost the same. Find the right figure through your telescopic scope, steady the crosshair, and take the one shot you get.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move the mouse (or drag on touch) to sweep the scope across the street; the scope magnifies the crowd so you can read the details — hats, shirts, bags, umbrellas. Click to fire. Hit the described target to complete the mission and bank your time bonus; hit anyone else, or run out of time, and the mission fails. Later missions pack the street with near-identical decoys, so read the briefing twice and shoot once.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Six handcrafted missions with unique, verifiable target descriptions</li>
+    <li>A real magnifying scope over a living, walking crowd</li>
+    <li>Score = accuracy plus time bonus, best score saved</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=440, H=400, STREET_Y=318, FIG_H=64;
+/* figure: { x, speed (signed), hat, shirt, item } — item: 'bag' | 'umbrella' | 'case' | null
+   hat: colour name or null. People walk the full street width and wrap. */
+var MISSIONS=[
+  { time:45, brief:'the man in the <b>RED hat</b> with the <b>BLUE shirt</b>',
+    people:[
+      { x:40,  speed:26,  hat:'red',    shirt:'#3b82f6', item:null },
+      { x:150, speed:-20, hat:'red',    shirt:'#22c55e', item:null },
+      { x:230, speed:18,  hat:'black',  shirt:'#3b82f6', item:'bag' },
+      { x:320, speed:-28, hat:null,     shirt:'#eab308', item:null },
+      { x:390, speed:22,  hat:'blue',   shirt:'#ef4444', item:null } ],
+    target:0 },
+  { time:45, brief:'the woman with the <b>YELLOW umbrella</b> and <b>PINK shirt</b>',
+    people:[
+      { x:30,  speed:24,  hat:null,     shirt:'#ec4899', item:'bag' },
+      { x:120, speed:-18, hat:'green',  shirt:'#ec4899', item:'umbrella', umb:'#eab308' },
+      { x:210, speed:20,  hat:null,     shirt:'#3b82f6', item:'umbrella', umb:'#eab308' },
+      { x:300, speed:-24, hat:'black',  shirt:'#ec4899', item:null },
+      { x:380, speed:16,  hat:null,     shirt:'#22c55e', item:'umbrella', umb:'#3b82f6' } ],
+    target:1 },
+  { time:40, brief:'the man carrying the <b>BROWN case</b>, <b>GREEN shirt</b>, <b>no hat</b>',
+    people:[
+      { x:20,  speed:-22, hat:'black',  shirt:'#22c55e', item:'case' },
+      { x:100, speed:26,  hat:null,     shirt:'#22c55e', item:'bag' },
+      { x:180, speed:-16, hat:null,     shirt:'#22c55e', item:'case' },
+      { x:250, speed:20,  hat:null,     shirt:'#3b82f6', item:'case' },
+      { x:330, speed:-26, hat:'red',    shirt:'#22c55e', item:null },
+      { x:400, speed:18,  hat:null,     shirt:'#eab308', item:'case' } ],
+    target:2 },
+  { time:40, brief:'the man in the <b>WHITE hat</b> and <b>BLACK shirt</b> with a <b>bag</b>',
+    people:[
+      { x:35,  speed:20,  hat:'white',  shirt:'#111827', item:null },
+      { x:110, speed:-24, hat:'white',  shirt:'#111827', item:'bag' },
+      { x:185, speed:16,  hat:'black',  shirt:'#111827', item:'bag' },
+      { x:255, speed:-19, hat:'white',  shirt:'#3b82f6', item:'bag' },
+      { x:325, speed:23,  hat:'white',  shirt:'#111827', item:'umbrella', umb:'#ef4444' },
+      { x:395, speed:-15, hat:'red',    shirt:'#111827', item:'bag' } ],
+    target:1 },
+  { time:35, brief:'the woman in the <b>PURPLE shirt</b> with the <b>BLUE umbrella</b> and <b>no hat</b>',
+    people:[
+      { x:25,  speed:-26, hat:'black',  shirt:'#a855f7', item:'umbrella', umb:'#3b82f6' },
+      { x:95,  speed:22,  hat:null,     shirt:'#a855f7', item:'umbrella', umb:'#ef4444' },
+      { x:160, speed:-18, hat:null,     shirt:'#a855f7', item:'umbrella', umb:'#3b82f6' },
+      { x:230, speed:25,  hat:null,     shirt:'#ec4899', item:'umbrella', umb:'#3b82f6' },
+      { x:300, speed:-21, hat:null,     shirt:'#a855f7', item:'bag' },
+      { x:365, speed:17,  hat:'green',  shirt:'#a855f7', item:'umbrella', umb:'#3b82f6' },
+      { x:415, speed:-23, hat:null,     shirt:'#a855f7', item:null } ],
+    target:2 },
+  { time:35, brief:'the man in the <b>ORANGE shirt</b>, <b>GREEN hat</b>, carrying a <b>case</b>',
+    people:[
+      { x:15,  speed:24,  hat:'green',  shirt:'#f97316', item:'bag' },
+      { x:80,  speed:-20, hat:'green',  shirt:'#f97316', item:'case' },
+      { x:145, speed:18,  hat:'black',  shirt:'#f97316', item:'case' },
+      { x:210, speed:-25, hat:'green',  shirt:'#eab308', item:'case' },
+      { x:275, speed:21,  hat:'green',  shirt:'#f97316', item:null },
+      { x:335, speed:-17, hat:'red',    shirt:'#f97316', item:'case' },
+      { x:395, speed:26,  hat:'green',  shirt:'#3b82f6', item:'case' } ],
+    target:1 }
+];
+var HAT_COLORS={ red:'#ef4444', blue:'#3b82f6', black:'#111827', green:'#22c55e', white:'#f8fafc' };
+/* ---------- pure logic (testable) ---------- */
+function stepPeople(people, dt){
+  people.forEach(function(p){
+    p.x += p.speed*dt;
+    if(p.x > W+24) p.x = -24;
+    if(p.x < -24) p.x = W+24;
+  });
+  return people;
+}
+/* figure occupies x±11, from STREET_Y-FIG_H to STREET_Y. Returns index or -1. */
+function figureAt(people, px, py){
+  if(py < STREET_Y-FIG_H || py > STREET_Y) return -1;
+  for(var i=people.length-1;i>=0;i--){
+    if(Math.abs(px-people[i].x) <= 11) return i;
+  }
+  return -1;
+}
+/* does figure p match ALL described traits? traits: { hat, shirt, item, umb } with undefined = don't care, null = must be absent */
+function matches(p, traits){
+  if(traits.hat !== undefined && p.hat !== traits.hat) return false;
+  if(traits.shirt !== undefined && p.shirt !== traits.shirt) return false;
+  if(traits.item !== undefined && p.item !== traits.item) return false;
+  if(traits.umb !== undefined && p.umb !== traits.umb) return false;
+  return true;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+function bang(){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(160, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime+0.18);
+    gn.gain.value=0.12; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.2);
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.2);
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var scene=document.createElement('canvas');
+scene.width=W; scene.height=H;
+var sctx=scene.getContext('2d');
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var mission=0, people=[], score=0, timeLeft=0, playing=false, over=true, scope={ x:W/2, y:200 }, rafId=null, lastTs=0, flash=0;
+function best(){ return +(localStorage.getItem('makenSniperBest')||0); }
+function hud(){
+  el('mission').textContent= Math.min(6, mission+1)+'/6';
+  var t=el('time');
+  t.textContent=Math.ceil(timeLeft);
+  t.className= timeLeft<=10 && playing ? 'low' : '';
+  el('score').textContent=score;
+  el('best').textContent= best() ? best() : '—';
+}
+function loadMission(m){
+  mission=m;
+  var M=MISSIONS[m];
+  people=M.people.map(function(p){ return { x:p.x, speed:p.speed, hat:p.hat, shirt:p.shirt, item:p.item, umb:p.umb, phase:Math.random()*6 }; });
+  timeLeft=M.time;
+  playing=true; over=false; flash=0;
+  el('brief').innerHTML='🎯 TARGET: '+M.brief;
+  el('msg').textContent='Mission '+(m+1)+' — find the target and take the shot.';
+  hud();
+  if(rafId) cancelAnimationFrame(rafId);
+  lastTs=0;
+  rafId=requestAnimationFrame(frame);
+}
+function drawFigure(g, p, t){
+  var x=p.x, base=STREET_Y;
+  var bob=Math.sin(t*7 + p.phase)*1.6;
+  var dir= p.speed>=0 ? 1 : -1;
+  g.lineCap='round';
+  /* legs */
+  g.strokeStyle='#1f2937'; g.lineWidth=3.4;
+  var lp=Math.sin(t*7 + p.phase)*5;
+  g.beginPath(); g.moveTo(x, base-24+bob*0.3); g.lineTo(x-4+lp*0.5, base); g.stroke();
+  g.beginPath(); g.moveTo(x, base-24+bob*0.3); g.lineTo(x+4-lp*0.5, base); g.stroke();
+  /* body (shirt) */
+  g.strokeStyle=p.shirt; g.lineWidth=5;
+  g.beginPath(); g.moveTo(x, base-24+bob*0.3); g.lineTo(x, base-42+bob); g.stroke();
+  /* arms */
+  g.lineWidth=3;
+  g.beginPath(); g.moveTo(x, base-40+bob); g.lineTo(x-6*dir, base-30+bob); g.stroke();
+  if(p.item==='bag'){
+    g.beginPath(); g.moveTo(x, base-40+bob); g.lineTo(x+6*dir, base-29+bob); g.stroke();
+    g.fillStyle='#92400e'; g.fillRect(x+6*dir-4, base-29+bob, 9, 11);
+  } else if(p.item==='case'){
+    g.beginPath(); g.moveTo(x, base-40+bob); g.lineTo(x+6*dir, base-29+bob); g.stroke();
+    g.fillStyle='#78350f'; g.fillRect(x+6*dir-6, base-29+bob, 13, 9);
+  } else if(p.item==='umbrella'){
+    g.beginPath(); g.moveTo(x, base-40+bob); g.lineTo(x+5*dir, base-33+bob); g.stroke();
+    g.strokeStyle='#374151'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(x+5*dir, base-33+bob); g.lineTo(x+5*dir, base-56+bob); g.stroke();
+    g.fillStyle=p.umb || '#3b82f6';
+    g.beginPath(); g.arc(x+5*dir, base-56+bob, 13, Math.PI, 0); g.closePath(); g.fill();
+  } else {
+    g.beginPath(); g.moveTo(x, base-40+bob); g.lineTo(x+6*dir, base-30+bob); g.stroke();
+  }
+  /* head */
+  g.fillStyle='#fbbf24';
+  g.beginPath(); g.arc(x, base-49+bob, 5.6, 0, Math.PI*2); g.fill();
+  /* hat */
+  if(p.hat){
+    g.fillStyle=HAT_COLORS[p.hat];
+    g.beginPath(); g.arc(x, base-51+bob, 5.8, Math.PI, 0); g.closePath(); g.fill();
+    g.fillRect(x-8, base-51+bob, 16, 2.4);
+  }
+}
+function drawScene(t){
+  var sky=sctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#7dd3fc'); sky.addColorStop(0.7,'#e0f2fe'); sky.addColorStop(1,'#fef9c3');
+  sctx.fillStyle=sky; sctx.fillRect(0,0,W,H);
+  /* buildings */
+  var cols=['#94a3b8','#a8a29e','#9ca3af','#b6c2d2','#a3a380'];
+  for(var i=0;i<6;i++){
+    sctx.fillStyle=cols[i%cols.length];
+    sctx.fillRect(i*74-4, 92+((i*53)%40), 70, STREET_Y-92-((i*53)%40));
+    sctx.fillStyle='rgba(254,240,138,0.85)';
+    for(var wy=110+((i*53)%40); wy<STREET_Y-24; wy+=26)
+      for(var wx=i*74+6; wx<i*74+56; wx+=18)
+        if(((wx+wy)*7)%3) sctx.fillRect(wx, wy, 9, 11);
+  }
+  /* pavement + road */
+  sctx.fillStyle='#d6d3d1'; sctx.fillRect(0, STREET_Y, W, 14);
+  sctx.fillStyle='#374151'; sctx.fillRect(0, STREET_Y+14, W, H-STREET_Y-14);
+  sctx.fillStyle='#facc15';
+  for(var lx=6; lx<W; lx+=40) sctx.fillRect(lx, STREET_Y+46, 20, 3.4);
+  /* crowd (sorted so lower-speed... draw in array order) */
+  people.forEach(function(p){ drawFigure(sctx, p, t); });
+}
+function draw(t){
+  drawScene(t);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(scope.x, scope.y, 118, 0, Math.PI*2); ctx.clip();
+  ctx.drawImage(scene, 0, 0);
+  /* magnification illusion: redraw the scene scaled around the scope centre */
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath(); ctx.arc(scope.x, scope.y, 118, 0, Math.PI*2); ctx.clip();
+  var Z=1.7;
+  ctx.translate(scope.x, scope.y);
+  ctx.scale(Z, Z);
+  ctx.translate(-scope.x, -scope.y);
+  ctx.drawImage(scene, 0, 0);
+  ctx.restore();
+  /* scope glass + crosshair */
+  ctx.strokeStyle='rgba(248,250,252,0.9)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(scope.x, scope.y, 118, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='rgba(239,68,68,0.9)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(scope.x-118, scope.y); ctx.lineTo(scope.x-14, scope.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(scope.x+14, scope.y); ctx.lineTo(scope.x+118, scope.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(scope.x, scope.y-118); ctx.lineTo(scope.x, scope.y-14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(scope.x, scope.y+14); ctx.lineTo(scope.x, scope.y+118); ctx.stroke();
+  ctx.fillStyle='rgba(239,68,68,0.95)';
+  ctx.beginPath(); ctx.arc(scope.x, scope.y, 2.4, 0, Math.PI*2); ctx.fill();
+  if(flash>0){
+    ctx.fillStyle='rgba(255,255,255,'+(flash*0.85)+')';
+    ctx.beginPath(); ctx.arc(scope.x, scope.y, 118, 0, Math.PI*2); ctx.fill();
+  }
+  hud();
+}
+function frame(ts){
+  if(!lastTs) lastTs=ts;
+  var dt=Math.min(0.05, (ts-lastTs)/1000);
+  lastTs=ts;
+  if(playing){
+    timeLeft-=dt;
+    stepPeople(people, dt);
+    if(flash>0) flash-=dt*3;
+    if(timeLeft<=0){
+      playing=false; over=true;
+      el('msg').textContent='⏰ Time up — the target slipped away. Mission '+(mission+1)+' failed. Press START MISSION to retry it.';
+      beep(160,0.25,'sawtooth',0.055);
+    }
+  }
+  draw(ts/1000);
+  if(!over || playing) rafId=requestAnimationFrame(frame);
+}
+function shoot(){
+  if(!playing || over) return;
+  flash=1;
+  bang();
+  /* the shot lands at the scope centre in ZOOMED coordinates -> convert to scene coords */
+  var sx=scope.x, sy=scope.y;
+  var idx=figureAt(people, sx, sy);
+  if(idx===MISSIONS[mission].target){
+    var bonus=Math.ceil(timeLeft)*5;
+    var gained=300+bonus;
+    score+=gained;
+    playing=false; over=true;
+    beep(880,0.1,'sine',0.05);
+    setTimeout(function(){ beep(1175,0.16,'sine',0.05); }, 120);
+    if(mission<5){
+      el('msg').textContent='🎯 TARGET DOWN! +'+gained+' (300 + '+bonus+' time bonus). Press START MISSION for mission '+(mission+2)+'.';
+      mission++;
+    } else {
+      if(score>best()) localStorage.setItem('makenSniperBest', score);
+      el('msg').textContent='🏆 ALL 6 MISSIONS COMPLETE! Final score: '+score+'. Press START MISSION to run the contract again.';
+      mission=0;
+      score=0;
+    }
+  } else if(idx>=0){
+    playing=false; over=true;
+    el('msg').textContent='🚫 CIVILIAN HIT! That was not the target. Mission failed — press START MISSION to retry mission '+(mission+1)+'.';
+    beep(140,0.3,'sawtooth',0.06);
+  } else {
+    playing=false; over=true;
+    el('msg').textContent='💨 Clean miss — the shot spooked the target and he escaped. Press START MISSION to retry mission '+(mission+1)+'.';
+    beep(200,0.2,'sawtooth',0.05);
+  }
+  hud(); draw(0);
+}
+function canvasPos(e){
+  var r=cvs.getBoundingClientRect();
+  var cx= e.touches ? e.touches[0].clientX : e.clientX;
+  var cy= e.touches ? e.touches[0].clientY : e.clientY;
+  return [ (cx-r.left)*(W/r.width), (cy-r.top)*(H/r.height) ];
+}
+cvs.addEventListener('mousemove', function(e){ var p=canvasPos(e); scope.x=p[0]; scope.y=p[1]; if(!playing) draw(0); });
+cvs.addEventListener('mousedown', function(e){ var p=canvasPos(e); scope.x=p[0]; scope.y=p[1]; shoot(); });
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); var p=canvasPos(e); scope.x=p[0]; scope.y=p[1]; }, {passive:false});
+cvs.addEventListener('touchmove', function(e){ e.preventDefault(); var p=canvasPos(e); scope.x=p[0]; scope.y=p[1]; }, {passive:false});
+cvs.addEventListener('touchend', function(e){ e.preventDefault(); shoot(); });
+el('startBtn').addEventListener('click', function(){ loadMission(mission); });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+hud(); draw(0);
+if(typeof module!=='undefined') module.exports={ MISSIONS:MISSIONS, stepPeople:stepPeople, figureAt:figureAt, matches:matches, STREET_Y:STREET_Y, FIG_H:FIG_H };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

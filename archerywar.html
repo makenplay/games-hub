@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stickman Archery War — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Stickman Archery War free online. Duel an enemy archer across a windy canyon — drag to aim, judge the wind, land headshots. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .barwrap { width:min(94vw,440px); display:flex; gap:10px; margin:2px 0; }
+  .barbox { flex:1; }
+  .barlabel { font-size:11.5px; color:#9aa7c7; margin-bottom:2px; }
+  .bar { height:12px; background:#1e293b; border:1px solid #26335f; border-radius:6px; overflow:hidden; }
+  .bar > div { height:100%; transition:width .3s; }
+  #php { background:linear-gradient(90deg,#22c55e,#4ade80); width:100%; }
+  #ehp { background:linear-gradient(90deg,#ef4444,#f87171); width:100%; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏹 STICKMAN ARCHERY WAR</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🏹 ROUND <b id="round">1</b></div>
+  <div class="stat">🌬 WIND <b id="wind">→ 0</b></div>
+  <div class="stat">🎯 TURN <b id="turn">YOU</b></div>
+  <div class="stat">🏆 DUELS WON <b id="wins">0</b></div>
+</div>
+<div class="barwrap">
+  <div class="barbox"><div class="barlabel">🧍 YOU</div><div class="bar"><div id="php"></div></div></div>
+  <div class="barbox"><div class="barlabel">👹 ENEMY</div><div class="bar"><div id="ehp"></div></div></div>
+</div>
+
+<canvas id="cv" width="440" height="400"></canvas>
+<div id="msg">Press START — drag back from your archer to aim, release to loose!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START DUEL</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Drag back from the bow: the dotted line previews your shot · headshot 50 · body 30 · legs 20 · watch the wind flag</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Stickman Archery War</h2>
+  <p>Two stickman archers, two cliffs, one windy canyon. Take turns loosing arrows across the gap — drag back to set your angle and power, read the dotted preview, and correct for the wind that pushes every arrow sideways. Headshots deal 50, body shots 30, leg shots 20. Drop the enemy's health to zero before he drops yours.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and drag anywhere: an aiming line stretches from your bow, and the dotted curve previews the arrow's flight. Release to loose. The wind value changes every turn — an arrow drifting right needs aim to the left. The enemy is a real ballistic shot too: he solves the same physics you do, and his aim sharpens every round he survives, so finish duels quickly. Win and the next round starts on a fresh canyon with a healthier, sharper opponent.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>True projectile physics with wind, gravity and a trajectory preview</li>
+    <li>Zone damage — head 50, body 30, legs 20</li>
+    <li>An AI duelist whose aim improves round by round</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=440, H=400, GRAV=900;
+var PLAYER={ x:64, groundY:296 };
+var ENEMY={ x:376, groundY:296 };
+var ZONE_DMG={ head:50, body:30, legs:20 };
+/* ---------- pure logic (testable) ---------- */
+function arrowStep(a, wind, dt){
+  a.vx += wind*dt;
+  a.vy += GRAV*dt;
+  a.x += a.vx*dt;
+  a.y += a.vy*dt;
+  return a;
+}
+/* which zone of the stickman standing at (mx, groundY) does point (px,py) hit? */
+function hitZone(px, py, mx, groundY){
+  var dx=px-mx;
+  var headY=groundY-46;
+  if(dx*dx + (py-headY)*(py-headY) <= 8*8) return 'head';
+  if(Math.abs(dx)<=5 && py>=groundY-40 && py<groundY-17) return 'body';
+  if(Math.abs(dx)<=6 && py>=groundY-17 && py<=groundY) return 'legs';
+  return null;
+}
+/* exact ballistic solution from (sx,sy) to (tx,ty) with flight time T, given wind accel */
+function solveShot(sx, sy, tx, ty, T, wind){
+  var vx= (tx-sx - 0.5*wind*T*T)/T;
+  var vy= (ty-sy - 0.5*GRAV*T*T)/T;
+  return { vx:vx, vy:vy };
+}
+/* AI: solve the shot at a perturbed AIM POINT — errPx is the aim error in pixels
+   (re-solving for a different flight time would still hit dead centre) */
+function aiShot(sx, sy, tx, ty, wind, errPx, rand){
+  var dist=Math.abs(tx-sx);
+  var T= 0.9 + dist/420;
+  var ax= tx + (rand()*2-1)*errPx;
+  var ay= ty + (rand()*2-1)*errPx*0.6;
+  return solveShot(sx, sy, ax, ay, T, wind);
+}
+function bowPos(who){
+  return who==='player' ? { x:PLAYER.x+10, y:PLAYER.groundY-34 } : { x:ENEMY.x-10, y:ENEMY.groundY-34 };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var round=1, php=100, ehp=100, wind=0, turn='player', arrow=null, aiming=false, aimVec=null, wins=+(localStorage.getItem('makenArcheryWins')||0), rafId=null, lastTs=0, over=false, aiTimer=0;
+function hud(){
+  el('round').textContent=round;
+  el('wind').textContent= (wind===0 ? '· 0' : (wind>0 ? '→ +' : '← ')+wind);
+  el('turn').textContent= over ? '—' : (turn==='player' ? 'YOU' : 'ENEMY');
+  el('wins').textContent=wins;
+  el('php').style.width=Math.max(0,php)+'%';
+  el('ehp').style.width=Math.max(0,ehp)+'%';
+}
+function newWind(){ wind=Math.round((Math.random()*2-1)*26); }
+function startDuel(){
+  php=100; ehp=100; turn='player'; arrow=null; over=false; aiming=false; aimVec=null; aiTimer=0;
+  newWind();
+  el('msg').textContent='🏹 Round '+round+' — your shot. Drag back from the bow to aim!';
+  hud(); draw();
+  if(rafId) cancelAnimationFrame(rafId);
+  lastTs=0;
+  rafId=requestAnimationFrame(frame);
+}
+function drawMan(mx, groundY, color, flip, dead){
+  ctx.strokeStyle=color; ctx.lineWidth=3.2; ctx.lineCap='round';
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.arc(mx, groundY-46, 7, 0, Math.PI*2); ctx.fill();
+  if(dead){
+    ctx.beginPath(); ctx.moveTo(mx-12, groundY-2); ctx.lineTo(mx+12, groundY-2); ctx.stroke();
+    return;
+  }
+  ctx.beginPath(); ctx.moveTo(mx, groundY-39); ctx.lineTo(mx, groundY-17); ctx.stroke(); /* torso */
+  ctx.beginPath(); ctx.moveTo(mx, groundY-17); ctx.lineTo(mx-6, groundY); ctx.stroke(); /* legs */
+  ctx.beginPath(); ctx.moveTo(mx, groundY-17); ctx.lineTo(mx+6, groundY); ctx.stroke();
+  /* bow arm + bow */
+  var bx=mx + (flip?-10:10), by=groundY-34;
+  ctx.beginPath(); ctx.moveTo(mx, groundY-34); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.strokeStyle='#d6d3d1';
+  ctx.beginPath(); ctx.arc(bx, by, 11, flip?Math.PI*0.55:-Math.PI*0.45, flip?Math.PI*1.45:Math.PI*0.55); ctx.stroke();
+}
+function draw(){
+  var sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#38bdf8'); sky.addColorStop(0.75,'#bae6fd'); sky.addColorStop(1,'#fef3c7');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fde047';
+  ctx.beginPath(); ctx.arc(52,42,20,0,Math.PI*2); ctx.fill();
+  /* canyon */
+  ctx.fillStyle='#a8a29e';
+  ctx.beginPath(); ctx.moveTo(0,296); ctx.lineTo(118,296); ctx.lineTo(96,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(W,296); ctx.lineTo(322,296); ctx.lineTo(344,H); ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#57534e';
+  ctx.fillRect(0,296,118,5); ctx.fillRect(322,296,118,5);
+  ctx.fillStyle='#0ea5e9'; ctx.fillRect(96,H-26,W-192,26);
+  /* wind flag */
+  ctx.strokeStyle='#f8fafc'; ctx.lineWidth=2.4;
+  ctx.beginPath(); ctx.moveTo(220,296); ctx.lineTo(220,258); ctx.stroke();
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath();
+  if(wind>=0){ ctx.moveTo(220,258); ctx.lineTo(220+8+Math.abs(wind)*0.55, 263); ctx.lineTo(220,268); }
+  else { ctx.moveTo(220,258); ctx.lineTo(220-8-Math.abs(wind)*0.55, 263); ctx.lineTo(220,268); }
+  ctx.closePath(); ctx.fill();
+  /* archers */
+  drawMan(PLAYER.x, PLAYER.groundY, '#22c55e', false, php<=0);
+  drawMan(ENEMY.x, ENEMY.groundY, '#ef4444', true, ehp<=0);
+  /* aim preview */
+  if(aiming && aimVec && turn==='player' && !arrow){
+    var bp=bowPos('player');
+    var sim={ x:bp.x, y:bp.y, vx:aimVec.vx, vy:aimVec.vy };
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    for(var i=0;i<26;i++){
+      arrowStep(sim, wind*8, 1/30);
+      if(i%2===0){ ctx.beginPath(); ctx.arc(sim.x, sim.y, 2, 0, Math.PI*2); ctx.fill(); }
+      if(sim.y>H) break;
+    }
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(bp.x, bp.y); ctx.lineTo(bp.x - aimVec.vx*0.14, bp.y - aimVec.vy*0.14); ctx.stroke();
+  }
+  /* arrow in flight */
+  if(arrow){
+    var ang=Math.atan2(arrow.vy, arrow.vx);
+    ctx.save();
+    ctx.translate(arrow.x, arrow.y);
+    ctx.rotate(ang);
+    ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(-11,0); ctx.lineTo(7,0); ctx.stroke();
+    ctx.fillStyle='#f8fafc';
+    ctx.beginPath(); ctx.moveTo(7,-3.4); ctx.lineTo(13,0); ctx.lineTo(7,3.4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  hud();
+}
+function looseArrow(who, vx, vy){
+  var bp=bowPos(who);
+  arrow={ x:bp.x, y:bp.y, vx:vx, vy:vy, from:who };
+  beep(who==='player' ? 700 : 420, 0.06, 'sine', 0.04);
+}
+function endTurn(){
+  arrow=null;
+  if(over) return;
+  newWind();
+  turn= turn==='player' ? 'enemy' : 'player';
+  if(turn==='enemy'){
+    el('msg').textContent='👹 Enemy is aiming…';
+    aiTimer=0.85;
+  } else {
+    el('msg').textContent='🏹 Your shot — drag back from the bow!';
+  }
+  hud(); draw();
+}
+function resolveHit(zone, target){
+  var dmg=ZONE_DMG[zone];
+  if(target==='enemy'){
+    ehp-=dmg;
+    el('msg').textContent= zone==='head' ? '🎯 HEADSHOT! 50 damage!' : '💥 Hit — '+zone+', '+dmg+' damage!';
+    beep(980,0.1,'square',0.05);
+    if(ehp<=0){ duelWon(); return; }
+  } else {
+    php-=dmg;
+    el('msg').textContent= zone==='head' ? '😖 He headshot YOU — 50 damage!' : '🩸 You are hit — '+zone+', '+dmg+' damage!';
+    beep(160,0.14,'sawtooth',0.055);
+    if(php<=0){ duelLost(); return; }
+  }
+  hud(); draw();
+  setTimeout(endTurn, 650);
+}
+function duelWon(){
+  over=true;
+  wins++;
+  localStorage.setItem('makenArcheryWins', wins);
+  el('msg').textContent='🏆 DUEL WON in round '+round+'! Your health: '+php+'. Press START DUEL for round '+(round+1)+'.';
+  round++;
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(1175,0.18,'sine',0.05); }, 140);
+  hud(); draw();
+}
+function duelLost(){
+  over=true;
+  el('msg').textContent='💀 You lost the duel in round '+round+'. Press START DUEL to fight round 1 again.';
+  round=1;
+  beep(140,0.3,'sawtooth',0.06);
+  hud(); draw();
+}
+function frame(ts){
+  if(!lastTs) lastTs=ts;
+  var dt=Math.min(0.033, (ts-lastTs)/1000);
+  lastTs=ts;
+  if(arrow){
+    var sub=3;
+    for(var i=0;i<sub;i++) arrowStep(arrow, wind*8, dt/sub);
+    var target= arrow.from==='player' ? ENEMY : PLAYER;
+    var zone=hitZone(arrow.x, arrow.y, target.x, target.groundY);
+    if(zone){
+      var hitTarget= arrow.from==='player' ? 'enemy' : 'player';
+      arrow=null;
+      resolveHit(zone, hitTarget);
+    } else if(arrow.y>=296 && ((arrow.x<118) || (arrow.x>322)) ){
+      el('msg').textContent='🏹 Arrow thuds into the cliff.';
+      beep(220,0.05,'square',0.03);
+      setTimeout(endTurn, 350);
+      arrow=null;
+    } else if(arrow.y>H-24 || arrow.x<-20 || arrow.x>W+20){
+      el('msg').textContent='🏹 Missed — into the river.';
+      setTimeout(endTurn, 350);
+      arrow=null;
+    }
+    draw();
+  } else if(turn==='enemy' && !over){
+    aiTimer-=dt;
+    if(aiTimer<=0){
+      var bp=bowPos('enemy'), tp={ x:PLAYER.x, y:PLAYER.groundY-30 };
+      var err=Math.max(16, 56 - (round-1)*7);
+      var shot=aiShot(bp.x, bp.y, tp.x, tp.y, wind*8, err, Math.random);
+      looseArrow('enemy', shot.vx, shot.vy);
+      draw();
+    }
+  }
+  rafId=requestAnimationFrame(frame);
+}
+function canvasPos(e){
+  var r=cvs.getBoundingClientRect();
+  var cx= e.touches ? e.touches[0].clientX : e.clientX;
+  var cy= e.touches ? e.touches[0].clientY : e.clientY;
+  return [ (cx-r.left)*(W/r.width), (cy-r.top)*(H/r.height) ];
+}
+function pointerDown(e){
+  if(over || turn!=='player' || arrow) return;
+  e.preventDefault();
+  aiming=true;
+  updateAim(e);
+}
+function updateAim(e){
+  var p=canvasPos(e);
+  var bp=bowPos('player');
+  var dx=bp.x-p[0], dy=bp.y-p[1];
+  var len=Math.sqrt(dx*dx+dy*dy);
+  var MAXP=560;
+  var power=Math.min(1, len/130);
+  if(len<6){ aimVec=null; return; }
+  aimVec={ vx: dx/len*power*MAXP, vy: dy/len*power*MAXP };
+  draw();
+}
+function pointerMove(e){ if(aiming) updateAim(e); }
+function pointerUp(){
+  if(!aiming) return;
+  aiming=false;
+  if(aimVec && (Math.abs(aimVec.vx)>30 || Math.abs(aimVec.vy)>30)){
+    looseArrow('player', aimVec.vx, aimVec.vy);
+  }
+  aimVec=null;
+  draw();
+}
+cvs.addEventListener('mousedown', pointerDown);
+cvs.addEventListener('mousemove', pointerMove);
+document.addEventListener('mouseup', pointerUp);
+cvs.addEventListener('touchstart', pointerDown, {passive:false});
+cvs.addEventListener('touchmove', pointerMove, {passive:false});
+cvs.addEventListener('touchend', pointerUp);
+el('startBtn').addEventListener('click', startDuel);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+hud(); draw();
+if(typeof module!=='undefined') module.exports={ PLAYER:PLAYER, ENEMY:ENEMY, ZONE_DMG:ZONE_DMG, arrowStep:arrowStep, hitZone:hitZone, solveShot:solveShot, aiShot:aiShot, bowPos:bowPos, GRAV:GRAV };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
