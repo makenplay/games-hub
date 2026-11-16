@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Agar Cells Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play an agar.io-style cell game free online. Eat pellets and smaller cells, dodge the giants, top the leaderboard. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#f1f5f9; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🦠 AGAR CELLS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">MASS <b id="mass">10</b></div>
+  <div class="stat">EATEN <b id="eaten">0</b></div>
+  <div class="stat">RANK <b id="rank">–</b></div>
+  <div class="stat">BEST MASS <b id="best">10</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Move with the mouse or touch. Eat pellets and any cell smaller than you — flee the giants!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">You can only swallow cells at least ~12% smaller than you · the bigger you grow, the slower you cruise</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Agar Cells</h2>
+  <p>The eat-or-be-eaten cell arena. You are one hungry cell in a petri dish of pellets and rival cells — some tiny snacks, some roaming giants. Graze to grow, hunt anything smaller, and never let a bigger cell catch you.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Steer with the mouse or touch — your cell drifts toward your pointer. Eat colored pellets to gain mass, and swallow rival cells once you are clearly bigger than them (about 12% more radius and good overlap). Your rank updates live; finish a run as #1 to rule the dish.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>9 AI cells that graze, hunt and flee by size</li>
+    <li>Real agar rules — size-gated swallowing, size-scaled speed</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, WORLD=1600;
+/* ---------- pure logic (testable) ---------- */
+function radiusForMass(m){
+  return Math.sqrt(m)*3.4;
+}
+function massForRadius(r){
+  return (r/3.4)*(r/3.4);
+}
+function canEat(eater, prey){
+  return eater.r > prey.r*1.12 && Math.hypot(eater.x-prey.x, eater.y-prey.y) < eater.r - prey.r*0.32;
+}
+function speedForRadius(r){
+  return Math.max(56, 196 - r*1.65);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var NAMES=['Blob','Chomp','Gnasher','Pudding','Titan','Morsel','Orb','Gulper','Nibbles'];
+var COLORS=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#8b5cf6','#ec4899','#64748b','#84cc16'];
+var playing, cells, pellets, pointer, eaten, camX, camY, zoom, rafId, lastTick;
+var best=+(localStorage.getItem('makenAgarBest')||10);
+el('best').textContent=best;
+function hud(){
+  var me=cells[0];
+  if(!me) return;
+  el('mass').textContent=Math.floor(me.mass);
+  el('eaten').textContent=eaten;
+  var sorted=cells.slice().sort(function(a,b){ return b.mass-a.mass; });
+  el('rank').textContent='#'+(sorted.indexOf(me)+1)+' / '+cells.length;
+  if(me.mass>best){ best=Math.floor(me.mass); localStorage.setItem('makenAgarBest', best); }
+  el('best').textContent=best;
+}
+function makeCell(x, y, mass, color, name, isPlayer){
+  return { x:x, y:y, mass:mass, r:radiusForMass(mass), color:color, name:name, isPlayer:!!isPlayer, vx:0, vy:0, aiT:0, tx:x, ty:y, alive:true };
+}
+function spawnPellet(){
+  pellets.push({ x:Math.random()*WORLD, y:Math.random()*WORLD, r:3+Math.random()*2.2, hue:Math.floor(Math.random()*360) });
+}
+function reset(){
+  playing=false;
+  cells=[makeCell(WORLD/2, WORLD/2, 12, '#3b82f6', 'YOU', true)];
+  for(var i=0;i<9;i++){
+    cells.push(makeCell(120+Math.random()*(WORLD-240), 120+Math.random()*(WORLD-240), 8+Math.random()*46, COLORS[i], NAMES[i], false));
+  }
+  pellets=[];
+  for(var j=0;j<340;j++) spawnPellet();
+  pointer={ x:WORLD/2+60, y:WORLD/2 };
+  eaten=0; zoom=1;
+  camX=cells[0].x; camY=cells[0].y;
+  hud(); draw();
+}
+function drawCell(c){
+  var sx=(c.x-camX)*zoom + W/2, sy=(c.y-camY)*zoom + H/2;
+  var sr=c.r*zoom;
+  if(sx<-sr-10 || sx>W+sr+10 || sy<-sr-10 || sy>H+sr+10) return;
+  ctx.fillStyle=c.color;
+  ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.arc(sx, sy, sr*0.72, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold '+Math.max(10, Math.min(19, sr*0.52))+'px Arial'; ctx.textAlign='center';
+  if(sr>13) ctx.fillText(c.name, sx, sy+4);
+  ctx.font='10px Arial';
+  if(sr>20) ctx.fillText(Math.floor(c.mass), sx, sy+16);
+}
+function draw(){
+  ctx.fillStyle='#f1f5f9'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(100,116,139,0.22)'; ctx.lineWidth=1;
+  var gs=52*zoom;
+  var ox=(W/2 - camX*zoom) % gs, oy=(H/2 - camY*zoom) % gs;
+  for(var gx=ox; gx<W; gx+=gs){ ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for(var gy=oy; gy<H; gy+=gs){ ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+  ctx.strokeStyle='rgba(239,68,68,0.7)'; ctx.lineWidth=3;
+  ctx.strokeRect((0-camX)*zoom + W/2, (0-camY)*zoom + H/2, WORLD*zoom, WORLD*zoom);
+  pellets.forEach(function(p){
+    var sx=(p.x-camX)*zoom + W/2, sy=(p.y-camY)*zoom + H/2;
+    if(sx<-8 || sx>W+8 || sy<-8 || sy>H+8) return;
+    ctx.fillStyle='hsl('+p.hue+', 85%, 60%)';
+    ctx.beginPath(); ctx.arc(sx, sy, p.r*zoom, 0, Math.PI*2); ctx.fill();
+  });
+  var sorted=cells.slice().sort(function(a,b){ return a.r-b.r; });
+  sorted.forEach(drawCell);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    var meAlive=cells.length && cells[0].alive;
+    ctx.fillText(meAlive ? '🦠 AGAR CELLS' : '💀 YOU WERE EATEN!', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(meAlive ? 'Press START — eat or be eaten' : 'Press START to respawn and take revenge', W/2, H/2+18);
+  }
+}
+function stepCell(c, dt){
+  var tx, ty;
+  if(c.isPlayer){
+    tx=pointer.x; ty=pointer.y;
+  } else {
+    c.aiT-=dt;
+    if(c.aiT<=0){
+      c.aiT=0.35+Math.random()*0.4;
+      /* threats: bigger cells near -> flee; prey: smaller near -> chase; else nearest pellet drift */
+      var threat=null, prey=null, td=1e12, pd=1e12;
+      cells.forEach(function(o){
+        if(o===c || !o.alive) return;
+        var d=Math.hypot(o.x-c.x, o.y-c.y);
+        if(o.r > c.r*1.12 && d<300 && d<td){ td=d; threat=o; }
+        if(c.r > o.r*1.12 && d<340 && d<pd){ pd=d; prey=o; }
+      });
+      if(threat){ c.tx=c.x + (c.x-threat.x)*1.6; c.ty=c.y + (c.y-threat.y)*1.6; }
+      else if(prey){ c.tx=prey.x; c.ty=prey.y; }
+      else {
+        var bp=null, bd=1e12;
+        for(var i=0;i<pellets.length;i+=3){
+          var p=pellets[i];
+          var dd=(p.x-c.x)*(p.x-c.x)+(p.y-c.y)*(p.y-c.y);
+          if(dd<bd){ bd=dd; bp=p; }
+        }
+        if(bp){ c.tx=bp.x; c.ty=bp.y; }
+      }
+      c.tx=Math.max(30, Math.min(WORLD-30, c.tx));
+      c.ty=Math.max(30, Math.min(WORLD-30, c.ty));
+    }
+    tx=c.tx; ty=c.ty;
+  }
+  var dx=tx-c.x, dy=ty-c.y;
+  var dist=Math.hypot(dx, dy);
+  var sp=speedForRadius(c.r);
+  if(dist>2){
+    c.vx += (dx/dist*sp - c.vx)*Math.min(1, dt*4.4);
+    c.vy += (dy/dist*sp - c.vy)*Math.min(1, dt*4.4);
+  }
+  c.x=Math.max(c.r*0.6, Math.min(WORLD-c.r*0.6, c.x + c.vx*dt));
+  c.y=Math.max(c.r*0.6, Math.min(WORLD-c.r*0.6, c.y + c.vy*dt));
+  /* pellets */
+  for(var i=pellets.length-1;i>=0;i--){
+    var p=pellets[i];
+    if(Math.hypot(p.x-c.x, p.y-c.y) < c.r + p.r*0.4){
+      c.mass += 0.55;
+      c.r=radiusForMass(c.mass);
+      pellets.splice(i,1);
+      if(pellets.length<330) spawnPellet();
+    }
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  cells.forEach(function(c){ if(c.alive) stepCell(c, dt); });
+  /* eating */
+  for(var i=0;i<cells.length;i++){
+    for(var j=0;j<cells.length;j++){
+      if(i===j) continue;
+      var a=cells[i], b=cells[j];
+      if(!a.alive || !b.alive) continue;
+      if(canEat(a, b)){
+        a.mass += b.mass*0.86;
+        a.r=radiusForMass(a.mass);
+        b.alive=false;
+        if(b.isPlayer){
+          playing=false;
+          el('msg').textContent='💀 '+a.name+' swallowed you at mass '+Math.floor(b.mass)+'. Eaten count: '+eaten+'.';
+          beep(140,0.26,'sawtooth',0.08);
+        } else if(a.isPlayer){
+          eaten++;
+          el('msg').textContent='😋 You ate '+b.name+'! Mass '+Math.floor(a.mass)+'.';
+          beep(500,0.08,'sine',0.055);
+          var deadName=b.name, deadColor=b.color;
+          setTimeout(function(){
+            cells.push(makeCell(120+Math.random()*(WORLD-240), 120+Math.random()*(WORLD-240), 9+Math.random()*20, deadColor, deadName, false));
+          }, 4000);
+        }
+      }
+    }
+  }
+  cells=cells.filter(function(c){ return c.alive || c.isPlayer; });
+  if(!playing){ hud(); draw(); return; }
+  var me=cells[0];
+  camX += (me.x-camX)*Math.min(1, dt*5);
+  camY += (me.y-camY)*Math.min(1, dt*5);
+  var targetZoom=Math.max(0.42, Math.min(1, 30/(me.r+16)));
+  zoom += (targetZoom-zoom)*Math.min(1, dt*2.4);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function setPointer(e){
+  var r=cvs.getBoundingClientRect();
+  var cx=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var cy=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  var wx=cx * (W/r.width), wy=cy * (H/r.height);
+  pointer.x = camX + (wx - W/2)/zoom;
+  pointer.y = camY + (wy - H/2)/zoom;
+}
+cvs.addEventListener('mousemove', setPointer);
+cvs.addEventListener('touchmove', function(e){ e.preventDefault(); setPointer(e); }, {passive:false});
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🦠 Eat, grow, survive!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ radiusForMass:radiusForMass, massForRadius:massForRadius, canEat:canEat, speedForRadius:speedForRadius };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

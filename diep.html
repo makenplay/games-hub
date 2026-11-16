@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Diep Tanks Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a diep.io-style tank game free online. Blast shapes, earn XP, level up your cannon and battle rival tanks. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .xpwrap { width:min(640px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .xpwrap i { display:block; height:100%; background:linear-gradient(90deg,#facc15,#f97316); transition:width .15s; }
+  canvas#cv { background:#cbd5e1; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .upgrades { display:none; gap:8px; justify-content:center; padding:2px 0 6px; flex-wrap:wrap; }
+  .upgrades.show { display:flex; }
+  .upg { padding:10px 14px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.fire { background:linear-gradient(180deg,#ef4444,#991b1b); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔵 DIEP TANKS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1</b></div>
+  <div class="stat">❤️ <b id="hp">100</b></div>
+  <div class="stat">KILLS <b id="kills">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST LV <b id="best">1</b></div>
+</div>
+<div class="xpwrap"><i id="xpBar" style="width:0%"></i></div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Move with WASD / arrows, aim with the mouse, click or hold SPACE to fire. Blast shapes for XP!</div>
+<div class="upgrades" id="upgrades">
+  <button class="upg" data-upg="damage">⬆ Bullet Damage</button>
+  <button class="upg" data-upg="rate">⬆ Fire Rate</button>
+  <button class="upg" data-upg="speed">⬆ Move Speed</button>
+  <button class="upg" data-upg="health">⬆ Max Health</button>
+</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn fire" id="fireBtn">🔥 FIRE</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Squares 10 XP · triangles 25 · pentagons 130 · level up = choose 1 upgrade · rival tanks shoot back!</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Diep Tanks</h2>
+  <p>The geometric tank arena. Roam a grid world blasting floating shapes for XP; every level grants an upgrade point to spend on damage, fire rate, speed or health. Rival AI tanks roam the same fields — outgrow them before they outgrow you.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with WASD or the arrow keys; your cannon aims at the mouse (on touch, it aims where you tap and auto-fires). Destroy squares, triangles and pentagons for XP and score. On each level-up, pick one upgrade from the green buttons. Your health regenerates slowly — ram damage is real, so keep your distance.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Full XP/level system with 4 spendable upgrade tracks</li>
+    <li>3 rival tanks that farm, fight and level alongside you</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, WORLD=1700;
+/* ---------- pure logic (testable) ---------- */
+var SHAPE_STATS={
+  square:   { hp:10,  xp:10,  score:10,  r:15 },
+  triangle: { hp:22,  xp:25,  score:25,  r:16 },
+  pentagon: { hp:80,  xp:130, score:130, r:27 }
+};
+function xpToNext(level){
+  return 18 + level*14;
+}
+function applyUpgrade(stats, kind){
+  if(kind==='damage') stats.damage += 3.2;
+  else if(kind==='rate') stats.fireRate = Math.max(0.09, stats.fireRate*0.88);
+  else if(kind==='speed') stats.speed += 13;
+  else if(kind==='health'){ stats.maxHp += 22; }
+  return stats;
+}
+function baseStats(){
+  return { damage:8, fireRate:0.34, speed:148, maxHp:100 };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, tanks, shapes, bullets, aim, firing, camX, camY, kills, pendingUpgrades, keys, rafId, lastTick;
+var bestLv=+(localStorage.getItem('makenDiepBest')||1);
+el('best').textContent=bestLv;
+function hud(){
+  var me=tanks[0];
+  el('level').textContent=me.level;
+  el('hp').textContent=Math.max(0, Math.ceil(me.hp));
+  el('kills').textContent=kills;
+  el('score').textContent=me.score;
+  el('xpBar').style.width=Math.min(100, me.xp/xpToNext(me.level)*100)+'%';
+  if(me.level>bestLv){ bestLv=me.level; localStorage.setItem('makenDiepBest', bestLv); }
+  el('best').textContent=bestLv;
+  el('upgrades').className='upgrades' + (pendingUpgrades>0 && playing ? ' show' : '');
+}
+function makeTank(x, y, color, name, isPlayer){
+  var s=baseStats();
+  return { x:x, y:y, vx:0, vy:0, r:19, color:color, name:name, isPlayer:!!isPlayer,
+           hp:s.maxHp, stats:s, level:1, xp:0, score:0, fireCd:0, aimAng:0, aiT:0, tx:x, ty:y, alive:true, regenT:0 };
+}
+function spawnShape(x, y){
+  var roll=Math.random();
+  var kind= roll<0.62 ? 'square' : roll<0.9 ? 'triangle' : 'pentagon';
+  var st=SHAPE_STATS[kind];
+  shapes.push({ x: x!==undefined ? x : Math.random()*WORLD, y: y!==undefined ? y : Math.random()*WORLD,
+                kind:kind, hp:st.hp, maxHp:st.hp, r:st.r, rot:Math.random()*Math.PI*2, vr:(Math.random()-0.5)*0.7,
+                vx:(Math.random()-0.5)*9, vy:(Math.random()-0.5)*9 });
+}
+function reset(){
+  playing=false;
+  tanks=[makeTank(WORLD/2, WORLD/2, '#00b2e1', 'YOU', true)];
+  var cols=['#f14e54','#ffe763','#22c55e'];
+  var names=['Rival Rex','Turbo','Vex'];
+  for(var i=0;i<3;i++) tanks.push(makeTank(200+Math.random()*(WORLD-400), 200+Math.random()*(WORLD-400), cols[i], names[i], false));
+  shapes=[]; bullets=[];
+  for(var j=0;j<46;j++) spawnShape();
+  aim={ x:WORLD/2+80, y:WORLD/2 };
+  firing=false; kills=0; pendingUpgrades=0;
+  keys={};
+  camX=tanks[0].x; camY=tanks[0].y;
+  hud(); draw();
+}
+function drawShape(s){
+  var sx=s.x-camX+W/2, sy=s.y-camY+H/2;
+  if(sx<-50 || sx>W+50 || sy<-50 || sy>H+50) return;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(s.rot);
+  ctx.fillStyle= s.kind==='square' ? '#ffe763' : s.kind==='triangle' ? '#f14e54' : '#768dfc';
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=2.4;
+  ctx.beginPath();
+  var n= s.kind==='square' ? 4 : s.kind==='triangle' ? 3 : 5;
+  for(var i=0;i<n;i++){
+    var a=i/n*Math.PI*2 - Math.PI/2;
+    if(i===0) ctx.moveTo(Math.cos(a)*s.r, Math.sin(a)*s.r);
+    else ctx.lineTo(Math.cos(a)*s.r, Math.sin(a)*s.r);
+  }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  if(s.hp<s.maxHp){
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(sx-16, sy-s.r-11, 32, 4.6);
+    ctx.fillStyle='#4ade80'; ctx.fillRect(sx-16, sy-s.r-11, 32*(s.hp/s.maxHp), 4.6);
+  }
+}
+function drawTank(t){
+  var sx=t.x-camX+W/2, sy=t.y-camY+H/2;
+  if(sx<-70 || sx>W+70 || sy<-70 || sy>H+70) return;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(t.aimAng);
+  ctx.fillStyle='#9ca3af';
+  ctx.fillRect(0, -6.4, t.r+15, 12.8);
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=2;
+  ctx.strokeRect(0, -6.4, t.r+15, 12.8);
+  ctx.restore();
+  ctx.fillStyle=t.color;
+  ctx.beginPath(); ctx.arc(sx, sy, t.r, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=2.6; ctx.stroke();
+  ctx.fillStyle='#111827'; ctx.font='bold 10.5px Arial'; ctx.textAlign='center';
+  ctx.fillText(t.name+' · Lv'+t.level, sx, sy-t.r-14);
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(sx-19, sy-t.r-11, 38, 5);
+  ctx.fillStyle='#4ade80'; ctx.fillRect(sx-19, sy-t.r-11, 38*Math.max(0, t.hp/t.stats.maxHp), 5);
+}
+function draw(){
+  ctx.fillStyle='#cbd5e1'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(71,85,105,0.3)'; ctx.lineWidth=1;
+  var gs=46;
+  var ox=(W/2-camX)%gs, oy=(H/2-camY)%gs;
+  for(var gx=ox; gx<W; gx+=gs){ ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for(var gy=oy; gy<H; gy+=gs){ ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+  ctx.strokeStyle='rgba(239,68,68,0.65)'; ctx.lineWidth=3;
+  ctx.strokeRect(-camX+W/2, -camY+H/2, WORLD, WORLD);
+  shapes.forEach(drawShape);
+  ctx.fillStyle='#38bdf8';
+  bullets.forEach(function(b){
+    var sx=b.x-camX+W/2, sy=b.y-camY+H/2;
+    if(sx<-10 || sx>W+10 || sy<-10 || sy>H+10) return;
+    ctx.fillStyle=b.color;
+    ctx.beginPath(); ctx.arc(sx, sy, 6.4, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.28)'; ctx.lineWidth=1.6; ctx.stroke();
+  });
+  tanks.forEach(function(t){ if(t.alive) drawTank(t); });
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    var alive=tanks.length && tanks[0].alive;
+    ctx.fillText(alive ? '🔵 DIEP TANKS' : '💀 TANK DESTROYED', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(alive ? 'Press START — blast shapes, level up, rule the arena' : 'You reached level '+(tanks[0] ? tanks[0].level : 1)+' — press START again', W/2, H/2+18);
+  }
+}
+function gainXp(t, amount){
+  t.xp += amount;
+  while(t.xp >= xpToNext(t.level)){
+    t.xp -= xpToNext(t.level);
+    t.level++;
+    if(t.isPlayer){
+      pendingUpgrades++;
+      el('msg').textContent='⬆️ LEVEL '+t.level+'! Choose an upgrade below.';
+      beep(940,0.13,'sine',0.06);
+    } else {
+      var kinds=['damage','rate','speed','health'];
+      applyUpgrade(t.stats, kinds[Math.floor(Math.random()*4)]);
+    }
+  }
+}
+function killTank(t, killer){
+  t.alive=false;
+  if(t.isPlayer){
+    playing=false;
+    el('msg').textContent='💀 '+(killer ? killer.name : 'A shape')+' destroyed you at level '+t.level+'. Score: '+t.score+'.';
+    beep(140,0.26,'sawtooth',0.08);
+    hud(); draw();
+  } else {
+    if(killer && killer.isPlayer){
+      kills++;
+      gainXp(killer, 60);
+      killer.score += 150;
+      el('msg').textContent='⚔️ You destroyed '+t.name+'! +150.';
+      beep(420,0.11,'sawtooth',0.06);
+    }
+    setTimeout(function(){
+      var idx=tanks.indexOf(t);
+      if(idx>=0) tanks[idx]=makeTank(200+Math.random()*(WORLD-400), 200+Math.random()*(WORLD-400), t.color, t.name, false);
+    }, 4000);
+  }
+}
+function stepTank(t, dt){
+  var dx=0, dy=0;
+  if(t.isPlayer){
+    if(keys.KeyW || keys.ArrowUp) dy-=1;
+    if(keys.KeyS || keys.ArrowDown) dy+=1;
+    if(keys.KeyA || keys.ArrowLeft) dx-=1;
+    if(keys.KeyD || keys.ArrowRight) dx+=1;
+    t.aimAng=Math.atan2(aim.y-t.y, aim.x-t.x);
+  } else {
+    t.aiT-=dt;
+    if(t.aiT<=0){
+      t.aiT=0.4+Math.random()*0.4;
+      var nearest=null, nd=1e12;
+      shapes.forEach(function(s){
+        var d=(s.x-t.x)*(s.x-t.x)+(s.y-t.y)*(s.y-t.y);
+        if(d<nd){ nd=d; nearest=s; }
+      });
+      var me=tanks[0];
+      if(me.alive && Math.hypot(me.x-t.x, me.y-t.y) < 330 && me.level <= t.level+1){
+        t.tx=me.x; t.ty=me.y; t.aiTarget=me;
+      } else if(nearest){
+        t.tx=nearest.x; t.ty=nearest.y; t.aiTarget=nearest;
+      }
+    }
+    var mdx=t.tx-t.x, mdy=t.ty-t.y;
+    var md=Math.hypot(mdx, mdy);
+    if(md>70){ dx=mdx/md; dy=mdy/md; }
+    var tgt=t.aiTarget;
+    if(tgt && tgt.alive!==false && (tgt.hp===undefined || tgt.hp>0)){
+      t.aimAng=Math.atan2(tgt.y-t.y, tgt.x-t.x);
+      if(md<430 && t.fireCd<=0){
+        fireBullet(t);
+      }
+    }
+  }
+  var len=Math.hypot(dx, dy) || 1;
+  t.vx += (dx/len*t.stats.speed*(dx||dy?1:0) - t.vx)*Math.min(1, dt*5);
+  t.vy += (dy/len*t.stats.speed*(dx||dy?1:0) - t.vy)*Math.min(1, dt*5);
+  t.x=Math.max(t.r, Math.min(WORLD-t.r, t.x + t.vx*dt));
+  t.y=Math.max(t.r, Math.min(WORLD-t.r, t.y + t.vy*dt));
+  t.fireCd-=dt;
+  /* regen after 5s without damage */
+  t.regenT+=dt;
+  if(t.regenT>5 && t.hp<t.stats.maxHp) t.hp=Math.min(t.stats.maxHp, t.hp + dt*4.2);
+  if(t.isPlayer && (firing || keys.Space) && t.fireCd<=0) fireBullet(t);
+  /* ram damage vs shapes */
+  shapes.forEach(function(s){
+    if(Math.hypot(s.x-t.x, s.y-t.y) < s.r + t.r - 3){
+      t.hp -= 14*dt*3.2;
+      t.regenT=0;
+      s.hp -= 22*dt*3.2;
+      if(t.hp<=0){ killTank(t, null); }
+    }
+  });
+}
+function fireBullet(t){
+  t.fireCd=t.stats.fireRate;
+  bullets.push({ x:t.x+Math.cos(t.aimAng)*(t.r+13), y:t.y+Math.sin(t.aimAng)*(t.r+13),
+                 vx:Math.cos(t.aimAng)*430, vy:Math.sin(t.aimAng)*430,
+                 dmg:t.stats.damage, owner:t, color:t.color, life:0.95 });
+  t.vx -= Math.cos(t.aimAng)*13;
+  t.vy -= Math.sin(t.aimAng)*13;
+  if(t.isPlayer) beep(660,0.04,'square',0.035);
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  tanks.slice().forEach(function(t){ if(t.alive) stepTank(t, dt); });
+  if(!playing) return;
+  shapes.forEach(function(s){
+    s.x+=s.vx*dt; s.y+=s.vy*dt; s.rot+=s.vr*dt;
+    if(s.x<s.r || s.x>WORLD-s.r) s.vx*=-1;
+    if(s.y<s.r || s.y>WORLD-s.r) s.vy*=-1;
+  });
+  bullets=bullets.filter(function(b){
+    b.x+=b.vx*dt; b.y+=b.vy*dt; b.life-=dt;
+    return b.life>0 && b.x>0 && b.y>0 && b.x<WORLD && b.y<WORLD;
+  });
+  /* bullet hits */
+  for(var bi=bullets.length-1; bi>=0; bi--){
+    var b=bullets[bi], consumed=false;
+    for(var si=shapes.length-1; si>=0; si--){
+      var s=shapes[si];
+      if(Math.hypot(b.x-s.x, b.y-s.y) < s.r+5){
+        s.hp -= b.dmg;
+        consumed=true;
+        if(s.hp<=0){
+          var st=SHAPE_STATS[s.kind];
+          b.owner.score += st.score;
+          gainXp(b.owner, st.xp);
+          shapes.splice(si,1);
+          spawnShape();
+          if(b.owner.isPlayer) beep(840,0.05,'sine',0.04);
+        }
+        break;
+      }
+    }
+    if(!consumed){
+      for(var ti=0; ti<tanks.length; ti++){
+        var t=tanks[ti];
+        if(!t.alive || t===b.owner) continue;
+        if(Math.hypot(b.x-t.x, b.y-t.y) < t.r+5){
+          t.hp -= b.dmg;
+          t.regenT=0;
+          consumed=true;
+          if(t.hp<=0) killTank(t, b.owner);
+          break;
+        }
+      }
+    }
+    if(consumed) bullets.splice(bi,1);
+  }
+  if(!playing) return;
+  var me=tanks[0];
+  camX += (me.x-camX)*Math.min(1, dt*5.4);
+  camY += (me.y-camY)*Math.min(1, dt*5.4);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function setAim(e){
+  var r=cvs.getBoundingClientRect();
+  var cx=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var cy=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  aim.x = camX + (cx*(W/r.width) - W/2);
+  aim.y = camY + (cy*(H/r.height) - H/2);
+}
+cvs.addEventListener('mousemove', setAim);
+cvs.addEventListener('mousedown', function(e){ setAim(e); firing=true; });
+document.addEventListener('mouseup', function(){ firing=false; });
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); setAim(e); firing=true; }, {passive:false});
+cvs.addEventListener('touchend', function(){ firing=false; });
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+document.querySelectorAll('.upg').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    if(pendingUpgrades<=0) return;
+    applyUpgrade(tanks[0].stats, btn.getAttribute('data-upg'));
+    if(btn.getAttribute('data-upg')==='health') tanks[0].hp+=22;
+    pendingUpgrades--;
+    el('msg').textContent= pendingUpgrades>0 ? '⬆️ '+pendingUpgrades+' upgrade(s) left — choose another!' : '⬆️ Upgrade applied!';
+    beep(980,0.08,'sine',0.055);
+    hud();
+  });
+});
+el('fireBtn').addEventListener('touchstart', function(e){ e.preventDefault(); firing=true; }, {passive:false});
+el('fireBtn').addEventListener('touchend', function(){ firing=false; });
+el('fireBtn').addEventListener('mousedown', function(){ firing=true; });
+el('fireBtn').addEventListener('mouseup', function(){ firing=false; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🔵 Blast shapes, level up!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ SHAPE_STATS:SHAPE_STATS, xpToNext:xpToNext, applyUpgrade:applyUpgrade, baseStats:baseStats };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
