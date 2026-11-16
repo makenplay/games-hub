@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Helix Jump Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a helix-jump-style game free online. Spin the tower, drop the ball through the gaps, never land on red. How deep can you go? No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#312e81 0%,#4c1d95 60%,#701a75 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:grab; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🌀 HELIX JUMP</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1</b></div>
+  <div class="stat">DEPTH <b id="depth">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="560"></canvas>
+<div id="msg">Drag ◀ ▶ (or A/D) to spin the tower. Drop through the dark gaps — NEVER land on red!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀ SPIN</button>
+  <button class="btn" id="rightBtn">SPIN ▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Chain 3+ platforms in one fall for a fire drop that smashes through · each level adds more red</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Helix Jump</h2>
+  <p>The spinning-tower dropper. A ball bounces on a helix of ring platforms wrapped around a pole; you rotate the whole tower to line up the gaps and let it fall — level after level — while the red danger segments wait to end your run in one bounce.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Drag sideways, use A/D or the spin buttons to rotate the tower. The ball bounces where it lands: dark segments bounce you safely, gaps let you fall through (+1 depth each), and red segments are instant death. Clear all platforms to finish the level and descend into a harder one.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless levels with growing red-segment coverage</li>
+    <li>Combo falls build a fire drop that smashes one platform</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=560, TOWER_X=W/2, TOWER_R=128, PLAT_GAP=86;
+/* ---------- pure logic (testable) ---------- */
+/* platform: gapStart/gapSize (radians), redStart/redSize. Ball contact angle = -rotation (ball fixed at front). */
+function segmentUnder(platform, rotation){
+  /* ball touches the front (bottom, ellipse angle PI/2) of the ring */
+  var a=((Math.PI/2 - rotation - platform.phase) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+  function inArc(start, size){
+    var d=((a - start) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+    return d < size;
+  }
+  if(inArc(platform.gapStart, platform.gapSize)) return 'gap';
+  if(inArc(platform.redStart, platform.redSize)) return 'red';
+  return 'safe';
+}
+function makePlatform(y, level, rnd){
+  var redSize=Math.min(1.9, 0.55 + level*0.13 + rnd()*0.4);
+  return {
+    y:y,
+    phase: rnd()*Math.PI*2,
+    gapStart: rnd()*Math.PI*2,
+    gapSize: 0.85 + rnd()*0.35,
+    redStart: rnd()*Math.PI*2,
+    redSize: redSize
+  };
+}
+function platformsForLevel(level){
+  return 9 + level;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, ball, platforms, rotation, rotVel, camY, level, depth, score, fallChain, keys, dragging, lastDragX, rafId, lastTick;
+var best=+(localStorage.getItem('makenHelixBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('level').textContent=level;
+  el('depth').textContent=depth;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenHelixBest',best); }
+  el('best').textContent=best;
+}
+function buildLevel(){
+  platforms=[];
+  var n=platformsForLevel(level);
+  for(var i=0;i<n;i++) platforms.push(makePlatform(300 + i*PLAT_GAP, level, Math.random));
+  ball={ y: platforms[0].y - 15, vy:0 };
+  camY=0; fallChain=0;
+}
+function reset(){
+  playing=false;
+  level=1; depth=0; score=0;
+  rotation=0; rotVel=0;
+  keys={};
+  buildLevel();
+  hud(); draw();
+}
+function arcPath(cx, cy, r, start, size, ySquash){
+  ctx.beginPath();
+  var steps=Math.max(4, Math.floor(size/0.2));
+  for(var i=0;i<=steps;i++){
+    var a=start + size*i/steps;
+    var x=cx + Math.cos(a)*r;
+    var y=cy + Math.sin(a)*r*ySquash;
+    if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+function draw(){
+  /* pole */
+  ctx.fillStyle='rgba(255,255,255,0.13)';
+  ctx.fillRect(TOWER_X-9, 0, 18, H);
+  /* platforms */
+  platforms.forEach(function(p){
+    var sy=p.y - camY;
+    if(sy<-40 || sy>H+40) return;
+    ctx.lineWidth=15;
+    ctx.lineCap='round';
+    /* safe ring (base) */
+    ctx.strokeStyle='#334155';
+    ctx.beginPath(); ctx.ellipse(TOWER_X, sy, TOWER_R, 26, 0, 0, Math.PI*2); ctx.stroke();
+    /* gap: redraw background-colored arc thicker to "cut" the ring visually */
+    ctx.strokeStyle='#701a75';
+    arcPath(TOWER_X, sy, TOWER_R, p.phase + p.gapStart + rotation, p.gapSize, 26/TOWER_R);
+    /* red danger */
+    ctx.strokeStyle='#ef4444';
+    arcPath(TOWER_X, sy, TOWER_R, p.phase + p.redStart + rotation, p.redSize, 26/TOWER_R);
+    /* safe highlight */
+    ctx.strokeStyle='rgba(148,163,184,0.5)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.ellipse(TOWER_X, sy-5, TOWER_R, 24, 0, Math.PI, Math.PI*2); ctx.stroke();
+    ctx.lineWidth=15;
+  });
+  /* finish pad */
+  var last=platforms[platforms.length-1];
+  if(last){
+    var fy=last.y + PLAT_GAP - camY;
+    if(fy>-40 && fy<H+40){
+      ctx.fillStyle='#22c55e';
+      ctx.beginPath(); ctx.ellipse(TOWER_X, fy, TOWER_R*0.7, 18, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#052e16'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+      ctx.fillText('FINISH ▼', TOWER_X, fy+4);
+    }
+  }
+  /* ball */
+  var by=ball.y - camY;
+  var fire=fallChain>=3;
+  ctx.fillStyle= fire ? '#f97316' : '#facc15';
+  ctx.beginPath(); ctx.arc(TOWER_X, by, 13, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.beginPath(); ctx.arc(TOWER_X-4, by-4, 4, 0, Math.PI*2); ctx.fill();
+  if(fire){
+    ctx.fillStyle='rgba(249,115,22,0.5)';
+    ctx.beginPath(); ctx.arc(TOWER_X, by-16, 7, 0, Math.PI*2); ctx.fill();
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(score>0 ? '🔴 RED! GAME OVER' : '🌀 HELIX JUMP', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(score>0 ? 'Score '+score+' — press START to drop again' : 'Press START — spin the tower, drop the ball', W/2, H/2+18);
+  }
+}
+function gameOver(){
+  playing=false;
+  el('msg').textContent='🔴 You landed on red! Final score: '+score+'.';
+  beep(140,0.26,'sawtooth',0.08);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) rotVel -= 26*dt;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) rotVel += 26*dt;
+  rotVel *= Math.pow(0.0015, dt);
+  if(Math.abs(rotVel)<0.002) rotVel=0;
+  rotation += rotVel*dt*3.4;
+  ball.vy += 1750*dt;
+  if(ball.vy>760) ball.vy=760;
+  var prevBottom=ball.y+13;
+  ball.y += ball.vy*dt;
+  var newBottom=ball.y+13;
+  if(ball.vy>0){
+    for(var i=0;i<platforms.length;i++){
+      var p=platforms[i];
+      if(prevBottom <= p.y && newBottom >= p.y){
+        var seg=segmentUnder(p, rotation);
+        if(seg==='gap'){
+          depth++;
+          fallChain++;
+          score += 10 + fallChain*2;
+          el('msg').textContent='⬇️ Through! Depth '+depth+(fallChain>=3 ? ' — 🔥 FIRE DROP!' : '');
+          beep(500+fallChain*40, 0.05, 'square', 0.04);
+        } else if(seg==='red'){
+          if(fallChain>=3){
+            /* fire drop smashes through red */
+            platforms.splice(i,1);
+            depth++;
+            score+=25;
+            fallChain=0;
+            el('msg').textContent='🔥 SMASHED through the red platform! +25.';
+            beep(220,0.12,'sawtooth',0.07);
+            i--;
+          } else {
+            gameOver();
+            return;
+          }
+        } else {
+          ball.y = p.y - 13;
+          ball.vy = -512;
+          fallChain=0;
+          beep(340,0.045,'square',0.04);
+        }
+        break;
+      }
+    }
+    /* finish pad */
+    var last=platforms[platforms.length-1];
+    if(last && prevBottom <= last.y+PLAT_GAP && newBottom >= last.y+PLAT_GAP){
+      level++;
+      score+=100;
+      el('msg').textContent='🎉 Level '+(level-1)+' cleared! Level '+level+' — more red below.';
+      beep(940,0.16,'sine',0.06);
+      buildLevel();
+      hud(); draw();
+      if(playing) rafId=requestAnimationFrame(loop);
+      return;
+    }
+  }
+  /* camera follows ball down */
+  var target=Math.max(0, ball.y - 240);
+  camY += (target-camY)*Math.min(1, dt*7);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right');
+function dragStart(x){ dragging=true; lastDragX=x; }
+function dragMove(x){
+  if(!dragging) return;
+  rotation += (x-lastDragX)*0.011;
+  lastDragX=x;
+}
+cvs.addEventListener('mousedown', function(e){ dragStart(e.clientX); });
+document.addEventListener('mousemove', function(e){ dragMove(e.clientX); });
+document.addEventListener('mouseup', function(){ dragging=false; });
+cvs.addEventListener('touchstart', function(e){ dragStart(e.touches[0].clientX); }, {passive:true});
+cvs.addEventListener('touchmove', function(e){ dragMove(e.touches[0].clientX); }, {passive:true});
+cvs.addEventListener('touchend', function(){ dragging=false; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🌀 Spin and drop!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ segmentUnder:segmentUnder, makePlatform:makePlatform, platformsForLevel:platformsForLevel };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

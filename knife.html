@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Knife Hit Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a knife-hit-style game free online. Throw every knife into the spinning log — never hit another blade. Boss stages included. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#1c1917 0%,#292524 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .knivesLeft { font-size:19px; letter-spacing:3px; min-height:24px; text-align:center; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 20px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.throw { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; font-size:17px; padding:12px 30px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔪 KNIFE HIT</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">STAGE <b id="stage">1</b></div>
+  <div class="stat">🍎 <b id="apples">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST STAGE <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="520"></canvas>
+<div class="knivesLeft" id="knivesLeft"></div>
+<div id="msg">Tap / SPACE to throw. Stick every knife — hit another blade and it's over!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn throw" id="throwBtn">🔪 THROW</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Every 5th stage is a BOSS (cheese, donut, planet…) · slice apples for +25 · the log changes speed and direction</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Knife Hit</h2>
+  <p>The precision thrower. A log spins — sometimes steady, sometimes surging, sometimes reversing — and you must bury a set number of knives in it without ever striking a blade already stuck there. Every fifth stage the log becomes a boss: a cheese wheel, a donut, a planet.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap, click or press SPACE to throw the knife upward into the log. Watch the rotation pattern and pick your moment: a new knife needs clear wood around the impact point. Stick all the stage's knives to smash the log and advance. Apples on the rim are worth +25 when sliced.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless stages with variable spin patterns and boss targets</li>
+    <li>Apple bonuses and a saved best-stage record</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=520, LOG_X=W/2, LOG_Y=196, LOG_R=86, MIN_SEP=0.42;
+var BOSSES=['🧀','🍩','🎃','🍉','🪐'];
+/* ---------- pure logic (testable) ---------- */
+function knivesForStage(stage){
+  return Math.min(10, 4 + Math.ceil(stage*0.8));
+}
+function isBoss(stage){
+  return stage % 5 === 0;
+}
+function angleDiff(a, b){
+  var d=Math.abs(a-b) % (Math.PI*2);
+  return d > Math.PI ? Math.PI*2 - d : d;
+}
+function canStick(existingAngles, newAngle){
+  for(var i=0;i<existingAngles.length;i++){
+    if(angleDiff(existingAngles[i], newAngle) < MIN_SEP) return false;
+  }
+  return true;
+}
+function spinAt(stage, t){
+  /* returns angular velocity at time t for the stage pattern */
+  var base=1.15 + Math.min(1.3, stage*0.09);
+  var mode=stage % 3;
+  if(mode===0) return base;
+  if(mode===1) return base * (1 + 0.55*Math.sin(t*1.7));
+  return (Math.sin(t*0.62) > 0 ? 1 : -1) * base * 0.92;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, stage, rotation, stageT, stuck, knivesLeft, flying, apples, score, appleAngles, shards, rafId, lastTick;
+var bestStage=+(localStorage.getItem('makenKnifeBest')||0);
+el('best').textContent=bestStage;
+function hud(){
+  el('stage').textContent=stage;
+  el('apples').textContent=apples;
+  el('score').textContent=score;
+  if(stage>bestStage){ bestStage=stage; localStorage.setItem('makenKnifeBest',bestStage); }
+  el('best').textContent=bestStage;
+  var s='';
+  for(var i=0;i<knivesLeft;i++) s+='🗡️';
+  el('knivesLeft').textContent=s;
+}
+function setupStage(){
+  rotation=0; stageT=0;
+  stuck=[];
+  knivesLeft=knivesForStage(stage);
+  flying=null;
+  appleAngles=[];
+  var preStuck= stage>=3 ? Math.min(3, Math.floor(stage/3)) : 0;
+  var tries=0;
+  while(stuck.length<preStuck && tries<60){
+    tries++;
+    var a=Math.random()*Math.PI*2;
+    if(canStick(stuck, a) && angleDiff(a, Math.PI/2)>0.6) stuck.push(a);
+  }
+  var na= stage>=2 ? 1 + (Math.random()<0.5 ? 1 : 0) : 0;
+  tries=0;
+  while(appleAngles.length<na && tries<60){
+    tries++;
+    var aa=Math.random()*Math.PI*2;
+    if(canStick(stuck.concat(appleAngles), aa)) appleAngles.push(aa);
+  }
+  shards=[];
+}
+function reset(){
+  playing=false;
+  stage=1; apples=0; score=0;
+  setupStage();
+  hud(); draw();
+}
+function drawKnifeShape(x, y, ang, len){
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(ang);
+  ctx.fillStyle='#e5e7eb';
+  ctx.beginPath();
+  ctx.moveTo(0, -len);
+  ctx.lineTo(4.6, -len+16);
+  ctx.lineTo(1.6, 0);
+  ctx.lineTo(-1.6, 0);
+  ctx.lineTo(-4.6, -len+16);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#92400e';
+  ctx.fillRect(-2.6, 0, 5.2, 13);
+  ctx.restore();
+}
+function draw(){
+  /* log / boss */
+  ctx.save();
+  ctx.translate(LOG_X, LOG_Y);
+  ctx.rotate(rotation);
+  if(isBoss(stage)){
+    ctx.font=(LOG_R*1.5)+'px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(BOSSES[(stage/5 - 1) % BOSSES.length], 0, 6);
+  } else {
+    ctx.fillStyle='#b45309';
+    ctx.beginPath(); ctx.arc(0, 0, LOG_R, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#92400e'; ctx.lineWidth=3;
+    [0.78, 0.55, 0.32].forEach(function(f){
+      ctx.beginPath(); ctx.arc(0, 0, LOG_R*f, 0, Math.PI*2); ctx.stroke();
+    });
+    ctx.fillStyle='#d97706';
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.18)';
+    ctx.fillRect(-LOG_R, -2, 26, 4);
+  }
+  /* stuck knives (rotate with log) */
+  stuck.forEach(function(a){
+    var kx=Math.cos(a)*LOG_R, ky=Math.sin(a)*LOG_R;
+    drawKnifeShape(kx, ky, a + Math.PI/2 + Math.PI, 40);
+  });
+  /* apples on rim */
+  appleAngles.forEach(function(a){
+    var ax=Math.cos(a)*(LOG_R+2), ay=Math.sin(a)*(LOG_R+2);
+    ctx.font='21px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🍎', ax, ay);
+  });
+  ctx.restore();
+  /* shards on stage clear */
+  shards.forEach(function(s){
+    ctx.fillStyle='#b45309';
+    ctx.fillRect(s.x, s.y, 9, 6);
+  });
+  /* flying knife */
+  if(flying){
+    drawKnifeShape(LOG_X, flying.y, 0, 46);
+  } else if(playing){
+    drawKnifeShape(LOG_X, 452, 0, 46);
+  }
+  /* stage banner */
+  if(isBoss(stage)){
+    ctx.fillStyle='#f87171'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+    ctx.fillText('👹 BOSS STAGE', W/2, 34);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(score>0 ? '⚔️ CLANG! KNIFE ON KNIFE' : '🔪 KNIFE HIT', W/2, H/2+40);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(score>0 ? 'You reached stage '+stage+' — press START again' : 'Press START — stick every knife in the log', W/2, H/2+68);
+  }
+}
+function throwKnife(){
+  if(!playing || flying) return;
+  flying={ y:452 };
+  beep(700,0.05,'sine',0.04);
+}
+function stageCleared(){
+  score += 50 + stage*10;
+  el('msg').textContent='💥 LOG SMASHED! Stage '+(stage+1)+' next…';
+  beep(300,0.16,'sawtooth',0.06);
+  for(var i=0;i<10;i++){
+    shards.push({ x:LOG_X+(Math.random()*90-45), y:LOG_Y+(Math.random()*60-30), vx:(Math.random()*2-1)*90, vy:-60-Math.random()*90 });
+  }
+  stage++;
+  setupStage();
+  hud();
+}
+function gameOver(){
+  playing=false;
+  el('msg').textContent='⚔️ Clang — knife hit knife! You reached stage '+stage+'. Score: '+score+'.';
+  beep(1200,0.2,'square',0.07);
+  setTimeout(function(){ beep(180,0.24,'sawtooth',0.07); }, 90);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  stageT += dt;
+  rotation += spinAt(stage, stageT)*dt;
+  shards.forEach(function(s){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=420*dt; });
+  shards=shards.filter(function(s){ return s.y<H+20; });
+  if(flying){
+    flying.y -= 880*dt;
+    var tipY=flying.y - 46;
+    if(tipY <= LOG_Y + LOG_R){
+      /* impact angle: bottom of log = PI/2 in log space */
+      var impact=((Math.PI/2 - rotation) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+      /* apple slice? */
+      var sliced=false;
+      for(var i=0;i<appleAngles.length;i++){
+        var worldA=((appleAngles[i] + rotation) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+        if(angleDiff(worldA, Math.PI/2) < 0.3){
+          appleAngles.splice(i,1);
+          apples++;
+          score+=25;
+          sliced=true;
+          el('msg').textContent='🍎 Apple sliced! +25.';
+          beep(1250,0.08,'sine',0.06);
+          break;
+        }
+      }
+      if(!canStick(stuck, impact)){
+        gameOver();
+        return;
+      }
+      stuck.push(impact);
+      knivesLeft--;
+      score+=10;
+      flying=null;
+      beep(240,0.06,'square',0.06);
+      hud();
+      if(knivesLeft<=0){
+        stageCleared();
+      } else if(!sliced){
+        el('msg').textContent='🗡️ Stuck! '+knivesLeft+' to go.';
+      }
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+cvs.addEventListener('mousedown', throwKnife);
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); throwKnife(); }, {passive:false});
+el('throwBtn').addEventListener('click', throwKnife);
+document.addEventListener('keydown', function(e){
+  if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); throwKnife(); }
+});
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🔪 Stage 1 — throw!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ knivesForStage:knivesForStage, isBoss:isBoss, angleDiff:angleDiff, canStick:canStick, spinAt:spinAt, MIN_SEP:MIN_SEP };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
