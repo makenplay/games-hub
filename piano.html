@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Piano Tiles Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a piano-tiles-style rhythm game free online. Tap only the black tiles, never the white — how long can you keep the music playing? No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#f8fafc; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🎹 PIANO TILES</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">TILES <b id="score">0</b></div>
+  <div class="stat">COMBO <b id="combo">0</b></div>
+  <div class="stat">SPEED <b id="speed">1.0×</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="400" height="560"></canvas>
+<div id="msg">Tap ONLY the black tiles (or press D F J K). One white tap — or one missed tile — ends the song!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Every tile plays a note · the river speeds up as your score climbs · combos multiply your streak sound</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Piano Tiles</h2>
+  <p>The finger-tapping phenomenon: an endless river of black tiles flows down four lanes and your only job is to tap every single one — and nothing else. Each correct tap plays the next note of the melody; one mistake and the music stops.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap or click the black tiles before they slide off the bottom, or use the D F J K keys for the four lanes. Never tap a white space, and never let a black tile pass. The scroll speed rises steadily with your score — stay calm, find the rhythm.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A real melody note-by-note — Für Elise — played by your taps</li>
+    <li>Endless mode with a steadily rising speed curve</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=400, H=560, COLS=4, TILE_H=140;
+/* Für Elise opening (note frequencies), loops */
+var MELODY=[659,622,659,622,659,494,587,523,440,0,262,330,440,494,0,330,392,494,523,0,330,659,622,659,622,659,494,587,523,440,0,262,330,440,494,0,330,523,494,440];
+/* ---------- pure logic (testable) ---------- */
+function speedForScore(score){
+  return 265 + Math.min(420, score*7);
+}
+function nextColumn(prev, rnd){
+  var c=Math.floor(rnd()*COLS);
+  if(c===prev) c=(c+1+Math.floor(rnd()*(COLS-1)))%COLS;
+  return c;
+}
+function noteForIndex(i){
+  return MELODY[i % MELODY.length];
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function tone(f, d){
+  if(!soundOn || !f) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type='triangle'; o.frequency.value=f;
+    gn.gain.value=0.14; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.24));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.24));
+  }catch(e){}
+}
+function buzz(){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type='sawtooth'; o.frequency.value=110;
+    gn.gain.value=0.1; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.3);
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, tiles, scrollY, score, combo, lastCol, rafId, lastTick;
+var best=+(localStorage.getItem('makenPianoBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('score').textContent=score;
+  el('combo').textContent=combo;
+  el('speed').textContent=(speedForScore(score)/265).toFixed(1)+'×';
+  if(score>best){ best=score; localStorage.setItem('makenPianoBest',best); }
+  el('best').textContent=best;
+}
+function spawnRow(y){
+  lastCol=nextColumn(lastCol, Math.random);
+  tiles.push({ col:lastCol, y:y, hit:false });
+}
+function reset(){
+  playing=false;
+  tiles=[]; scrollY=0; score=0; combo=0; lastCol=-1;
+  for(var i=0;i<6;i++) spawnRow(-i*TILE_H + 60);
+  hud(); draw();
+}
+function draw(){
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(0,0,W,H);
+  /* lane lines */
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=1;
+  for(var c=1;c<COLS;c++){
+    ctx.beginPath(); ctx.moveTo(c*W/COLS, 0); ctx.lineTo(c*W/COLS, H); ctx.stroke();
+  }
+  /* tiles */
+  tiles.forEach(function(t){
+    var x=t.col*W/COLS, y=t.y+scrollY;
+    if(y<-TILE_H || y>H+TILE_H) return;
+    if(t.hit){
+      ctx.fillStyle='#94a3b8';
+    } else {
+      ctx.fillStyle='#111827';
+    }
+    ctx.fillRect(x+1.5, y+1.5, W/COLS-3, TILE_H-3);
+    if(!t.hit){
+      ctx.fillStyle='rgba(255,255,255,0.16)';
+      ctx.fillRect(x+10, y+12, W/COLS-20, 8);
+    }
+  });
+  /* key hints */
+  ctx.fillStyle='#64748b'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+  ['D','F','J','K'].forEach(function(k, i){
+    ctx.fillText(k, i*W/COLS + W/COLS/2, H-10);
+  });
+  /* danger line */
+  ctx.fillStyle='rgba(239,68,68,0.5)';
+  ctx.fillRect(0, H-26, W, 2);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(score>0 ? '🎵 MUSIC STOPPED' : '🎹 PIANO TILES', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(score>0 ? 'You played '+score+' notes — press START again' : 'Press START — tap only the black tiles', W/2, H/2+18);
+  }
+}
+function gameOver(why){
+  playing=false;
+  buzz();
+  el('msg').textContent=why+' Final score: '+score+' notes.';
+  hud(); draw();
+}
+function tapColumn(col, clientY){
+  if(!playing) return;
+  /* lowest unhit tile in this column that's on screen */
+  var candidate=null;
+  tiles.forEach(function(t){
+    if(t.hit || t.col!==col) return;
+    var y=t.y+scrollY;
+    if(y+TILE_H>0 && y<H) {
+      if(!candidate || y>candidate.y+scrollY) candidate=t;
+    }
+  });
+  if(candidate){
+    var cy=candidate.y+scrollY;
+    if(clientY===undefined || (clientY>=cy-8 && clientY<=cy+TILE_H+8)){
+      candidate.hit=true;
+      score++; combo++;
+      tone(noteForIndex(score-1), 0.24);
+      if(combo>0 && combo%25===0) el('msg').textContent='🔥 '+combo+' combo — the river is speeding up!';
+      hud();
+      return;
+    }
+  }
+  gameOver('🎵 Wrong tap — you hit a white tile!');
+}
+function canvasPos(e){
+  var r=cvs.getBoundingClientRect();
+  var cx=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var cy=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  return { x: cx * (W/r.width), y: cy * (H/r.height) };
+}
+function onTap(e){
+  e.preventDefault();
+  var p=canvasPos(e);
+  tapColumn(Math.floor(p.x/(W/COLS)), p.y);
+}
+cvs.addEventListener('mousedown', onTap);
+cvs.addEventListener('touchstart', onTap, {passive:false});
+document.addEventListener('keydown', function(e){
+  var map={ KeyD:0, KeyF:1, KeyJ:2, KeyK:3 };
+  if(map[e.code]!==undefined){ e.preventDefault(); tapColumn(map[e.code]); }
+});
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  scrollY += speedForScore(score)*dt;
+  /* spawn above */
+  var minY=Math.min.apply(null, tiles.map(function(t){ return t.y; }));
+  while(minY + scrollY > -TILE_H*1.4){
+    minY -= TILE_H;
+    spawnRow(minY);
+  }
+  /* missed tile check */
+  for(var i=0;i<tiles.length;i++){
+    var t=tiles[i];
+    if(!t.hit && t.y+scrollY > H+6){
+      gameOver('🎵 A black tile slipped past!');
+      return;
+    }
+  }
+  tiles=tiles.filter(function(t){ return t.y+scrollY < H+170; });
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🎹 Play! Tap the black tiles.';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ speedForScore:speedForScore, nextColumn:nextColumn, noteForIndex:noteForIndex, MELODY:MELODY, COLS:COLS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

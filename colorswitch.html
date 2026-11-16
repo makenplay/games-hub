@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Color Switch Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a color-switch-style game free online. Tap to bounce the ball through the matching color of every spinning wheel. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#0b1023; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 20px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.jump { background:linear-gradient(180deg,#ec4899,#9d174d); color:#fff; font-size:17px; padding:12px 32px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🎨 COLOR SWITCH</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">⭐ <b id="stars">0</b></div>
+  <div class="stat">BALL <b id="ballColor">●</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="400" height="560"></canvas>
+<div id="msg">Tap / SPACE to bounce. Only pass through the wheel where the color matches your ball!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn jump" id="jumpBtn">⬆ TAP</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Rainbow stars change your ball's color · +1 for every wheel cleared · wheels spin faster as you climb</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Color Switch</h2>
+  <p>The hypnotic color-matching climber. Your ball bounces upward through endless spinning wheels, and it may only touch the arc segment painted its own color. Every wheel hides a rainbow star that repaints the ball — so the color you need is always changing.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap, click or press SPACE to bounce the ball up; gravity pulls it back down. Time each rise so the ball crosses the wheel's ring exactly where the matching color passes. Touch a wrong color and the run ends. Score one point per wheel cleared.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless wheels that spin faster the higher you climb</li>
+    <li>Color-changer stars that keep every run unpredictable</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=400, H=560;
+var COLORS=[
+  { name:'pink',   hex:'#ec4899' },
+  { name:'cyan',   hex:'#22d3ee' },
+  { name:'yellow', hex:'#facc15' },
+  { name:'violet', hex:'#a78bfa' }
+];
+/* ---------- pure logic (testable) ---------- */
+/* wheel: 4 arcs, each 90 degrees, starting at rotation offset. angle measured in radians,
+   0 = pointing down (toward incoming ball from below), increasing clockwise visually. */
+function segmentAt(rotation, angleFromDown){
+  var a=((angleFromDown - rotation) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+  return Math.floor(a / (Math.PI/2)) % 4;
+}
+function ballPasses(ballColorIdx, rotation, fromBelow){
+  var angleFromDown= fromBelow ? 0 : Math.PI;
+  return segmentAt(rotation, angleFromDown) === ballColorIdx;
+}
+function spinForScore(score){
+  return 0.9 + Math.min(1.5, score*0.06);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.06; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, ball, wheels, camY, score, stars, rafId, lastTick;
+var best=+(localStorage.getItem('makenColorBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('score').textContent=score;
+  el('stars').textContent=stars;
+  var bc=el('ballColor');
+  bc.textContent='●';
+  bc.style.color=COLORS[ball.color].hex;
+  if(score>best){ best=score; localStorage.setItem('makenColorBest',best); }
+  el('best').textContent=best;
+}
+function makeWheel(y){
+  return { y:y, r:74, rot:Math.random()*Math.PI*2, dir: Math.random()<0.5 ? 1 : -1, passed:false, starTaken:false };
+}
+function reset(){
+  playing=false;
+  ball={ y:440, vy:0, color: Math.floor(Math.random()*4), r:11 };
+  wheels=[];
+  for(var i=0;i<4;i++) wheels.push(makeWheel(210 - i*295));
+  camY=0; score=0; stars=0;
+  hud(); draw();
+}
+function draw(){
+  /* wheels */
+  wheels.forEach(function(w){
+    var cy=w.y - camY;
+    if(cy<-120 || cy>H+120) return;
+    ctx.lineWidth=13;
+    for(var s=0;s<4;s++){
+      ctx.strokeStyle=COLORS[s].hex;
+      ctx.beginPath();
+      /* canvas arc: 0 = +x axis; bottom of circle = PI/2. segment s spans from rotation+s*90deg measured from bottom */
+      var start=Math.PI/2 + w.rot + s*Math.PI/2;
+      ctx.arc(W/2, cy, w.r, start, start + Math.PI/2 - 0.035);
+      ctx.stroke();
+    }
+    /* changer star at wheel centre */
+    if(!w.starTaken){
+      ctx.fillStyle='#fff';
+      ctx.font='19px Arial'; ctx.textAlign='center';
+      ctx.fillText('⭐', W/2, cy+7);
+    }
+    /* hub */
+    ctx.fillStyle='#1e293b';
+    ctx.beginPath(); ctx.arc(W/2, cy, 5, 0, Math.PI*2); ctx.fill();
+  });
+  /* ball */
+  var by=ball.y - camY;
+  ctx.fillStyle=COLORS[ball.color].hex;
+  ctx.beginPath(); ctx.arc(W/2, by, ball.r, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(W/2-3.6, by-3.6, 3.6, 0, Math.PI*2); ctx.fill();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(score>0 ? '💥 WRONG COLOR!' : '🎨 COLOR SWITCH', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(score>0 ? 'Score '+score+' — press START to climb again' : 'Press START — match the color, clear the wheels', W/2, H/2+18);
+  }
+}
+function gameOver(){
+  playing=false;
+  el('msg').textContent='💥 Wrong color! Final score: '+score+'.';
+  beep(150,0.24,'sawtooth',0.07);
+  hud(); draw();
+}
+function tap(){
+  if(!playing) return;
+  ball.vy=-472;
+  beep(560,0.045,'sine',0.045);
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  ball.vy += 1310*dt;
+  ball.y += ball.vy*dt;
+  wheels.forEach(function(w){ w.rot += w.dir * spinForScore(score) * dt; });
+  /* camera follows ball upward */
+  var target=ball.y - 350;
+  if(target < camY) camY = target;
+  /* fell below camera */
+  if(ball.y - camY > H+24){
+    gameOver();
+    el('msg').textContent='⬇️ You fell! Final score: '+score+'.';
+    return;
+  }
+  /* wheel interactions */
+  for(var i=0;i<wheels.length;i++){
+    var w=wheels[i];
+    /* star (colour changer) at centre */
+    if(!w.starTaken && Math.abs(ball.y - w.y) < 15){
+      w.starTaken=true;
+      stars++;
+      var nc;
+      do { nc=Math.floor(Math.random()*4); } while(nc===ball.color);
+      ball.color=nc;
+      el('msg').textContent='⭐ Color changed to '+COLORS[nc].name.toUpperCase()+'!';
+      beep(1180,0.09,'sine',0.06);
+    }
+    /* ring crossing: ball edge reaches ring radius band */
+    var dy=ball.y - w.y;
+    var dist=Math.abs(dy);
+    if(dist > w.r - ball.r - 7 && dist < w.r + ball.r + 7){
+      var fromBelow= dy > 0;
+      /* only check while actually crossing the ring line this frame region */
+      if(Math.abs(dist - w.r) < ball.r + 3.4){
+        if(!ballPasses(ball.color, w.rot, fromBelow)){
+          gameOver();
+          return;
+        }
+      }
+    }
+    if(!w.passed && ball.y < w.y - w.r - 14){
+      w.passed=true;
+      score++;
+      el('msg').textContent='🎨 Wheel cleared! Score '+score+'.';
+      beep(880,0.07,'sine',0.055);
+    }
+  }
+  /* recycle wheels above */
+  var minY=Math.min.apply(null, wheels.map(function(w){ return w.y; }));
+  wheels=wheels.filter(function(w){ return w.y - camY < H+180; });
+  while(wheels.length<4){
+    minY -= 295;
+    wheels.push(makeWheel(minY));
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+cvs.addEventListener('mousedown', tap);
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); tap(); }, {passive:false});
+el('jumpBtn').addEventListener('click', tap);
+document.addEventListener('keydown', function(e){
+  if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); tap(); }
+});
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🎨 Tap to bounce — match your color!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ COLORS:COLORS, segmentAt:segmentAt, ballPasses:ballPasses, spinForScore:spinForScore };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
