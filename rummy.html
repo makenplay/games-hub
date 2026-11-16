@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rummy Cards — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Rummy free online against the computer. Draw, meld sets and runs, knock with low deadwood and win the round. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #table { background:#14532d; border:2px solid #166534; border-radius:14px; padding:14px 10px 18px; width:min(760px,96vw); }
+  .zone { text-align:center; margin-bottom:10px; }
+  .zone .lbl { font-size:11.5px; letter-spacing:2px; color:#bbf7d0; margin-bottom:5px; }
+  .hand { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; min-height:88px; }
+  .card { width:56px; height:80px; background:#f8fafc; border-radius:7px; border:1.5px solid #94a3b8; position:relative; cursor:pointer; padding:3px 5px; font-weight:800; font-size:14.5px; color:#111827; box-shadow:0 1px 3px rgba(0,0,0,0.35); user-select:none; }
+  .card.red { color:#dc2626; }
+  .card .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:23px; padding-top:10px; }
+  .card.back { background:repeating-linear-gradient(45deg,#b91c1c,#b91c1c 6px,#7f1d1d 6px,#7f1d1d 12px); border-color:#450a0a; cursor:default; }
+  .card.sel { box-shadow:0 0 0 3px #facc15; transform:translateY(-7px); }
+  .card.melded { box-shadow:0 0 0 2.5px #22c55e; }
+  .midrow { display:flex; gap:14px; justify-content:center; align-items:flex-start; margin:8px 0; }
+  .pilebox { text-align:center; }
+  .pilebox .lbl { font-size:11px; letter-spacing:1.5px; color:#bbf7d0; margin-top:4px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn:disabled { opacity:0.42; cursor:default; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🎴 RUMMY</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">YOU <b id="scoreYou">0</b></div>
+  <div class="stat">CPU <b id="scoreCpu">0</b></div>
+  <div class="stat">ROUND <b id="round">1</b></div>
+  <div class="stat">YOUR DEADWOOD <b id="deadwood">—</b></div>
+  <div class="stat">FIRST TO <b>100</b></div>
+</div>
+
+<div id="table">
+  <div class="zone">
+    <div class="lbl">🤖 CPU HAND</div>
+    <div class="hand" id="cpuHand"></div>
+  </div>
+  <div class="midrow">
+    <div class="pilebox">
+      <div class="card back" id="stockPile"></div>
+      <div class="lbl">STOCK · <span id="stockCount">0</span></div>
+    </div>
+    <div class="pilebox">
+      <div id="discardTop"></div>
+      <div class="lbl">DISCARD</div>
+    </div>
+  </div>
+  <div class="zone">
+    <div class="lbl">🧑 YOUR HAND — green outline = part of a meld</div>
+    <div class="hand" id="yourHand"></div>
+  </div>
+</div>
+<div id="msg">Press NEW ROUND, draw a card, then click one of your cards to discard it.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW ROUND</button>
+  <button class="btn" id="sortBtn">↕ SORT</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Meld = 3-4 of a kind, or a run of 3+ in one suit · discard with deadwood ≤ 10 to KNOCK · deadwood 0 = GIN (+25 bonus) · face cards count 10, Ace counts 1</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Rummy</h2>
+  <p>The world's most-played card game, one-on-one against the computer. Draw from the stock or grab the discard, build sets and runs, and dump your deadwood. When your unmatched cards total 10 or less you can knock by discarding — lowest deadwood wins the difference. Meld everything and it's Gin, with a fat bonus.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Each turn: click the stock (or the discard pile) to draw, then click one of your cards to discard it. Your melded cards glow green automatically — the DEADWOOD counter shows what you're still holding. Discard with deadwood of 10 or less to knock and end the round; if the CPU's deadwood is lower, it wins instead (and an undercut earns +10). First to 100 points takes the match.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Full Gin-Rummy scoring: knock, gin bonus and undercut bonus</li>
+    <li>A CPU that reads the discard pile and hunts its own melds</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var SUITS=['♠','♥','♦','♣'];
+var RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+function isRed(card){ return card.s===1 || card.s===2; }
+function cardValue(card){ return Math.min(card.r, 10); }
+function makeDeck(){
+  var deck=[];
+  for(var s=0;s<4;s++) for(var r=1;r<=13;r++) deck.push({ s:s, r:r });
+  for(var i=deck.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=deck[i]; deck[i]=deck[j]; deck[j]=t;
+  }
+  return deck;
+}
+/* ---------- pure logic (testable) ---------- */
+/* find the best meld arrangement: returns { melded:Set(index), deadwood:points } minimizing deadwood */
+function bestMelds(hand){
+  var n=hand.length;
+  var melds=[];
+  var i, j, k;
+  /* sets */
+  for(i=0;i<n;i++) for(j=i+1;j<n;j++) for(k=j+1;k<n;k++){
+    if(hand[i].r===hand[j].r && hand[j].r===hand[k].r) melds.push([i, j, k]);
+  }
+  for(i=0;i<n;i++) for(j=i+1;j<n;j++) for(k=j+1;k<n;k++) for(var m=k+1;m<n;m++){
+    if(hand[i].r===hand[j].r && hand[j].r===hand[k].r && hand[k].r===hand[m].r) melds.push([i, j, k, m]);
+  }
+  /* runs (same suit, consecutive; Ace low only) */
+  var bySuit={};
+  hand.forEach(function(card, idx){
+    if(!bySuit[card.s]) bySuit[card.s]=[];
+    bySuit[card.s].push(idx);
+  });
+  Object.keys(bySuit).forEach(function(s){
+    var idxs=bySuit[s].slice().sort(function(a, b){ return hand[a].r-hand[b].r; });
+    for(var a=0;a<idxs.length;a++){
+      var run=[idxs[a]];
+      for(var b=a+1;b<idxs.length;b++){
+        if(hand[idxs[b]].r===hand[run[run.length-1]].r+1) run.push(idxs[b]);
+        else if(hand[idxs[b]].r===hand[run[run.length-1]].r) continue;
+        else break;
+        if(run.length>=3) melds.push(run.slice());
+      }
+    }
+  });
+  /* exact minimum deadwood via bitmask DP over subsets (n <= 11 -> at most 2048 states) */
+  var meldMasks=melds.map(function(m){
+    return m.reduce(function(a, idx){ return a | (1<<idx); }, 0);
+  });
+  var vals=hand.map(cardValue);
+  var FULL=(1<<n)-1;
+  var dp=new Array(1<<n).fill(-1);
+  var choice=new Array(1<<n).fill(null);
+  function solve(mask){
+    if(mask===0) return 0;
+    if(dp[mask]>=0) return dp[mask];
+    var i=0;
+    while(!(mask & (1<<i))) i++;
+    var bestVal=vals[i] + solve(mask ^ (1<<i));
+    var bestChoice={ skip:true, i:i };
+    for(var k=0;k<meldMasks.length;k++){
+      var mm=meldMasks[k];
+      if((mm & (1<<i)) && (mm & mask)===mm){
+        var v=solve(mask ^ mm);
+        if(v<bestVal){ bestVal=v; bestChoice={ skip:false, mask:mm }; }
+      }
+    }
+    dp[mask]=bestVal;
+    choice[mask]=bestChoice;
+    return bestVal;
+  }
+  var dwTotal=solve(FULL);
+  var melded=new Set();
+  var curMask=FULL;
+  while(curMask!==0){
+    var ch=choice[curMask];
+    if(!ch) break;
+    if(ch.skip) curMask ^= (1<<ch.i);
+    else {
+      for(var b=0;b<n;b++) if(ch.mask & (1<<b)) melded.add(b);
+      curMask ^= ch.mask;
+    }
+  }
+  return { melded:melded, deadwood:dwTotal };
+}
+function handDeadwood(hand){
+  return bestMelds(hand).deadwood;
+}
+function sortHand(hand){
+  return hand.slice().sort(function(a, b){ return a.s-b.s || a.r-b.r; });
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var stock, discardPile, you, cpu, phase, round, scoreYou, scoreCpu, roundOver, revealCpu;
+function hud(){
+  el('scoreYou').textContent=scoreYou;
+  el('scoreCpu').textContent=scoreCpu;
+  el('round').textContent=round;
+  el('stockCount').textContent=stock ? stock.length : 0;
+  el('deadwood').textContent= you ? handDeadwood(you) : '—';
+}
+function cardEl(card, extra){
+  var d=document.createElement('div');
+  d.className='card'+(isRed(card) ? ' red' : '')+(extra ? ' '+extra : '');
+  d.innerHTML=RANKS[card.r-1]+SUITS[card.s]+'<span class="big">'+SUITS[card.s]+'</span>';
+  return d;
+}
+function render(){
+  var cpuEl=el('cpuHand');
+  cpuEl.innerHTML='';
+  cpu.forEach(function(card){
+    if(revealCpu) cpuEl.appendChild(cardEl(card, ''));
+    else {
+      var b=document.createElement('div');
+      b.className='card back';
+      cpuEl.appendChild(b);
+    }
+  });
+  var yourEl=el('yourHand');
+  yourEl.innerHTML='';
+  var bm=bestMelds(you);
+  you.forEach(function(card, idx){
+    var ce=cardEl(card, bm.melded.has(idx) ? 'melded' : '');
+    (function(i){
+      ce.addEventListener('click', function(){ clickYourCard(i); });
+    })(idx);
+    yourEl.appendChild(ce);
+  });
+  var dt=el('discardTop');
+  dt.innerHTML='';
+  if(discardPile.length){
+    var topCard=discardPile[discardPile.length-1];
+    var dc=cardEl(topCard, '');
+    dc.addEventListener('click', drawDiscard);
+    dt.appendChild(dc);
+  } else {
+    var empty=document.createElement('div');
+    empty.className='card';
+    empty.style.opacity='0.3';
+    dt.appendChild(empty);
+  }
+  hud();
+}
+function newRound(){
+  var deck=makeDeck();
+  you=[]; cpu=[];
+  for(var i=0;i<10;i++){ you.push(deck.pop()); cpu.push(deck.pop()); }
+  stock=deck;
+  discardPile=[stock.pop()];
+  phase='draw';
+  roundOver=false;
+  revealCpu=false;
+  you=sortHand(you);
+  el('msg').textContent='🎴 Round '+round+' — your draw: click the STOCK or the DISCARD.';
+  render();
+}
+function drawStock(){
+  if(roundOver || phase!=='draw' || !stock.length) return;
+  you.push(stock.pop());
+  phase='discard';
+  el('msg').textContent='🎴 Now click a card in your hand to discard it.'+(handDeadwood(you)<=10 ? ' Your deadwood is low — discarding now KNOCKS!' : '');
+  beep(520,0.04,'square',0.03);
+  render();
+}
+function drawDiscard(){
+  if(roundOver || phase!=='draw' || !discardPile.length) return;
+  you.push(discardPile.pop());
+  phase='discard';
+  el('msg').textContent='🎴 Took the discard. Now click a card to discard.'+(handDeadwood(you)<=10 ? ' Discarding now KNOCKS!' : '');
+  beep(520,0.04,'square',0.03);
+  render();
+}
+function clickYourCard(idx){
+  if(roundOver || phase!=='discard') return;
+  var card=you.splice(idx, 1)[0];
+  discardPile.push(card);
+  var dw=handDeadwood(you);
+  beep(640,0.04,'square',0.03);
+  if(dw<=10){
+    endRound('you', dw);
+    return;
+  }
+  if(stock.length===0){
+    endRound(handDeadwood(you)<=handDeadwood(cpu) ? 'you' : 'cpu', dw);
+    return;
+  }
+  phase='cpu';
+  render();
+  setTimeout(cpuTurn, 650);
+}
+function cpuUseful(card, hand){
+  var test=hand.concat([card]);
+  return handDeadwood(test) < handDeadwood(hand);
+}
+function cpuTurn(){
+  if(roundOver) return;
+  /* draw: take discard if it lowers deadwood, else stock */
+  var top=discardPile[discardPile.length-1];
+  if(top && cpuUseful(top, cpu)) cpu.push(discardPile.pop());
+  else if(stock.length) cpu.push(stock.pop());
+  /* discard: the card whose removal leaves the lowest deadwood, avoiding the card just drawn from discard when possible */
+  var bestIdx=0, bestDw=Infinity;
+  for(var i=0;i<cpu.length;i++){
+    var rest=cpu.slice(0, i).concat(cpu.slice(i+1));
+    var dw=handDeadwood(rest);
+    if(dw<bestDw){ bestDw=dw; bestIdx=i; }
+  }
+  var card=cpu.splice(bestIdx, 1)[0];
+  discardPile.push(card);
+  if(bestDw<=10){
+    endRound('cpu', bestDw);
+    return;
+  }
+  if(stock.length===0){
+    endRound(handDeadwood(cpu)<=handDeadwood(you) ? 'cpu' : 'you', handDeadwood(you));
+    return;
+  }
+  phase='draw';
+  el('msg').textContent='🎴 CPU played. Your draw: STOCK or DISCARD.';
+  render();
+}
+function endRound(knocker, knockerDw){
+  roundOver=true;
+  revealCpu=true;
+  var youDw=handDeadwood(you), cpuDw=handDeadwood(cpu);
+  var text='';
+  if(knocker==='you'){
+    if(youDw===0){
+      var gain=25+cpuDw;
+      scoreYou+=gain;
+      text='🎉 GIN! You melded everything — +'+gain+' points (25 bonus + CPU deadwood '+cpuDw+').';
+    } else if(cpuDw<=youDw){
+      var cpuGain=(youDw-cpuDw)+10;
+      scoreCpu+=cpuGain;
+      text='😱 UNDERCUT! You knocked with '+youDw+' but the CPU holds only '+cpuDw+' — CPU scores +'+cpuGain+'.';
+    } else {
+      var gain2=cpuDw-youDw;
+      scoreYou+=gain2;
+      text='🎉 You knocked with '+youDw+' vs CPU '+cpuDw+' — +'+gain2+' points!';
+    }
+  } else {
+    if(cpuDw===0){
+      var cgain=25+youDw;
+      scoreCpu+=cgain;
+      text='🤖 CPU went GIN! It scores +'+cgain+'. Your deadwood was '+youDw+'.';
+    } else if(youDw<=cpuDw){
+      var ygain=(cpuDw-youDw)+10;
+      scoreYou+=ygain;
+      text='🎉 UNDERCUT! CPU knocked with '+cpuDw+' but you hold only '+youDw+' — you score +'+ygain+'!';
+    } else {
+      var cgain2=youDw-cpuDw;
+      scoreCpu+=cgain2;
+      text='🤖 CPU knocked with '+cpuDw+' vs your '+youDw+' — CPU +'+cgain2+'.';
+    }
+  }
+  beep(scoreYou>=100 || scoreCpu>=100 ? 1180 : 840, 0.16,'sine',0.055);
+  if(scoreYou>=100 || scoreCpu>=100){
+    text+=' 🏆 MATCH OVER: '+(scoreYou>=100 ? 'YOU WIN the match!' : 'CPU wins the match.')+' Press NEW ROUND for a fresh match.';
+    round=1; scoreYou=0; scoreCpu=0;
+  } else {
+    round++;
+    text+=' Press NEW ROUND for round '+round+'.';
+  }
+  el('msg').textContent=text;
+  phase='over';
+  render();
+}
+el('stockPile').addEventListener('click', drawStock);
+el('startBtn').addEventListener('click', newRound);
+el('sortBtn').addEventListener('click', function(){
+  if(!you) return;
+  you=sortHand(you);
+  render();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+round=1; scoreYou=0; scoreCpu=0;
+stock=[]; discardPile=[]; you=[]; cpu=[]; phase='draw'; roundOver=true; revealCpu=false;
+hud();
+el('msg').textContent='Press NEW ROUND to deal the cards.';
+if(typeof module!=='undefined') module.exports={ bestMelds:bestMelds, handDeadwood:handDeadwood, cardValue:cardValue, makeDeck:makeDeck, sortHand:sortHand };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

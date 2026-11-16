@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Teen Patti Cards — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Teen Patti free online with play-money chips against two computer players. Trios, pure sequences, pairs — call, raise or fold. No download, no real money — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #table { background:#14532d; border:2px solid #166534; border-radius:14px; padding:14px 10px 18px; width:min(720px,96vw); }
+  .seat { text-align:center; margin-bottom:12px; }
+  .seat .lbl { font-size:12px; letter-spacing:1.5px; color:#bbf7d0; margin-bottom:5px; }
+  .seat .lbl b { color:#fff; }
+  .seat.folded { opacity:0.45; }
+  .hand { display:flex; gap:6px; justify-content:center; min-height:86px; }
+  .card { width:60px; height:84px; background:#f8fafc; border-radius:7px; border:1.5px solid #94a3b8; position:relative; padding:3px 5px; font-weight:800; font-size:15.5px; color:#111827; box-shadow:0 1px 3px rgba(0,0,0,0.35); user-select:none; }
+  .card.red { color:#dc2626; }
+  .card .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:25px; padding-top:10px; }
+  .card.back { background:repeating-linear-gradient(45deg,#b45309,#b45309 6px,#92400e 6px,#92400e 12px); border-color:#451a03; }
+  .card.win { box-shadow:0 0 0 3.5px #facc15; }
+  #pot { text-align:center; font-size:19px; font-weight:900; color:#fde68a; margin:4px 0 10px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.raise { background:linear-gradient(90deg,#d97706,#dc2626); color:#fff; }
+  .btn:disabled { opacity:0.42; cursor:default; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🂡 TEEN PATTI</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🪙 YOUR CHIPS <b id="chips">1000</b></div>
+  <div class="stat">CURRENT BET <b id="bet">10</b></div>
+  <div class="stat">HANDS WON <b id="won">0</b></div>
+  <div class="stat">BEST HAND <b id="bestHand">—</b></div>
+</div>
+
+<div id="table">
+  <div class="seat" id="seat1">
+    <div class="lbl">🤖 RAJA · <b id="chips1">1000</b> chips · <span id="status1"></span></div>
+    <div class="hand" id="hand1"></div>
+  </div>
+  <div class="seat" id="seat2">
+    <div class="lbl">🤖 RANI · <b id="chips2">1000</b> chips · <span id="status2"></span></div>
+    <div class="hand" id="hand2"></div>
+  </div>
+  <div id="pot">POT: 0</div>
+  <div class="seat" id="seat0">
+    <div class="lbl">🧑 YOU · <span id="status0"></span> · <b id="yourHandName"></b></div>
+    <div class="hand" id="hand0"></div>
+  </div>
+</div>
+<div id="msg">Press DEAL to start. Play-money chips only — just for fun!</div>
+<div class="row">
+  <button class="btn primary" id="dealBtn">▶ DEAL</button>
+  <button class="btn" id="callBtn" disabled>✔ CALL</button>
+  <button class="btn raise" id="raiseBtn" disabled>⬆ RAISE ×2</button>
+  <button class="btn" id="foldBtn" disabled>✖ FOLD</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Hand order: Trio &gt; Pure Sequence &gt; Sequence &gt; Colour &gt; Pair &gt; High Card · ante 10 from everyone · 3 betting rounds, then showdown · bust out and DEAL refills you to 500</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Teen Patti</h2>
+  <p>South Asia's beloved three-card game, played here with play-money chips against two computer rivals — Raja and Rani. Everyone antes up, gets three cards, and bets over three rounds. Read your hand, time your raises, and take the pot at the showdown. No real money, ever — just bragging rights.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press DEAL: everyone antes 10 chips and receives 3 cards (you can see yours, with its hand name). Each round you may CALL to match the current bet, RAISE to double it, or FOLD to drop out. The CPUs judge their own hands and bet, raise or fold in reply. After three rounds the remaining players show their cards — best hand takes the whole pot. If your chips hit zero, DEAL refills you with 500 on the house.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Authentic Teen Patti hand rankings, from Trio down to High Card</li>
+    <li>Two CPU rivals with their own chip stacks and betting judgement</li>
+    <li>Free to play on mobile and PC — play-money only, no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var SUITS=['♠','♥','♦','♣'];
+var RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+/* card: { s:0-3, r:2-14 } */
+function isRed(card){ return card.s===1 || card.s===2; }
+function makeDeck(){
+  var deck=[];
+  for(var s=0;s<4;s++) for(var r=2;r<=14;r++) deck.push({ s:s, r:r });
+  for(var i=deck.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=deck[i]; deck[i]=deck[j]; deck[j]=t;
+  }
+  return deck;
+}
+/* ---------- pure logic (testable) ---------- */
+/* category: 6 trio, 5 pure sequence, 4 sequence, 3 colour, 2 pair, 1 high card */
+function evaluate3(cards){
+  var ranks=cards.map(function(c){ return c.r; }).sort(function(a, b){ return b-a; });
+  var suits=cards.map(function(c){ return c.s; });
+  var flush= suits[0]===suits[1] && suits[1]===suits[2];
+  var trio= ranks[0]===ranks[1] && ranks[1]===ranks[2];
+  var pair= !trio && (ranks[0]===ranks[1] || ranks[1]===ranks[2]);
+  /* sequence: A-2-3 counts as the lowest sequence (value 3), K-A-2 is NOT a sequence */
+  var seq=false, seqTop=0;
+  if(!trio && !pair){
+    if(ranks[0]-ranks[1]===1 && ranks[1]-ranks[2]===1){ seq=true; seqTop=ranks[0]; }
+    else if(ranks[0]===14 && ranks[1]===3 && ranks[2]===2){ seq=true; seqTop=3; }
+  }
+  var cat, tie;
+  if(trio){ cat=6; tie=[ranks[0]]; }
+  else if(seq && flush){ cat=5; tie=[seqTop]; }
+  else if(seq){ cat=4; tie=[seqTop]; }
+  else if(flush){ cat=3; tie=ranks.slice(); }
+  else if(pair){
+    cat=2;
+    var pairRank= ranks[0]===ranks[1] ? ranks[0] : ranks[1];
+    var kicker= ranks[0]===ranks[1] ? ranks[2] : ranks[0];
+    tie=[pairRank, kicker];
+  }
+  else { cat=1; tie=ranks.slice(); }
+  var names={ 6:'Trio 👑', 5:'Pure Sequence 🌈', 4:'Sequence 🎵', 3:'Colour 🎨', 2:'Pair 👯', 1:'High Card 🃏' };
+  return { cat:cat, tie:tie, name:names[cat] };
+}
+function compareHands(a, b){
+  var ea=typeof a==='object' && a.cat!==undefined ? a : evaluate3(a);
+  var eb=typeof b==='object' && b.cat!==undefined ? b : evaluate3(b);
+  if(ea.cat!==eb.cat) return ea.cat-eb.cat;
+  for(var i=0;i<Math.max(ea.tie.length, eb.tie.length);i++){
+    var d=(ea.tie[i]||0)-(eb.tie[i]||0);
+    if(d!==0) return d;
+  }
+  return 0;
+}
+/* CPU strength 0..1 used for decisions */
+function handStrength(cards){
+  var e=evaluate3(cards);
+  var base={ 6:0.97, 5:0.9, 4:0.78, 3:0.55, 2:0.38, 1:0.12 }[e.cat];
+  return Math.min(1, base + (e.tie[0]||0)/14*0.08);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var players, pot, currentBet, roundNum, phase, deck;
+var handsWon=+(localStorage.getItem('makenPattiWon')||0);
+var bestCat=+(localStorage.getItem('makenPattiBest')||0);
+el('won').textContent=handsWon;
+function hud(){
+  el('chips').textContent=players[0].chips;
+  el('chips1').textContent=players[1].chips;
+  el('chips2').textContent=players[2].chips;
+  el('bet').textContent=currentBet;
+  el('pot').textContent='POT: '+pot;
+  el('won').textContent=handsWon;
+  var names={ 6:'Trio 👑', 5:'Pure Sequence 🌈', 4:'Sequence 🎵', 3:'Colour 🎨', 2:'Pair 👯', 1:'High Card 🃏' };
+  el('bestHand').textContent= bestCat ? names[bestCat] : '—';
+  for(var i=0;i<3;i++){
+    el('status'+i).textContent= players[i].folded ? 'FOLDED' : (phase==='showdown' ? evaluate3(players[i].cards).name : '');
+  }
+  el('yourHandName').textContent= players[0].folded ? '' : evaluate3(players[0].cards).name;
+  el('callBtn').disabled= !(phase==='bet' );
+  el('raiseBtn').disabled= !(phase==='bet');
+  el('foldBtn').disabled= !(phase==='bet');
+  el('dealBtn').disabled= phase==='bet';
+  if(phase==='bet') el('callBtn').textContent='✔ CALL '+currentBet;
+}
+function cardEl(card, extra){
+  var d=document.createElement('div');
+  d.className='card'+(isRed(card) ? ' red' : '')+(extra ? ' '+extra : '');
+  d.innerHTML=RANKS[card.r-2]+SUITS[card.s]+'<span class="big">'+SUITS[card.s]+'</span>';
+  return d;
+}
+function render(){
+  for(var i=0;i<3;i++){
+    var h=el('hand'+i);
+    h.innerHTML='';
+    var show= i===0 || phase==='showdown';
+    players[i].cards.forEach(function(card){
+      if(show) h.appendChild(cardEl(card, phase==='showdown' && winnerIdx===i ? 'win' : ''));
+      else {
+        var b=document.createElement('div');
+        b.className='card back';
+        h.appendChild(b);
+      }
+    });
+    el('seat'+i).className='seat'+(players[i].folded ? ' folded' : '');
+  }
+  hud();
+}
+var winnerIdx=-1;
+function newPlayers(){
+  players=[
+    { name:'You', chips:1000, cards:[], folded:false },
+    { name:'Raja', chips:1000, cards:[], folded:false },
+    { name:'Rani', chips:1000, cards:[], folded:false }
+  ];
+}
+function deal(){
+  if(players[0].chips<10){
+    players[0].chips=500;
+    el('msg').textContent='🏠 The house refills you with 500 chips. Good luck!';
+  }
+  players.forEach(function(p){ if(p.chips<10) p.chips=500; });
+  deck=makeDeck();
+  pot=0; currentBet=10; roundNum=1; winnerIdx=-1;
+  players.forEach(function(p){
+    p.folded=false;
+    p.chips-=10;
+    pot+=10;
+    p.cards=[deck.pop(), deck.pop(), deck.pop()];
+  });
+  phase='bet';
+  var e=evaluate3(players[0].cards);
+  if(e.cat>bestCat){ bestCat=e.cat; localStorage.setItem('makenPattiBest', bestCat); }
+  el('msg').textContent='🂡 Your hand: '+e.name+'. Round 1 — CALL '+currentBet+', RAISE or FOLD.';
+  beep(560,0.05,'square',0.035);
+  render();
+}
+function payIn(p, amount){
+  var pay=Math.min(amount, p.chips);
+  p.chips-=pay;
+  pot+=pay;
+  return pay;
+}
+function cpuAct(p){
+  if(p.folded) return 'folded earlier';
+  var s=handStrength(p.cards);
+  var r=Math.random();
+  if(currentBet>=160 && s<0.6){ p.folded=true; return 'folds'; }
+  if(s>0.72 && r<0.55 && p.chips>=currentBet*2){
+    currentBet*=2;
+    payIn(p, currentBet);
+    return 'RAISES to '+currentBet+'!';
+  }
+  if(s<0.2 && roundNum>=2 && r<0.6){ p.folded=true; return 'folds'; }
+  payIn(p, currentBet);
+  return 'calls '+currentBet;
+}
+function activePlayers(){
+  return players.filter(function(p){ return !p.folded; });
+}
+function afterPlayerAction(){
+  render();
+  var act=activePlayers();
+  if(act.length===1){
+    endHand(act[0], true);
+    return;
+  }
+  setTimeout(function(){
+    var notes=[];
+    notes.push('Raja '+cpuAct(players[1]));
+    render();
+    setTimeout(function(){
+      notes.push('Rani '+cpuAct(players[2]));
+      render();
+      var act2=activePlayers();
+      if(act2.length===1){ endHand(act2[0], true); return; }
+      if(players[0].folded){ showdown(); return; }
+      if(roundNum>=3){ showdown(); return; }
+      roundNum++;
+      el('msg').textContent='🂡 '+notes.join(' · ')+'. Round '+roundNum+' — your move.';
+      phase='bet';
+      render();
+    }, 600);
+  }, 600);
+}
+function endHand(winner, byFold){
+  phase='showdown';
+  winnerIdx=players.indexOf(winner);
+  winner.chips+=pot;
+  var amount=pot;
+  pot=0;
+  if(winner===players[0]){
+    handsWon++;
+    localStorage.setItem('makenPattiWon', handsWon);
+    el('msg').textContent='🎉 '+(byFold ? 'Everyone else folded — ' : '')+'You take the pot of '+amount+' chips!';
+    beep(1180,0.2,'sine',0.06);
+  } else {
+    el('msg').textContent='🤖 '+winner.name+' takes the pot of '+amount+' chips'+(byFold ? ' — everyone else folded.' : '.');
+    beep(300,0.14,'sawtooth',0.05);
+  }
+  render();
+}
+function showdown(){
+  phase='showdown';
+  var act=activePlayers();
+  var bestP=act[0];
+  act.forEach(function(p){
+    if(compareHands(p.cards, bestP.cards)>0) bestP=p;
+  });
+  /* exact tie: split not implemented — first best keeps it (ties are rare); note in msg */
+  winnerIdx=players.indexOf(bestP);
+  var amount=pot;
+  bestP.chips+=pot;
+  pot=0;
+  var lines=act.map(function(p){ return p.name+': '+evaluate3(p.cards).name; }).join(' · ');
+  if(bestP===players[0]){
+    handsWon++;
+    localStorage.setItem('makenPattiWon', handsWon);
+    el('msg').textContent='🎉 SHOWDOWN — '+lines+'. You win '+amount+' chips!';
+    beep(1180,0.2,'sine',0.06);
+  } else {
+    el('msg').textContent='🂡 SHOWDOWN — '+lines+'. '+bestP.name+' wins '+amount+' chips.';
+    beep(300,0.14,'sawtooth',0.05);
+  }
+  phase='done';
+  render();
+  el('dealBtn').disabled=false;
+}
+el('dealBtn').addEventListener('click', function(){
+  if(!players) newPlayers();
+  deal();
+});
+el('callBtn').addEventListener('click', function(){
+  if(phase!=='bet') return;
+  payIn(players[0], currentBet);
+  phase='cpu';
+  el('msg').textContent='✔ You call '+currentBet+'.';
+  beep(620,0.04,'square',0.03);
+  afterPlayerAction();
+});
+el('raiseBtn').addEventListener('click', function(){
+  if(phase!=='bet') return;
+  currentBet*=2;
+  payIn(players[0], currentBet);
+  phase='cpu';
+  el('msg').textContent='⬆ You RAISE — bet is now '+currentBet+'!';
+  beep(760,0.05,'square',0.035);
+  afterPlayerAction();
+});
+el('foldBtn').addEventListener('click', function(){
+  if(phase!=='bet') return;
+  players[0].folded=true;
+  phase='cpu';
+  el('msg').textContent='✖ You fold. Let\u2019s see how it plays out…';
+  beep(220,0.08,'sawtooth',0.045);
+  afterPlayerAction();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+newPlayers();
+players.forEach(function(p){ p.cards=[{ s:0, r:14 }, { s:1, r:13 }, { s:2, r:7 }]; });
+pot=0; currentBet=10; phase='idle';
+render();
+if(typeof module!=='undefined') module.exports={ evaluate3:evaluate3, compareHands:compareHands, handStrength:handStrength, makeDeck:makeDeck };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
