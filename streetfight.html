@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Street Fighting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play street fighting free online. A side-scrolling beat-em-up: clear three streets of thugs and face the boss. Combos, pickups, no mercy. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .hpwrap { width:min(640px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .hpwrap i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#4ade80); transition:width .15s; }
+  canvas#cv { background:linear-gradient(180deg,#111827 0%,#1f2937 52%,#374151 52.2%,#4b5563 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 14px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>👊 STREET FIGHTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">STREET <b id="stage">1 / 3</b></div>
+  <div class="stat">THUGS DOWN <b id="kos">0</b></div>
+  <div class="stat">COMBO <b id="combo">×0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+<div class="hpwrap"><i id="hpBar" style="width:100%"></i></div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">A/D to walk, W/S to step up/down the street, J punch, K kick. Clear the street, then walk right!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START FIGHT</button>
+  <button class="btn" id="upBtn">⬆</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="punchBtn">👊</button>
+  <button class="btn" id="kickBtn">🦵</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="downBtn">⬇</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Chain hits without taking damage to build your combo multiplier · burgers 🍔 restore health · the street boss waits at the end of street 3</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Street Fighting</h2>
+  <p>The classic side-scrolling beat-'em-up. Your neighbourhood has a thug problem on three streets — walk them, fight through punks, bikers and bruisers, grab the burgers they drop, and finish the boss who runs the whole crew.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move in all four directions (WASD or the buttons) across the street's depth, punch with J and kick with K. Enemies approach from both sides — face them to hit them. Unanswered hits build a combo multiplier for bonus score; taking a hit resets it. Clear every thug on a street, then walk off the right edge to advance.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three streets, three enemy types and a heavyweight boss finale</li>
+    <li>Combo multiplier scoring and health pickups dropped by fallen thugs</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, ROAD_TOP=218, ROAD_BOT=372;
+/* ---------- pure logic (testable) ---------- */
+var THUGS={
+  punk:{ hp:14, dmg:3, speed:56, score:50 },
+  biker:{ hp:22, dmg:5, speed:74, score:90 },
+  bruiser:{ hp:38, dmg:8, speed:44, score:160 },
+  boss:{ hp:120, dmg:11, speed:52, score:600 }
+};
+function stageComp(stage){
+  if(stage===1) return ['punk','punk','punk','punk','punk'];
+  if(stage===2) return ['punk','punk','biker','punk','biker','biker','punk'];
+  return ['biker','punk','bruiser','biker','bruiser','punk','boss'];
+}
+function comboMult(combo){
+  return combo>=12 ? 4 : combo>=7 ? 3 : combo>=4 ? 2 : 1;
+}
+function hitLands(attacker, defender, range){
+  var dx=(defender.x - attacker.x) * attacker.facing;
+  var dy=Math.abs(defender.y - attacker.y);
+  return dx > 2 && dx < range && dy < 26;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, stage, player, enemies, pickups, spawnQueue, spawnT, score, kos, combo, comboT, over, cleared, rafId, lastTick, keys;
+var best=+(localStorage.getItem('makenStreetBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('stage').textContent=Math.min(3, stage)+' / 3';
+  el('kos').textContent=kos;
+  el('combo').textContent='×'+combo+' (×'+comboMult(combo)+' pts)';
+  el('score').textContent=score;
+  el('hpBar').style.width=Math.max(0, player.hp)+'%';
+  if(score>best){ best=score; localStorage.setItem('makenStreetBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false; stage=1; score=0; kos=0; combo=0; comboT=0; over=false;
+  player={ x:90, y:300, facing:1, hp:100, cool:0, action:null, actionT:0 };
+  startStage();
+  hud(); draw();
+}
+function startStage(){
+  enemies=[]; pickups=[];
+  spawnQueue=stageComp(stage).slice();
+  spawnT=0.5;
+  cleared=false;
+  player.x=70;
+}
+function drawFigure(f, shirt, pants, big){
+  var s=big?1.25:1;
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.scale(f.facing*s, s);
+  ctx.strokeStyle=pants; ctx.lineWidth=6.5;
+  ctx.beginPath(); ctx.moveTo(0,-46); ctx.lineTo(-11,0); ctx.moveTo(0,-46); ctx.lineTo(12,0); ctx.stroke();
+  ctx.fillStyle=shirt; ctx.fillRect(-11,-84,22,40);
+  ctx.fillStyle='#d9a066';
+  ctx.beginPath(); ctx.arc(1,-96,11,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#d9a066'; ctx.lineWidth=6;
+  if(f.action==='punch'){
+    ctx.beginPath(); ctx.moveTo(6,-76); ctx.lineTo(38,-78); ctx.stroke();
+    ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(42,-78,5.5,0,Math.PI*2); ctx.fill();
+  } else if(f.action==='kick'){
+    ctx.strokeStyle=pants;
+    ctx.beginPath(); ctx.moveTo(0,-46); ctx.lineTo(42,-56); ctx.stroke();
+  } else if(f.action==='hit'){
+    ctx.beginPath(); ctx.moveTo(6,-76); ctx.lineTo(-12,-62); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(6,-76); ctx.lineTo(18,-60); ctx.moveTo(4,-74); ctx.lineTo(-8,-60); ctx.stroke();
+  }
+  ctx.restore();
+  if(f.hp!==undefined && f.maxHp){
+    ctx.fillStyle='#111827'; ctx.fillRect(f.x-20, f.y-122*(big?1.25:1), 40, 5);
+    ctx.fillStyle='#f87171'; ctx.fillRect(f.x-20, f.y-122*(big?1.25:1), 40*Math.max(0, f.hp/f.maxHp), 5);
+  }
+}
+function draw(){
+  /* skyline + street */
+  ctx.fillStyle='#0f172a';
+  ctx.fillRect(0, 40, 130, 178); ctx.fillRect(180, 20, 110, 198); ctx.fillRect(340, 55, 140, 163); ctx.fillRect(520, 30, 120, 188);
+  ctx.fillStyle='#facc15';
+  for(var i=0;i<26;i++){ ctx.globalAlpha=0.55; ctx.fillRect((i*67)%620+8, 40+(i*29)%150, 7, 9); }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#f8fafc'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+  ctx.fillText('🍔 BURGER JOINT', 235, 44);
+  ctx.fillStyle='#f472b6'; ctx.fillText('★ CLUB NEON ★', 575, 56);
+  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.setLineDash([22,18]); ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(0, 296); ctx.lineTo(W, 296); ctx.stroke(); ctx.setLineDash([]);
+  /* pickups */
+  pickups.forEach(function(p){
+    ctx.font='24px Arial'; ctx.textAlign='center';
+    ctx.fillText('🍔', p.x, p.y-6);
+  });
+  /* entities sorted by depth */
+  var all=enemies.slice();
+  all.push(player);
+  all.sort(function(a,b){ return a.y-b.y; });
+  all.forEach(function(f){
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(f.x, f.y+3, 20, 5, 0, 0, Math.PI*2); ctx.fill();
+    if(f===player) drawFigure(f, '#2563eb', '#1e293b', false);
+    else drawFigure(f, f.type==='boss' ? '#7f1d1d' : f.type==='bruiser' ? '#7c3aed' : f.type==='biker' ? '#b45309' : '#4b5563', '#111827', f.type==='boss');
+  });
+  if(cleared && enemies.length===0 && playing){
+    ctx.fillStyle='#4ade80'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText('➡️ STREET CLEAR — GO RIGHT!', W/2, 130);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? (stage>3 ? '🏆 STREETS CLEANED — YOU WIN!' : '💥 KNOCKED OUT') : '👊 STREET FIGHTING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Final score '+score+' — press START FIGHT to run it back' : 'Press START FIGHT — clear 3 streets and the boss', W/2, H/2+18);
+  }
+}
+function playerStrike(move){
+  if(!playing || player.cool>0) return;
+  var isKick=move==='kick';
+  player.cool= isKick ? 0.42 : 0.26;
+  player.action=move; player.actionT=0.15;
+  var range= isKick ? 62 : 48;
+  var dmg= isKick ? 8 : 5;
+  var hitAny=false;
+  enemies.forEach(function(e){
+    if(hitLands(player, e, range)){
+      hitAny=true;
+      e.hp-=dmg;
+      e.action='hit'; e.actionT=0.16;
+      e.x += player.facing*7;
+      combo++; comboT=2.6;
+      if(e.hp<=0){
+        score += THUGS[e.type].score * comboMult(combo);
+        kos++;
+        el('msg').textContent='💥 KO! '+e.type.toUpperCase()+' down (combo ×'+comboMult(combo)+').';
+        if(Math.random()<0.3) pickups.push({ x:e.x, y:e.y });
+        e.dead=true;
+      } else {
+        el('msg').textContent=(isKick?'🦵 Kick':'👊 Punch')+' connects! Combo ×'+combo+'.';
+      }
+      beep(isKick?200:260, 0.06, 'square', 0.06);
+    }
+  });
+  enemies=enemies.filter(function(e){ return !e.dead; });
+  if(!hitAny) beep(480,0.04,'sine',0.03);
+  hud();
+}
+function spawnNext(){
+  var type=spawnQueue.shift();
+  var fromLeft=Math.random()<0.4;
+  var t=THUGS[type];
+  enemies.push({ type:type, x: fromLeft ? -24 : W+24, y: ROAD_TOP+30+Math.random()*(ROAD_BOT-ROAD_TOP-50), facing: fromLeft?1:-1, hp:t.hp, maxHp:t.hp, cool:1+Math.random(), action:null, actionT:0 });
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  /* spawns */
+  if(spawnQueue.length){
+    spawnT-=dt;
+    if(spawnT<=0 && enemies.length<3){ spawnNext(); spawnT=0.9; }
+  }
+  /* player movement */
+  if(player.cool>0) player.cool-=dt;
+  if(player.action){ player.actionT-=dt; if(player.actionT<=0) player.action=null; }
+  var spd=158;
+  if(keys.KeyA || keys.ArrowLeft){ player.x -= spd*dt; player.facing=-1; }
+  if(keys.KeyD || keys.ArrowRight){ player.x += spd*dt; player.facing=1; }
+  if(keys.KeyW || keys.ArrowUp) player.y -= spd*0.72*dt;
+  if(keys.KeyS || keys.ArrowDown) player.y += spd*0.72*dt;
+  player.y=Math.max(ROAD_TOP+16, Math.min(ROAD_BOT, player.y));
+  player.x=Math.max(20, Math.min(W-14, player.x));
+  if(keys.KeyJ){ playerStrike('punch'); keys.KeyJ=false; }
+  if(keys.KeyK){ playerStrike('kick'); keys.KeyK=false; }
+  /* combo decay */
+  if(comboT>0){ comboT-=dt; if(comboT<=0) combo=0; }
+  /* pickups */
+  pickups=pickups.filter(function(p){
+    if(Math.hypot(p.x-player.x, p.y-player.y) < 26){
+      player.hp=Math.min(100, player.hp+22);
+      el('msg').textContent='🍔 Burger! +22 health.';
+      beep(760,0.09,'sine',0.06);
+      hud();
+      return false;
+    }
+    return true;
+  });
+  /* enemies AI */
+  enemies.forEach(function(e){
+    var t=THUGS[e.type];
+    if(e.cool>0) e.cool-=dt;
+    if(e.action){ e.actionT-=dt; if(e.actionT<=0) e.action=null; }
+    var dx=player.x-e.x, dy=player.y-e.y;
+    e.facing = dx>=0 ? 1 : -1;
+    if(Math.abs(dx) > 34 || Math.abs(dy) > 12){
+      var l=Math.hypot(dx,dy)||1;
+      e.x += dx/l * t.speed * dt;
+      e.y += dy/l * t.speed * dt * 0.8;
+    } else if(e.cool<=0){
+      e.cool=0.8+Math.random()*0.7;
+      e.action='punch'; e.actionT=0.15;
+      if(hitLands(e, player, 46)){
+        player.hp=Math.max(0, player.hp - t.dmg);
+        combo=0; comboT=0;
+        el('msg').textContent='😖 The '+e.type+' hits you for '+t.dmg+'! Combo lost.';
+        beep(130,0.09,'sawtooth',0.06);
+        hud();
+        if(player.hp<=0){
+          playing=false; over=true;
+          el('msg').textContent='💥 Knocked out on street '+stage+'. Final score: '+score+'.';
+          draw();
+        }
+      }
+    }
+    e.x=Math.max(14, Math.min(W-14, e.x));
+    e.y=Math.max(ROAD_TOP+16, Math.min(ROAD_BOT, e.y));
+  });
+  /* stage clear */
+  if(!spawnQueue.length && enemies.length===0 && !cleared){
+    cleared=true;
+    el('msg').textContent='✅ Street '+stage+' cleared! Walk off the right edge ➡️';
+  }
+  if(cleared && player.x >= W-16){
+    stage++;
+    if(stage>3){
+      playing=false; over=true;
+      el('msg').textContent='🏆 All streets cleaned and the boss is down! Final score: '+score+'.';
+      beep(980,0.2,'sine',0.07);
+    } else {
+      startStage();
+      el('msg').textContent='👊 Street '+stage+' — they keep coming!';
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, code){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ keys[code]=true; e.preventDefault(); }, {passive:false});
+  b.addEventListener('touchend', function(){ keys[code]=false; });
+  b.addEventListener('mousedown', function(){ keys[code]=true; });
+  b.addEventListener('mouseup', function(){ keys[code]=false; });
+  b.addEventListener('mouseleave', function(){ keys[code]=false; });
+}
+holdBtn('leftBtn','KeyA'); holdBtn('rightBtn','KeyD'); holdBtn('upBtn','KeyW'); holdBtn('downBtn','KeyS');
+el('punchBtn').addEventListener('click', function(){ keys.KeyJ=true; });
+el('kickBtn').addEventListener('click', function(){ keys.KeyK=true; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='👊 Street 1 — here they come!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ THUGS:THUGS, stageComp:stageComp, comboMult:comboMult, hitLands:hitLands };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

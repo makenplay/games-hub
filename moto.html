@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Moto Stunts Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play moto stunts free online. Ride a physics stunt bike over ramps and gaps — land flips for bonus points and reach the flag. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#7dd3fc 0%,#bae6fd 55%,#fde68a 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 15px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏍️ MOTO STUNTS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1 / 3</b></div>
+  <div class="stat">⏱️ <b id="time">0.0s</b></div>
+  <div class="stat">FLIPS <b id="flips">0</b></div>
+  <div class="stat">CRASHES <b id="crashes">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Hold GAS to ride. In the air, lean ◀ ▶ to rotate — land a full flip for +150!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START ENGINE</button>
+  <button class="btn" id="leanL">◀ LEAN</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS (hold)</button>
+  <button class="btn" id="leanR">LEAN ▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">W / ↑ also gas · A/D lean · land on your wheels, not your head · R restarts the level after a crash</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Moto Stunts</h2>
+  <p>A physics stunt-bike trial over three hand-built tracks of ramps, gaps and seesaw climbs. The throttle is easy; the art is in the air — lean to control your rotation, stick the landing, and flip for bonus points.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Hold GAS (button, W, or ↑) to accelerate and brake/reverse with S. While airborne, lean back and forth with A/D or the LEAN buttons to rotate the bike: complete a full backflip or frontflip and land on both wheels for +150 points. Crash and you restart the level — your time and flips carry the score.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real two-wheel physics with airborne rotation control</li>
+    <li>Three tracks with ramps, gaps and a finish flag each</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* track: polyline points [x, y]; y grows downward; gaps = segments flagged */
+var LEVELS=[
+  { pts:[[0,330],[260,330],[360,262],[470,262],[560,330],[760,330],[830,268],[930,268],[1010,330],[1300,330],[1380,250],[1500,250],[1580,330],[1900,330]], finish:1860 },
+  { pts:[[0,330],[200,330],[300,240],[380,330],[560,330],[640,215],[720,330],[900,330],[980,252],[1090,252],[1180,330],[1420,330],[1500,205],[1600,330],[1950,330]], finish:1900 },
+  { pts:[[0,330],[170,330],[250,205],[330,330],[470,330],[560,268],[700,180],[790,268],[880,330],[1080,330],[1160,240],[1260,330],[1460,330],[1540,190],[1660,330],[2050,330]], finish:2000 }
+];
+/* ---------- pure logic (testable) ---------- */
+function groundYAt(level, x){
+  var pts=level.pts;
+  if(x<=pts[0][0]) return pts[0][1];
+  for(var i=0;i<pts.length-1;i++){
+    var a=pts[i], b=pts[i+1];
+    if(x>=a[0] && x<=b[0]){
+      var t=(x-a[0])/((b[0]-a[0])||1);
+      return a[1] + (b[1]-a[1])*t;
+    }
+  }
+  return pts[pts.length-1][1];
+}
+function flipsFromRotation(totalRot){
+  return Math.floor(Math.abs(totalRot) / (Math.PI*2));
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, levelIdx, bike, camX, timeMs, flips, crashes, score, airRot, wasAir, keys, finished, rafId, lastTick;
+var best=+(localStorage.getItem('makenMotoBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('level').textContent=Math.min(3, levelIdx+1)+' / 3';
+  el('time').textContent=(timeMs/1000).toFixed(1)+'s';
+  el('flips').textContent=flips;
+  el('crashes').textContent=crashes;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenMotoBest',best); }
+  el('best').textContent=best;
+}
+function resetLevel(){
+  var lv=LEVELS[levelIdx];
+  bike={ x:60, y:groundYAt(lv, 60)-14, vx:0, vy:0, ang:0, va:0, grounded:true };
+  camX=0; airRot=0; wasAir=false;
+}
+function reset(){
+  playing=false; levelIdx=0; timeMs=0; flips=0; crashes=0; score=0; finished=false;
+  keys={};
+  resetLevel();
+  hud(); draw();
+}
+function draw(){
+  var lv=LEVELS[levelIdx];
+  /* hills backdrop */
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(90-camX*0.2%700, 70, 26, 0, Math.PI*2); ctx.arc(130-camX*0.2%700, 76, 20, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#86c06c';
+  ctx.beginPath();
+  ctx.moveTo(0, 330);
+  for(var bx=0; bx<=W; bx+=40){
+    var wx=bx + camX*0.45;
+    ctx.lineTo(bx, 300 - Math.abs(Math.sin(wx/210))*60);
+  }
+  ctx.lineTo(W, 400); ctx.lineTo(0, 400); ctx.closePath(); ctx.fill();
+  /* track */
+  ctx.strokeStyle='#8a6844'; ctx.lineWidth=7; ctx.lineJoin='round';
+  ctx.beginPath();
+  var started=false;
+  lv.pts.forEach(function(p){
+    var sx=p[0]-camX;
+    if(sx<-60 || sx>W+60){ started=false; return; }
+    if(!started){ ctx.moveTo(sx, p[1]); started=true; }
+    else ctx.lineTo(sx, p[1]);
+  });
+  ctx.stroke();
+  ctx.strokeStyle='#5d4429'; ctx.lineWidth=2;
+  ctx.stroke();
+  /* ground fill under track */
+  ctx.fillStyle='#a9834f';
+  ctx.beginPath();
+  var sx0=0;
+  ctx.moveTo(-4, groundYAt(lv, camX-4));
+  for(var x=0;x<=W;x+=16) ctx.lineTo(x, groundYAt(lv, camX+x));
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+  /* finish flag */
+  var fx=lv.finish - camX;
+  if(fx>-30 && fx<W+30){
+    ctx.strokeStyle='#111827'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(fx, groundYAt(lv, lv.finish)); ctx.lineTo(fx, groundYAt(lv, lv.finish)-64); ctx.stroke();
+    ctx.fillStyle='#22c55e';
+    ctx.beginPath(); ctx.moveTo(fx, groundYAt(lv, lv.finish)-64); ctx.lineTo(fx+26, groundYAt(lv, lv.finish)-55); ctx.lineTo(fx, groundYAt(lv, lv.finish)-46); ctx.closePath(); ctx.fill();
+  }
+  /* bike */
+  var bx=bike.x-camX, by=bike.y;
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bike.ang);
+  ctx.strokeStyle='#111827'; ctx.lineWidth=3.4;
+  ctx.beginPath(); ctx.arc(-15, 10, 9.5, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(16, 10, 9.5, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#dc2626'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(-15, 10); ctx.lineTo(-2, -6); ctx.lineTo(13, -4); ctx.lineTo(16, 10); ctx.moveTo(-2, -6); ctx.lineTo(10, 8); ctx.stroke();
+  /* rider */
+  ctx.strokeStyle='#1e3a8a'; ctx.lineWidth=4.4;
+  ctx.beginPath(); ctx.moveTo(-2, -6); ctx.lineTo(-7, -20); ctx.lineTo(4, -12); ctx.stroke();
+  ctx.fillStyle='#facc15';
+  ctx.beginPath(); ctx.arc(-8, -25, 6.4, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(finished ? '🏁 ALL TRACKS CLEARED!' : '🏍️ MOTO STUNTS', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'Final score '+score+' · flips '+flips+' · crashes '+crashes+' — press START ENGINE to ride again' : 'Press START ENGINE — 3 tracks, flip for glory', W/2, H/2+18);
+  }
+}
+function crash(){
+  crashes++;
+  score=Math.max(0, score-40);
+  el('msg').textContent='💥 Crash! Restarting the level… (-40 pts)';
+  beep(120,0.3,'sawtooth',0.08);
+  resetLevel();
+  hud();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeMs += dt*1000;
+  var lv=LEVELS[levelIdx];
+  var gY=groundYAt(lv, bike.x);
+  var slopeAng=Math.atan2(groundYAt(lv, bike.x+14) - groundYAt(lv, bike.x-14), 28);
+  var gas=keys.KeyW || keys.ArrowUp || keys.__gas;
+  var brake=keys.KeyS || keys.ArrowDown;
+  if(bike.grounded){
+    if(gas) bike.vx += 300*dt;
+    if(brake) bike.vx -= 190*dt;
+    bike.vx *= Math.pow(0.55, dt);
+    bike.vx += Math.sin(slopeAng) * 160 * dt; /* gravity along the slope pulls the bike downhill */
+    bike.vx = Math.max(-60, Math.min(265, bike.vx));
+    bike.x += bike.vx*dt;
+    bike.y = groundYAt(lv, bike.x) - 14;
+    bike.ang += (slopeAng - bike.ang) * Math.min(1, dt*10);
+    bike.va=0;
+    /* launch off crests */
+    var ahead=groundYAt(lv, bike.x+16);
+    if(ahead - (bike.y+14) > 12 && bike.vx > 60){
+      bike.grounded=false;
+      bike.vy=-(ahead-(bike.y+14))*1.4;
+      bike.va = bike.vx/300;
+    }
+    wasAir=false; airRot=0;
+  } else {
+    bike.vy += 640*dt;
+    bike.x += bike.vx*dt;
+    bike.y += bike.vy*dt;
+    if(keys.KeyA || keys.ArrowLeft || keys.__leanL) bike.va -= 3.4*dt;
+    if(keys.KeyD || keys.ArrowRight || keys.__leanR) bike.va += 3.4*dt;
+    bike.ang += bike.va*dt*2.2;
+    airRot += bike.va*dt*2.2;
+    wasAir=true;
+    var gy2=groundYAt(lv, bike.x) - 14;
+    if(bike.y >= gy2 && bike.vy > 0){
+      /* landing: angle must roughly match slope */
+      var landSlope=Math.atan2(groundYAt(lv, bike.x+14) - groundYAt(lv, bike.x-14), 28);
+      var diff=((bike.ang - landSlope + Math.PI*3) % (Math.PI*2)) - Math.PI;
+      bike.y=gy2;
+      if(Math.abs(diff) > 0.72){
+        crash();
+      } else {
+        var f=flipsFromRotation(airRot);
+        if(f>0){
+          flips += f;
+          score += 150*f;
+          el('msg').textContent='🤸 '+(f>1 ? f+' FLIPS' : 'FLIP')+' landed! +'+(150*f)+' pts!';
+          beep(990,0.14,'sine',0.07);
+        } else {
+          el('msg').textContent='✅ Clean landing.';
+        }
+        bike.grounded=true;
+        bike.ang=landSlope;
+        bike.vy=0;
+      }
+    }
+  }
+  if(bike.x >= lv.finish){
+    score += 300;
+    levelIdx++;
+    if(levelIdx>=LEVELS.length){
+      playing=false; finished=true;
+      el('msg').textContent='🏁 Final flag! Total score '+score+'.';
+      beep(980,0.2,'sine',0.07);
+    } else {
+      el('msg').textContent='🏁 Track cleared! +300 — Track '+(levelIdx+1)+' begins.';
+      beep(880,0.15,'sine',0.06);
+      resetLevel();
+    }
+  }
+  if(bike.x < 30) bike.x=30;
+  camX = Math.max(0, Math.min(lv.pts[lv.pts.length-1][0]-W+80, bike.x - 190));
+  score += dt*4;
+  score=Math.floor(score);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(e.code==='KeyR' && playing) resetLevel();
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('leanL','__leanL'); holdBtn('leanR','__leanR');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🏍️ Track 1 — hold GAS and mind the landings!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ LEVELS:LEVELS, groundYAt:groundYAt, flipsFromRotation:flipsFromRotation };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
