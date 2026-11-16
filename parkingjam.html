@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Parking Jam Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Parking Jam free online. Slide the cars, vans and trucks around the packed 6x6 lot and drive your red car out of the exit. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #lotWrap { position:relative; margin:4px 0; }
+  #lot { position:relative; width:min(92vw, 432px); aspect-ratio:1/1; background:#1f2937; border:2px solid #26335f; border-radius:12px; overflow:hidden;
+    background-image:linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size:16.666% 16.666%; }
+  #exitGap { position:absolute; right:-2px; top:33.333%; width:6px; height:16.666%; background:#22c55e; border-radius:3px; z-index:2; }
+  #exitLabel { position:absolute; right:6px; top:33.333%; height:16.666%; display:flex; align-items:center; font-size:11px; font-weight:800; color:#86efac; letter-spacing:1px; z-index:1; }
+  .car { position:absolute; border-radius:9px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.28), 0 2px 5px rgba(0,0,0,0.4); transition:left .12s, top .12s; z-index:3; border:2px solid rgba(255,255,255,0.25); }
+  .car .emo { pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,0.5)); }
+  .car.sel { border-color:#facc15; box-shadow:0 0 0 3px #facc15, inset 0 -4px 0 rgba(0,0,0,0.28); z-index:4; }
+  .car.red { border-color:#fecaca; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .btn.move { font-size:17px; padding:11px 20px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🅿️ PARKING JAM</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🗺 LOT <b id="level">1</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">👆 MOVES <b id="moves">0</b></div>
+  <div class="stat">🎯 PAR <b id="par">—</b></div>
+  <div class="stat">🏆 BEST <b id="best">—</b></div>
+</div>
+
+<div id="lotWrap">
+  <div id="lot"><div id="exitLabel">EXIT ▶</div><div id="exitGap"></div></div>
+</div>
+<div id="msg">Press START — tap a vehicle, then slide it with the arrows.</div>
+<div class="row">
+  <button class="btn move" id="leftBtn">◀</button>
+  <button class="btn move" id="upBtn">▲</button>
+  <button class="btn move" id="downBtn">▼</button>
+  <button class="btn move" id="rightBtn">▶</button>
+</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn lvl on" data-l="0">LOT 1</button>
+  <button class="btn lvl" data-l="1">LOT 2</button>
+  <button class="btn lvl" data-l="2">LOT 3</button>
+  <button class="btn" id="resetBtn">↺ RESET</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Cars slide only along their length · get the red car 🚗 to the green EXIT on the right · arrow keys work too</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Parking Jam Puzzle</h2>
+  <p>The rush-hour traffic puzzle everyone loves. Your red car is boxed in on a packed 6×6 lot by cars, vans and trucks that can only slide forwards and backwards along their own length. Shuffle the whole jam around, one vehicle at a time, until the red car has a clear run at the green exit.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap any vehicle to select it, then use the arrow buttons (or your keyboard arrows) to slide it one space at a time — horizontal vehicles move left/right, vertical ones up/down, and nothing can jump over another vehicle. The PAR score shows the fewest slides a perfect escape takes; every lot here is solver-verified, so an escape always exists. Beat all three lots and chase a perfect-par run.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three handcrafted, solver-verified lots from warm-up to brain-burner</li>
+    <li>Par scores, move counter, timer and saved best for every lot</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var GRID=6, EXIT_ROW=2;
+/* ---------- levels + pure logic (testable) ---------- */
+/* car: { x, y, len, dir: 'h'|'v', red, color, emo } — positions in state are {x, y} per car index */
+var LEVELS=[
+  { par: 5, cars: [
+    { x:0, y:2, len:2, dir:'h', red:true,  color:'#dc2626', emo:'🚗' },
+    { x:3, y:1, len:2, dir:'v', color:'#2563eb', emo:'🚙' },
+    { x:2, y:4, len:3, dir:'h', color:'#7c3aed', emo:'🚚' },
+    { x:5, y:3, len:2, dir:'v', color:'#059669', emo:'🚕' },
+    { x:0, y:5, len:2, dir:'h', color:'#d97706', emo:'🚗' },
+    { x:1, y:3, len:2, dir:'v', color:'#0891b2', emo:'🚙' }
+  ]},
+  { par: 9, cars: [
+    { x:0, y:2, len:2, dir:'h', red:true,  color:'#dc2626', emo:'🚗' },
+    { x:2, y:0, len:3, dir:'v', color:'#2563eb', emo:'🚚' },
+    { x:3, y:3, len:2, dir:'h', color:'#059669', emo:'🚕' },
+    { x:4, y:1, len:2, dir:'v', color:'#7c3aed', emo:'🚙' },
+    { x:5, y:3, len:3, dir:'v', color:'#d97706', emo:'🚚' },
+    { x:0, y:4, len:2, dir:'h', color:'#0891b2', emo:'🚗' },
+    { x:1, y:5, len:2, dir:'h', color:'#db2777', emo:'🚕' }
+  ]},
+  { par: 10, cars: [
+    { x:0, y:2, len:2, dir:'h', red:true,  color:'#dc2626', emo:'🚗' },
+    { x:2, y:0, len:3, dir:'v', color:'#2563eb', emo:'🚚' },
+    { x:3, y:3, len:2, dir:'h', color:'#059669', emo:'🚕' },
+    { x:4, y:1, len:2, dir:'v', color:'#7c3aed', emo:'🚙' },
+    { x:5, y:3, len:3, dir:'v', color:'#d97706', emo:'🚚' },
+    { x:0, y:4, len:2, dir:'h', color:'#0891b2', emo:'🚗' },
+    { x:1, y:5, len:2, dir:'h', color:'#db2777', emo:'🚕' },
+    { x:0, y:0, len:2, dir:'v', color:'#65a30d', emo:'🚙' },
+    { x:3, y:0, len:2, dir:'h', color:'#0d9488', emo:'🚗' },
+    { x:5, y:0, len:2, dir:'v', color:'#9333ea', emo:'🚙' }
+  ]}
+];
+function makeState(level){
+  return LEVELS[level].cars.map(function(c){ return { x:c.x, y:c.y }; });
+}
+function occupiedCells(state, level){
+  var occ={};
+  LEVELS[level].cars.forEach(function(car, i){
+    var pos=state[i];
+    for(var k=0;k<car.len;k++){
+      var cx= car.dir==='h' ? pos.x+k : pos.x;
+      var cy= car.dir==='h' ? pos.y : pos.y+k;
+      occ[cx+','+cy]=i;
+    }
+  });
+  return occ;
+}
+function canSlide(state, level, carIdx, delta){
+  var car=LEVELS[level].cars[carIdx];
+  var pos=state[carIdx];
+  var occ=occupiedCells(state, level);
+  var nx=pos.x, ny=pos.y;
+  if(car.dir==='h') nx+=delta; else ny+=delta;
+  if(nx<0 || ny<0) return false;
+  if(car.dir==='h' && nx+car.len>GRID) return false;
+  if(car.dir==='v' && ny+car.len>GRID) return false;
+  for(var k=0;k<car.len;k++){
+    var cx= car.dir==='h' ? nx+k : nx;
+    var cy= car.dir==='h' ? ny : ny+k;
+    var holder=occ[cx+','+cy];
+    if(holder!==undefined && holder!==carIdx) return false;
+  }
+  return true;
+}
+function slide(state, level, carIdx, delta){
+  if(!canSlide(state, level, carIdx, delta)) return null;
+  var next=state.map(function(p){ return { x:p.x, y:p.y }; });
+  if(LEVELS[level].cars[carIdx].dir==='h') next[carIdx].x+=delta;
+  else next[carIdx].y+=delta;
+  return next;
+}
+function isWin(state){
+  return state[0].x===GRID-2 && state[0].y===EXIT_ROW;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var el=function(id){ return document.getElementById(id); };
+var level=0, state=makeState(0), selected=0, moves=0, seconds=0, timerId=null, playing=false, carEls=[];
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenParkingBest'+level; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? b+' moves' : '—';
+}
+function hud(){
+  el('level').textContent=level+1;
+  el('moves').textContent=moves;
+  el('time').textContent=fmt(seconds);
+  el('par').textContent=LEVELS[level].par ? LEVELS[level].par+' slides' : '—';
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function loadLevel(lv){
+  stopTimer();
+  level=lv;
+  state=makeState(level);
+  selected=0; moves=0; seconds=0; playing=true;
+  var lot=el('lot');
+  carEls.forEach(function(ce){ if(ce.parentNode) ce.parentNode.removeChild(ce); });
+  carEls=[];
+  LEVELS[level].cars.forEach(function(car, i){
+    var d=document.createElement('div');
+    d.className='car'+(car.red ? ' red' : '');
+    d.style.background='linear-gradient(135deg, '+car.color+', '+car.color+'cc)';
+    var emo=document.createElement('span');
+    emo.className='emo';
+    emo.textContent=car.emo;
+    d.appendChild(emo);
+    (function(idx){
+      d.addEventListener('click', function(){
+        if(!playing) return;
+        selected=idx;
+        beep(620,0.03,'square',0.028);
+        render();
+      });
+    })(i);
+    lot.appendChild(d);
+    carEls.push(d);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+    b.classList.toggle('on', +b.getAttribute('data-l')===level);
+  });
+  el('msg').textContent='🅿️ Lot '+(level+1)+' — free the red car! Par is '+LEVELS[level].par+' slides.';
+  showBest(); render();
+}
+function render(){
+  var cellPct=100/GRID;
+  LEVELS[level].cars.forEach(function(car, i){
+    var d=carEls[i];
+    if(!d) return;
+    var pos=state[i];
+    d.style.left='calc('+pos.x*cellPct+'% + 2px)';
+    d.style.top='calc('+pos.y*cellPct+'% + 2px)';
+    d.style.width='calc('+(car.dir==='h' ? car.len*cellPct : cellPct)+'% - 4px)';
+    d.style.height='calc('+(car.dir==='v' ? car.len*cellPct : cellPct)+'% - 4px)';
+    d.style.fontSize= car.len===3 ? '30px' : '26px';
+    d.classList.toggle('sel', selected===i);
+    if(car.dir==='v') d.style.transform='rotate(0deg)';
+  });
+  hud();
+}
+function trySlide(dx, dy){
+  if(!playing) return;
+  var car=LEVELS[level].cars[selected];
+  var delta=0;
+  if(car.dir==='h' && dx!==0 && dy===0) delta=dx;
+  else if(car.dir==='v' && dy!==0 && dx===0) delta=dy;
+  else { beep(150,0.045,'square',0.03); return; }
+  var next=slide(state, level, selected, delta);
+  if(!next){ beep(150,0.045,'square',0.03); return; }
+  state=next;
+  moves++;
+  startTimer();
+  beep(500,0.035,'square',0.03);
+  render();
+  if(isWin(state)) win();
+}
+function win(){
+  stopTimer();
+  playing=false;
+  var prev=localStorage.getItem(bestKey());
+  var isBest= !prev || moves<+prev;
+  if(isBest) localStorage.setItem(bestKey(), moves);
+  var rating= moves<=LEVELS[level].par ? '🏆 PERFECT — par beaten or matched!' : moves<=Math.ceil(LEVELS[level].par*1.6) ? '⭐ Smooth driving!' : '🎉 Out at last!';
+  el('msg').textContent='🎉 The red car is OUT in '+fmt(seconds)+' with '+moves+' slides (par '+LEVELS[level].par+')! '+rating+(isBest ? ' New best for Lot '+(level+1)+'!' : '')+(level<2 ? ' Try LOT '+(level+2)+' next.' : ' You cleared every lot!');
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); hud();
+}
+el('leftBtn').addEventListener('click', function(){ trySlide(-1, 0); });
+el('rightBtn').addEventListener('click', function(){ trySlide(1, 0); });
+el('upBtn').addEventListener('click', function(){ trySlide(0, -1); });
+el('downBtn').addEventListener('click', function(){ trySlide(0, 1); });
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowLeft'){ e.preventDefault(); trySlide(-1, 0); }
+  else if(e.key==='ArrowRight'){ e.preventDefault(); trySlide(1, 0); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); trySlide(0, -1); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); trySlide(0, 1); }
+});
+el('startBtn').addEventListener('click', function(){ loadLevel(level); });
+el('resetBtn').addEventListener('click', function(){ loadLevel(level); });
+Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+  b.addEventListener('click', function(){ loadLevel(+b.getAttribute('data-l')); });
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+showBest(); hud();
+if(typeof module!=='undefined') module.exports={ LEVELS:LEVELS, makeState:makeState, occupiedCells:occupiedCells, canSlide:canSlide, slide:slide, isWin:isWin, GRID:GRID };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Maze Runner Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Maze Runner free online. Find your way through a fresh maze every level, grab the stars and beat the clock as the mazes grow. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  #pad { display:grid; grid-template-columns:repeat(3, 56px); grid-template-rows:repeat(3, 48px); gap:4px; justify-content:center; margin:2px 0 4px; }
+  #pad button { font-size:19px; border:none; border-radius:9px; background:#1e2a4a; color:#dbe6ff; cursor:pointer; }
+  #pad button:active { transform:scale(.93); background:#26335f; }
+  #pad .sp { visibility:hidden; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏃 MAZE RUNNER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🗺 LEVEL <b id="level">1</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">⭐ <b id="stars">0/3</b></div>
+  <div class="stat">🎯 BEST PATH <b id="par">—</b></div>
+  <div class="stat">🏆 BEST TIME <b id="best">—</b></div>
+</div>
+
+<canvas id="cv" width="440" height="440"></canvas>
+<div id="msg">Press START RUN — reach the 🏁 flag, grab ⭐ stars on the way.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START RUN</button>
+  <button class="btn" id="nextBtn" style="display:none">⏭ NEXT LEVEL</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div id="pad">
+  <span class="sp"></span><button data-dir="up">⬆</button><span class="sp"></span>
+  <button data-dir="left">⬅</button><button data-dir="down">⬇</button><button data-dir="right">➡</button>
+  <span class="sp"></span><span class="sp"></span><span class="sp"></span>
+</div>
+<div class="keys">Arrow keys / WASD / on-screen pad · every maze is generated fresh and always has a way through</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Maze Runner Puzzle</h2>
+  <p>Every level is a brand-new maze, generated the moment you start — no two runs are ever the same. You are the glowing runner in the top-left corner; the chequered flag waits in the bottom-right. Three golden stars hide along the way, and the maze grows bigger and twistier with every level you clear.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with the arrow keys, WASD, or the on-screen pad. The clock starts on your first step. The BEST PATH counter shows the shortest possible route in steps — finish close to it for a perfect run. Clearing a level unlocks the next, larger maze; your best total time for each level size is saved. Dead end? Backtrack and try the other fork — a perfect maze always has exactly one route between any two points, so every wrong turn teaches you the map.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless fresh mazes that grow from 11×9 up to 21×15</li>
+    <li>Star pickups, a shortest-path par counter and saved best times</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* ---------- pure logic (testable) ---------- */
+/* cell walls: { n, e, s, w } booleans; grid is cols x rows, index = y*cols + x */
+var DIRS=[ {dx:0,dy:-1,w:'n',o:'s'}, {dx:1,dy:0,w:'e',o:'w'}, {dx:0,dy:1,w:'s',o:'n'}, {dx:-1,dy:0,w:'w',o:'e'} ];
+function generateMaze(cols, rows){
+  var cells=[];
+  for(var i=0;i<cols*rows;i++) cells.push({ n:true, e:true, s:true, w:true });
+  var visited=new Array(cols*rows).fill(false);
+  var stack=[0];
+  visited[0]=true;
+  while(stack.length){
+    var cur=stack[stack.length-1];
+    var cx=cur%cols, cy=Math.floor(cur/cols);
+    var options=[];
+    DIRS.forEach(function(d){
+      var nx=cx+d.dx, ny=cy+d.dy;
+      if(nx>=0 && ny>=0 && nx<cols && ny<rows && !visited[ny*cols+nx]) options.push({ d:d, idx:ny*cols+nx });
+    });
+    if(!options.length){ stack.pop(); continue; }
+    var pick=options[Math.floor(Math.random()*options.length)];
+    cells[cur][pick.d.w]=false;
+    cells[pick.idx][pick.d.o]=false;
+    visited[pick.idx]=true;
+    stack.push(pick.idx);
+  }
+  return cells;
+}
+function canMove(cells, cols, rows, x, y, dir){
+  var cell=cells[y*cols+x];
+  if(cell[dir.w]) return false;
+  var nx=x+dir.dx, ny=y+dir.dy;
+  return nx>=0 && ny>=0 && nx<cols && ny<rows;
+}
+function bfsDistances(cells, cols, rows, sx, sy){
+  var dist=new Array(cols*rows).fill(-1);
+  var queue=[sy*cols+sx];
+  dist[sy*cols+sx]=0;
+  while(queue.length){
+    var cur=queue.shift();
+    var cx=cur%cols, cy=Math.floor(cur/cols);
+    DIRS.forEach(function(d){
+      if(cells[cur][d.w]) return;
+      var nx=cx+d.dx, ny=cy+d.dy;
+      if(nx<0 || ny<0 || nx>=cols || ny>=rows) return;
+      var ni=ny*cols+nx;
+      if(dist[ni]===-1){ dist[ni]=dist[cur]+1; queue.push(ni); }
+    });
+  }
+  return dist;
+}
+function levelSize(level){
+  var cols=Math.min(21, 11+(level-1)*2);
+  var rows=Math.min(15, 9+(level-1)*2);
+  return { cols:cols, rows:rows };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var level=1, cells=null, cols=11, rows=9, px=0, py=0, stars=[], starsGot=0, steps=0;
+var seconds=0, timerId=null, playing=false, par=0;
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenMazeBest'+cols+'x'+rows; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? fmt(+b) : '—';
+}
+function hud(){
+  el('level').textContent=level;
+  el('time').textContent=fmt(seconds);
+  el('stars').textContent=starsGot+'/3';
+  el('par').textContent= par ? par+' steps' : '—';
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function newLevel(){
+  stopTimer();
+  var size=levelSize(level);
+  cols=size.cols; rows=size.rows;
+  cells=generateMaze(cols, rows);
+  px=0; py=0; steps=0; starsGot=0; seconds=0;
+  var dist=bfsDistances(cells, cols, rows, 0, 0);
+  par=dist[(rows-1)*cols+(cols-1)];
+  /* stars: three reachable cells spread along the journey (distance bands) */
+  stars=[];
+  var bands=[0.3, 0.55, 0.8];
+  bands.forEach(function(f){
+    var target=par*f;
+    var bestIdx=-1, bestDiff=1e9;
+    for(var i=0;i<dist.length;i++){
+      if(dist[i]>0 && Math.abs(dist[i]-target)<bestDiff && i!==(rows-1)*cols+(cols-1)){
+        bestDiff=Math.abs(dist[i]-target); bestIdx=i;
+      }
+    }
+    if(bestIdx>=0 && stars.indexOf(bestIdx)===-1) stars.push(bestIdx);
+  });
+  playing=true;
+  el('nextBtn').style.display='none';
+  el('msg').textContent='🗺 Level '+level+' — a fresh '+cols+'×'+rows+' maze. Reach the 🏁!';
+  showBest(); hud(); draw();
+}
+function draw(){
+  var W=440, H=440;
+  ctx.fillStyle='#0d1330'; ctx.fillRect(0,0,W,H);
+  if(!cells){ 
+    ctx.fillStyle='#fbbf24'; ctx.font='bold 20px Arial'; ctx.textAlign='center';
+    ctx.fillText('🏃 MAZE RUNNER', W/2, H/2-8);
+    ctx.font='14px Arial'; ctx.fillStyle='#9aa7c7';
+    ctx.fillText('Press START RUN', W/2, H/2+20);
+    hud();
+    return;
+  }
+  var cw=W/cols, ch=H/rows;
+  /* exit */
+  ctx.font=Math.floor(Math.min(cw,ch)*0.72)+'px Arial'; ctx.textAlign='center';
+  ctx.fillText('🏁', (cols-1)*cw+cw/2, (rows-1)*ch+ch*0.74);
+  /* stars */
+  stars.forEach(function(idx){
+    var sx=idx%cols, sy=Math.floor(idx/cols);
+    ctx.fillText('⭐', sx*cw+cw/2, sy*ch+ch*0.74);
+  });
+  /* walls */
+  ctx.strokeStyle='#7dd3fc'; ctx.lineWidth=Math.max(2, Math.min(cw,ch)*0.09);
+  ctx.beginPath();
+  for(var y=0;y<rows;y++) for(var x=0;x<cols;x++){
+    var cell=cells[y*cols+x];
+    var x0=x*cw, y0=y*ch;
+    if(cell.n){ ctx.moveTo(x0,y0); ctx.lineTo(x0+cw,y0); }
+    if(cell.w){ ctx.moveTo(x0,y0); ctx.lineTo(x0,y0+ch); }
+    if(cell.e && x===cols-1){ ctx.moveTo(x0+cw,y0); ctx.lineTo(x0+cw,y0+ch); }
+    if(cell.s && y===rows-1){ ctx.moveTo(x0,y0+ch); ctx.lineTo(x0+cw,y0+ch); }
+  }
+  ctx.stroke();
+  /* player */
+  var cxp=px*cw+cw/2, cyp=py*ch+ch/2, r=Math.min(cw,ch)*0.31;
+  ctx.fillStyle='#f472b6';
+  ctx.beginPath(); ctx.arc(cxp,cyp,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(cxp-r*0.3,cyp-r*0.25,r*0.16,0,Math.PI*2); ctx.fill();
+  hud();
+}
+function tryMove(dir){
+  if(!playing || !cells) return;
+  if(!canMove(cells, cols, rows, px, py, dir)) { beep(160,0.04,'square',0.025); return; }
+  px+=dir.dx; py+=dir.dy; steps++;
+  startTimer();
+  beep(520,0.03,'square',0.028);
+  var idx=py*cols+px;
+  var si=stars.indexOf(idx);
+  if(si>=0){
+    stars.splice(si,1);
+    starsGot++;
+    beep(1040,0.09,'sine',0.05);
+    el('msg').textContent='⭐ Star '+starsGot+' of 3! Keep going.';
+  }
+  draw();
+  if(px===cols-1 && py===rows-1) win();
+}
+function win(){
+  stopTimer();
+  playing=false;
+  var prev=localStorage.getItem(bestKey());
+  var isBest= !prev || seconds<+prev;
+  if(isBest) localStorage.setItem(bestKey(), seconds);
+  var rating= steps<=par ? '🏆 PERFECT PATH!' : steps<=Math.ceil(par*1.5) ? '⭐ Great route!' : '🐢 Scenic route — cleared!';
+  el('msg').textContent='🎉 Level '+level+' cleared in '+fmt(seconds)+' — '+steps+' steps (best path '+par+'), '+starsGot+'/3 stars. '+rating+(isBest ? ' New best time!' : '');
+  el('nextBtn').style.display='';
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); draw();
+}
+var DIRMAP={ up:DIRS[0], right:DIRS[1], down:DIRS[2], left:DIRS[3] };
+document.addEventListener('keydown', function(e){
+  var d=null;
+  if(e.key==='ArrowUp' || e.key==='w' || e.key==='W') d=DIRS[0];
+  else if(e.key==='ArrowRight' || e.key==='d' || e.key==='D') d=DIRS[1];
+  else if(e.key==='ArrowDown' || e.key==='s' || e.key==='S') d=DIRS[2];
+  else if(e.key==='ArrowLeft' || e.key==='a' || e.key==='A') d=DIRS[3];
+  if(d){ e.preventDefault(); tryMove(d); }
+});
+Array.prototype.forEach.call(document.querySelectorAll('#pad button'), function(b){
+  b.addEventListener('click', function(){ tryMove(DIRMAP[b.getAttribute('data-dir')]); });
+});
+el('startBtn').addEventListener('click', function(){ level=1; newLevel(); });
+el('nextBtn').addEventListener('click', function(){ level++; newLevel(); });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+draw();
+if(typeof module!=='undefined') module.exports={ generateMaze:generateMaze, canMove:canMove, bfsDistances:bfsDistances, levelSize:levelSize, DIRS:DIRS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
