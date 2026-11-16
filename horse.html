@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Horse Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play horse racing free online. Ride your horse, time your gallop to save stamina and beat three rivals to the finish line. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .barwrap { width:min(640px,94vw); background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:6px 10px; margin:2px 0 4px; font-size:12px; color:#9aa7c7; }
+  .bar { height:12px; background:#1e2a4a; border-radius:6px; margin-top:4px; overflow:hidden; }
+  .bar > div { height:100%; background:linear-gradient(90deg,#22c55e,#84cc16); width:100%; transition:width .12s; }
+  canvas#cv { background:linear-gradient(180deg,#8fc7e8 0%,#c4e2f2 46%,#7a9a52 46.2%,#5d7a3e 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 18px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gallop { background:linear-gradient(90deg,#f59e0b,#ef4444); color:#fff; font-size:16px; padding:12px 26px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🏇 HORSE RACING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">POSITION <b id="pos">—</b></div>
+  <div class="stat">DISTANCE <b id="dist">0m</b> / 600m</div>
+  <div class="stat">WINS <b id="wins">0</b></div>
+  <div class="stat">BEST SCORE <b id="best">0</b></div>
+</div>
+<div class="barwrap">🐴 STAMINA — tap GALLOP in rhythm; wild mashing tires your horse!
+  <div class="bar"><div id="stamBar"></div></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Press START RACE, then tap GALLOP (or SPACE) in a steady rhythm to ride!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START RACE</button>
+  <button class="btn gallop" id="gallopBtn">🐎 GALLOP!</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">SPACE or the GALLOP button — best rhythm ≈ one tap every 0.3 seconds</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, RACE_LEN=600, START_X=56, FINISH_X=600;
+var NAMES=['⭐ YOU','🔴 Rocket','🔵 Bolt','🟢 Comet'];
+var LANE_Y=[196, 252, 308, 364];
+/* ---------- pure logic (testable) ---------- */
+function stride(stamina, msSinceLastTap){
+  /* returns {boost, cost}: rhythm taps (240-520ms) are efficient */
+  if(stamina < 8) return { boost:0.4, cost:1 };
+  if(msSinceLastTap < 150) return { boost:0.7, cost:9 };   /* mashing: weak + tiring */
+  if(msSinceLastTap <= 520) return { boost:2.6, cost:5 };  /* perfect rhythm */
+  return { boost:1.8, cost:5 };                            /* slow tap */
+}
+function positionOf(distances, idx){
+  var pos=1;
+  for(var i=0;i<distances.length;i++){ if(i!==idx && distances[i] > distances[idx]) pos++; }
+  return pos;
+}
+function raceScore(position, staminaLeft){
+  var base = position===1 ? 500 : position===2 ? 250 : position===3 ? 100 : 40;
+  return base + Math.round(staminaLeft);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var horses, stamina, playerVel, running, finished, lastTapAt, lastTs, wins, raceNo;
+var best=+(localStorage.getItem('makenHorseBest')||0);
+el('best').textContent=best;
+wins=0; raceNo=0;
+function reset(){
+  horses=[0,1,2,3].map(function(i){
+    return { d:0, base: i===0 ? 0 : 5.1 + Math.random()*0.9, surgeAt: 120 + Math.random()*320, surgeLen: 90 + Math.random()*80, finishedAt:0 };
+  });
+  stamina=100; playerVel=0; finished=false; lastTapAt=0;
+  raceNo++;
+}
+function hud(){
+  el('dist').textContent=Math.floor(horses[0].d)+'m';
+  el('pos').textContent = finished ? positionOf(horses.map(function(h){return h.d;}),0)+' / 4' : positionOf(horses.map(function(h){return h.d;}),0)+' / 4';
+  el('wins').textContent=wins;
+  el('stamBar').style.width=Math.max(0, stamina)+'%';
+  el('stamBar').style.background = stamina < 30 ? '#ef4444' : 'linear-gradient(90deg,#22c55e,#84cc16)';
+}
+function draw(now){
+  /* stands */
+  ctx.fillStyle='#e8eef7'; ctx.fillRect(0, 118, W, 46);
+  ctx.font='15px Arial'; ctx.textAlign='center';
+  for(var s=0;s<22;s++){ ctx.fillText(['🙂','😀','🧑','👩'][s%4], 16+s*29, 140 + (s%2)*14); }
+  ctx.fillStyle='#b45309'; ctx.fillRect(0, 164, W, 8);
+  /* lanes */
+  for(var l=0;l<4;l++){
+    ctx.fillStyle = l%2 ? '#678344' : '#71914c';
+    ctx.fillRect(0, LANE_Y[l]-26, W, 52);
+    ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.setLineDash([8,8]);
+    ctx.beginPath(); ctx.moveTo(0, LANE_Y[l]+26); ctx.lineTo(W, LANE_Y[l]+26); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.font='bold 11px Arial'; ctx.textAlign='left';
+    ctx.fillText(NAMES[l], 8, LANE_Y[l]-32);
+  }
+  /* finish post */
+  ctx.fillStyle='#111'; ctx.fillRect(FINISH_X, 168, 5, 224);
+  ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+  ctx.fillText('🏁', FINISH_X+2, 162);
+  /* horses: camera follows the pack leader-ish (player biased) */
+  var focus = Math.max(horses[0].d, (horses[1].d+horses[2].d+horses[3].d)/3);
+  var camX = Math.max(0, Math.min(RACE_LEN - (FINISH_X-START_X), focus - 200));
+  horses.forEach(function(h, i){
+    var x = START_X + (h.d - camX) * ((FINISH_X-START_X)/RACE_LEN) * (RACE_LEN/(FINISH_X-START_X)) ;
+    x = START_X + (h.d - camX);
+    if(x < -40 || x > W+40) return;
+    var bob = running && !h.finishedAt ? Math.sin(now/70 + i*2)*3 : 0;
+    ctx.font = (i===0 ? '46px' : '40px')+' Arial'; ctx.textAlign='center';
+    ctx.fillText('🏇', x, LANE_Y[i]+14+bob);
+    if(i===0){ ctx.font='16px Arial'; ctx.fillText('⭐', x, LANE_Y[i]-26+bob); }
+  });
+  /* progress markers */
+  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0, H-14, W, 14);
+  horses.forEach(function(h, i){
+    ctx.fillStyle = ['#facc15','#f87171','#60a5fa','#4ade80'][i];
+    ctx.beginPath(); ctx.arc(10 + (h.d/RACE_LEN)*(W-20), H-7, 4, 0, Math.PI*2); ctx.fill();
+  });
+}
+function gallop(){
+  if(!running || finished) return;
+  var now=performance.now();
+  var ms = lastTapAt ? now - lastTapAt : 400;
+  lastTapAt=now;
+  var s=stride(stamina, ms);
+  stamina=Math.max(0, stamina - s.cost);
+  playerVel = Math.min(11.5, playerVel + s.boost);
+  beep(190 + Math.random()*60, 0.05, 'square', 0.035);
+  hud();
+}
+function finishRace(now){
+  finished=true; running=false;
+  var pos=positionOf(horses.map(function(h){ return h.d; }), 0);
+  var sc=raceScore(pos, stamina);
+  if(pos===1){ wins++; beep(880,0.12,'sine',0.07); setTimeout(function(){ beep(1174,0.18,'sine',0.07); }, 120); }
+  if(sc>best){ best=sc; localStorage.setItem('makenHorseBest',best); el('best').textContent=best; }
+  el('msg').textContent = (pos===1 ? '🏆 YOU WIN! ' : '🏁 You finished '+pos+(pos===2?'nd':pos===3?'rd':'th')+'. ') + 'Score '+sc+' — press START RACE to run again.';
+  el('startBtn').textContent='▶ RACE AGAIN';
+  hud(); draw(now);
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  /* player physics */
+  playerVel *= Math.pow(0.42, dt/1000);       /* strong decay: must keep tapping */
+  playerVel = Math.max(3.4, playerVel);        /* horse keeps a base trot */
+  stamina = Math.min(100, stamina + 3.4*(dt/1000) * (playerVel<6 ? 2.2 : 1));
+  horses[0].d += playerVel * 0.62 * step;
+  /* AI horses */
+  for(var i=1;i<4;i++){
+    var h=horses[i];
+    var v=h.base + Math.sin(now/900 + i*2.4)*0.35;
+    if(h.d > h.surgeAt && h.d < h.surgeAt + h.surgeLen) v += 1.5;   /* surge */
+    if(h.d > RACE_LEN - 110) v += 0.8;                               /* finishing kick */
+    h.d += v * 0.62 * step;
+  }
+  var anyFinished = horses.some(function(h){ return h.d >= RACE_LEN; });
+  if(horses[0].d >= RACE_LEN || (anyFinished && horses[0].d > RACE_LEN*0.82)){
+    horses.forEach(function(h){ if(h.d > RACE_LEN) h.d = RACE_LEN + Math.random()*2; });
+    finishRace(now); hud(); return;
+  }
+  hud(); draw(now);
+  requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  if(e.key===' '){ gallop(); e.preventDefault(); }
+});
+el('gallopBtn').addEventListener('touchstart', function(e){ e.preventDefault(); gallop(); }, {passive:false});
+el('gallopBtn').addEventListener('click', gallop);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0;
+  this.textContent='↻ RESTART RACE';
+  el('msg').textContent='🏇 Race '+raceNo+' — and they\'re off! GALLOP in rhythm!';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); hud(); draw(0);
+if(typeof module!=='undefined') module.exports={ stride:stride, positionOf:positionOf, raceScore:raceScore };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

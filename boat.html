@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Boat Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play boat racing free online. Blast down the winding river, shoot the buoy gates and dodge rival boats. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#2e5d33; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:58px; height:50px; font-size:20px; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🚤 BOAT RACING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SPEED <b id="speed">0</b> kn</div>
+  <div class="stat">GATES <b id="gates">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">HULL <b id="lives">❤️❤️❤️</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="540"></canvas>
+<div id="msg">Press START — stay in the river, shoot the 🔴🟢 gates and dodge rival boats!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START RACE</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pLeft">◀</button><button id="pBoost">⏫</button><button id="pBrake">⏬</button><button id="pRight">▶</button>
+</div>
+<div class="keys">← → steer · ↑ boost · ↓ slow · scraping the bank damages your hull</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=540, BOAT_Y=438, HALF_W=118;
+/* ---------- pure logic (testable) ---------- */
+function riverCenterAt(d){
+  return 210 + Math.sin(d*0.004)*64 + Math.sin(d*0.0013+1)*38;
+}
+function inWater(boatX, d){
+  return Math.abs(boatX - riverCenterAt(d)) <= HALF_W - 22;
+}
+function gatePass(boatX, gateCenterX){ return Math.abs(boatX - gateCenterX) <= 48; }
+function crashTest(boatX, otherX, otherZ){
+  if(otherZ > 0.05 || otherZ < -0.04) return false;
+  return Math.abs(boatX - otherX) < 40;
+}
+function scoreFor(dist, gates){ return Math.floor(dist) + gates*50; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var boatX, rivals, gates, dist, gateCount, hull, speedKn, running, spawnT, gateDist, lastTs, steer, scrapeCd;
+var best=+(localStorage.getItem('makenBoatBest')||0);
+el('best').textContent=best;
+function reset(){
+  boatX=210; rivals=[]; gates=[]; dist=0; gateCount=0; hull=3;
+  speedKn=26; spawnT=900; gateDist=240; steer=0; scrapeCd=0;
+}
+function hud(){
+  el('speed').textContent=Math.round(speedKn);
+  el('gates').textContent=gateCount;
+  el('lives').textContent='❤️'.repeat(Math.max(0,hull));
+  var sc=scoreFor(dist, gateCount);
+  el('score').textContent=sc;
+  if(sc>best){ best=sc; localStorage.setItem('makenBoatBest',best); }
+  el('best').textContent=best;
+}
+function draw(){
+  /* grass banks */
+  ctx.fillStyle='#2e5d33'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#38703e';
+  for(var i=0;i<8;i++){ var ty=((i*83 - (dist*2.4)%83)+H)%H; ctx.fillRect(0, ty, 26, 10); ctx.fillRect(W-26, ty+30, 26, 10); }
+  /* river: draw in horizontal bands following the curve */
+  for(var y=0;y<H;y+=12){
+    var dAtY = dist + (BOAT_Y - y)*0.55;
+    var c = riverCenterAt(dAtY);
+    ctx.fillStyle = (Math.floor(y/24)%2===0) ? '#1d6fb8' : '#1a67ab';
+    ctx.fillRect(c-HALF_W, y, HALF_W*2, 12);
+    ctx.fillStyle='#d9c07a';
+    ctx.fillRect(c-HALF_W-5, y, 5, 12); ctx.fillRect(c+HALF_W, y, 5, 12);
+  }
+  /* wake */
+  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(boatX-10, BOAT_Y+22); ctx.lineTo(boatX-20, BOAT_Y+52); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(boatX+10, BOAT_Y+22); ctx.lineTo(boatX+20, BOAT_Y+52); ctx.stroke();
+  /* gates */
+  gates.forEach(function(g){
+    var gy = BOAT_Y - (g.at - dist)*0.55;
+    if(gy < -30 || gy > H+30) return;
+    ctx.font='24px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔴', g.cx-48, gy+8);
+    ctx.fillText('🟢', g.cx+48, gy+8);
+  });
+  /* rivals */
+  rivals.forEach(function(r){
+    var ry = BOAT_Y - r.ahead*0.55;
+    if(ry < -40 || ry > H+40) return;
+    ctx.font='38px Arial'; ctx.textAlign='center';
+    ctx.fillText(r.icon, r.x, ry+12);
+  });
+  /* player boat */
+  ctx.font='46px Arial'; ctx.textAlign='center';
+  ctx.fillText('🚤', boatX, BOAT_Y+14);
+}
+function damage(reason, now){
+  hull--; hud(); beep(140,0.3,'sawtooth',0.08);
+  scrapeCd = now + 1100;
+  if(hull<=0){
+    running=false;
+    el('msg').textContent='💥 Hull destroyed! '+reason+' Final score '+scoreFor(dist,gateCount)+' — press START to race again.';
+    el('startBtn').textContent='▶ RACE AGAIN';
+    draw(); return false;
+  }
+  el('msg').textContent='💥 '+reason+' Hull: '+hull+' left!';
+  speedKn = Math.max(14, speedKn-8);
+  return true;
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  dist += speedKn*0.052*step;
+  boatX += steer*4.4*step;
+  boatX = Math.max(24, Math.min(W-24, boatX));
+  /* bank scrape */
+  if(!inWater(boatX, dist) && now>=scrapeCd){
+    if(!damage('You scraped the river bank!', now)) return;
+  }
+  /* gates */
+  if(dist >= gateDist){
+    var gc = riverCenterAt(gateDist) + (Math.random()*90-45);
+    gates.push({ at:gateDist, cx:gc, judged:false });
+    gateDist += 300 + Math.random()*120;
+  }
+  for(var i=gates.length-1;i>=0;i--){
+    var g=gates[i];
+    if(!g.judged && dist >= g.at){
+      g.judged=true;
+      if(gatePass(boatX, g.cx)){ gateCount++; el('msg').textContent='🎯 Gate! +50'; beep(940,0.07,'sine',0.06); hud(); }
+    }
+    if(g.at < dist - 60) gates.splice(i,1);
+  }
+  /* rivals */
+  spawnT -= dt;
+  if(spawnT<=0){
+    var rc = riverCenterAt(dist+340);
+    rivals.push({ x: rc + (Math.random()*130-65), ahead: 340 + Math.random()*60, icon: Math.random()<0.5?'🛥️':'⛵', drift:(Math.random()*0.4-0.2) });
+    spawnT = 1300 + Math.random()*700;
+  }
+  for(var j=rivals.length-1;j>=0;j--){
+    var r=rivals[j];
+    r.ahead -= (speedKn*0.052 - 0.9)*step;
+    r.x += r.drift*step;
+    if(r.ahead < 8 && r.ahead > -10 && Math.abs(boatX - r.x) < 40 && now>=scrapeCd){
+      if(!damage('You smashed into a rival boat!', now)) return;
+      rivals.splice(j,1); continue;
+    }
+    if(r.ahead < -30) rivals.splice(j,1);
+  }
+  hud(); draw();
+  requestAnimationFrame(loop);
+}
+var keys={};
+document.addEventListener('keydown', function(e){
+  keys[e.key]=true;
+  if(e.key==='ArrowLeft'){ steer=-1; e.preventDefault(); }
+  if(e.key==='ArrowRight'){ steer=1; e.preventDefault(); }
+  if(e.key==='ArrowUp'){ speedKn=Math.min(46, speedKn+3); e.preventDefault(); }
+  if(e.key==='ArrowDown'){ speedKn=Math.max(12, speedKn-3); e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e){
+  keys[e.key]=false;
+  if(e.key==='ArrowLeft' && steer<0) steer = keys['ArrowRight'] ? 1 : 0;
+  if(e.key==='ArrowRight' && steer>0) steer = keys['ArrowLeft'] ? -1 : 0;
+});
+function holdBtn(id, down, up){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); down(); }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); if(up) up(); }, {passive:false});
+  b.addEventListener('mousedown', down); b.addEventListener('mouseup', function(){ if(up) up(); });
+}
+holdBtn('pLeft', function(){ steer=-1; }, function(){ if(steer<0) steer=0; });
+holdBtn('pRight', function(){ steer=1; }, function(){ if(steer>0) steer=0; });
+holdBtn('pBoost', function(){ speedKn=Math.min(46, speedKn+4); });
+holdBtn('pBrake', function(){ speedKn=Math.max(12, speedKn-4); });
+cvs.addEventListener('touchmove', function(e){
+  var rect=cvs.getBoundingClientRect();
+  boatX = Math.max(24, Math.min(W-24, (e.touches[0].clientX-rect.left)*(W/rect.width)));
+  e.preventDefault();
+}, {passive:false});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='🚤 Go! Follow the river bends.';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); draw();
+if(typeof module!=='undefined') module.exports={ riverCenterAt:riverCenterAt, inWater:inWater, gatePass:gatePass, crashTest:crashTest, scoreFor:scoreFor };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
