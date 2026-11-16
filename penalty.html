@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Football Penalty Shootout Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play football penalty shootout free online. Five kicks each — outsmart the keeper, then guard your own goal. Corners score, corners risk. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#1e40af 0%,#166534 30%,#15803d 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>⚽ PENALTY SHOOTOUT</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">YOU <b id="youScore">0</b></div>
+  <div class="stat">CPU <b id="cpuScore">0</b></div>
+  <div class="stat">KICK <b id="kickNo">–</b></div>
+  <div class="stat">YOUR KICKS <b id="youLog">–</b></div>
+  <div class="stat">CPU KICKS <b id="cpuLog">–</b></div>
+  <div class="stat">TROPHIES <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Press START — click a spot in the goal to shoot. Corners are deadly… and risky!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START SHOOTOUT</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">You shoot first each round, then you keep goal — click where to dive · the keeper learns: do not shoot the same corner every time</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Penalty Shootout</h2>
+  <p>Football's cruellest drama, five kicks at a time. Place your penalties past a keeper who studies your habits, then pull on the gloves yourself and guess where the CPU will put theirs. Level after five? Sudden death.</p>
+  <h3>🎯 How to Play</h3>
+  <p>When shooting, click anywhere in the goal to aim — shots near the corners beat the keeper far more often but can fly wide or hit the post. When keeping, click the zone you want to dive to as the CPU runs up. Most goals after 5 rounds wins the trophy; sudden death decides a tie.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Risk-and-reward aiming — corners score, corners miss</li>
+    <li>A keeper AI that reads your favourite corner, and a CPU shooter you must read in turn</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+var GOAL={ x0:110, x1:530, y0:74, y1:272 };
+/* zones: 0 TL, 1 TC, 2 TR, 3 ML, 4 MC, 5 MR, 6 BL, 7 BC, 8 BR */
+function zoneOf(px, py){
+  if(px<GOAL.x0 || px>GOAL.x1 || py<GOAL.y0 || py>GOAL.y1) return -1;
+  var col= px < GOAL.x0+(GOAL.x1-GOAL.x0)/3 ? 0 : px < GOAL.x0+2*(GOAL.x1-GOAL.x0)/3 ? 1 : 2;
+  var row= py < GOAL.y0+(GOAL.y1-GOAL.y0)/3 ? 0 : py < GOAL.y0+2*(GOAL.y1-GOAL.y0)/3 ? 1 : 2;
+  return row*3+col;
+}
+function zoneCenter(z){
+  var col=z%3, row=Math.floor(z/3);
+  return { x: GOAL.x0 + (col+0.5)*(GOAL.x1-GOAL.x0)/3, y: GOAL.y0 + (row+0.5)*(GOAL.y1-GOAL.y0)/3 };
+}
+function isCorner(z){ return z===0 || z===2 || z===6 || z===8; }
+/* ---------- pure logic (testable) ---------- */
+function shotOutcome(aimZone, keeperZone, rand){
+  /* shooter perspective: returns 'goal' | 'saved' | 'miss' */
+  if(aimZone === keeperZone){
+    if(isCorner(aimZone)) return rand < 0.42 ? 'goal' : 'saved';
+    return rand < 0.16 ? 'goal' : 'saved';
+  }
+  if(Math.abs(aimZone - keeperZone) === 1 || Math.abs(aimZone - keeperZone) === 3){
+    /* keeper close: partial chance */
+    if(rand < 0.18) return 'saved';
+  }
+  if(isCorner(aimZone) && rand < 0.13) return 'miss';
+  if(aimZone===4 && rand < 0.05) return 'miss';
+  return 'goal';
+}
+function keeperPick(history, rand){
+  /* reads shooter's favourite zone sometimes */
+  if(history.length>=2 && rand<0.55){
+    var counts={};
+    history.forEach(function(z){ counts[z]=(counts[z]||0)+1; });
+    var fav=history[0], best=0;
+    for(var z in counts) if(counts[z]>best){ best=counts[z]; fav=+z; }
+    if(best>=2) return fav;
+  }
+  return Math.floor(rand*9);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, turn, round, youScore, cpuScore, youLog, cpuLog, aimHistory, cpuHistory, anim, over, suddenDeath;
+var trophies=+(localStorage.getItem('makenPenaltyTrophies')||0);
+el('best').textContent=trophies;
+function hud(){
+  el('youScore').textContent=youScore;
+  el('cpuScore').textContent=cpuScore;
+  el('kickNo').textContent=playing ? (suddenDeath ? 'SD' : round+' / 5')+' · '+(turn==='shoot' ? 'YOU SHOOT' : 'YOU KEEP') : '–';
+  el('youLog').textContent=youLog.length ? youLog.join(' ') : '–';
+  el('cpuLog').textContent=cpuLog.length ? cpuLog.join(' ') : '–';
+  el('best').textContent=trophies;
+}
+function reset(){
+  playing=false; turn='shoot'; round=1;
+  youScore=0; cpuScore=0; youLog=[]; cpuLog=[];
+  aimHistory=[]; cpuHistory=[]; anim=null; over=false; suddenDeath=false;
+  hud(); draw();
+}
+function draw(){
+  /* stadium crowd */
+  ctx.fillStyle='#1e3a8a'; ctx.fillRect(0,0,W,66);
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  for(var i=0;i<120;i++){ ctx.fillRect((i*97)%W, 6+(i*13)%54, 3, 3); }
+  /* goal frame + net */
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(GOAL.x0-8, GOAL.y0-8, GOAL.x1-GOAL.x0+16, 8);
+  ctx.fillRect(GOAL.x0-8, GOAL.y0-8, 8, GOAL.y1-GOAL.y0+8);
+  ctx.fillRect(GOAL.x1, GOAL.y0-8, 8, GOAL.y1-GOAL.y0+8);
+  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1;
+  for(var gx=GOAL.x0; gx<=GOAL.x1; gx+=21){ ctx.beginPath(); ctx.moveTo(gx, GOAL.y0); ctx.lineTo(gx, GOAL.y1); ctx.stroke(); }
+  for(var gy=GOAL.y0; gy<=GOAL.y1; gy+=20){ ctx.beginPath(); ctx.moveTo(GOAL.x0, gy); ctx.lineTo(GOAL.x1, gy); ctx.stroke(); }
+  /* zone hover grid (subtle) */
+  ctx.strokeStyle='rgba(250,204,21,0.14)';
+  for(var z=0; z<9; z++){
+    var c=zoneCenter(z);
+    ctx.strokeRect(c.x-(GOAL.x1-GOAL.x0)/6, c.y-(GOAL.y1-GOAL.y0)/6, (GOAL.x1-GOAL.x0)/3, (GOAL.y1-GOAL.y0)/3);
+  }
+  /* keeper */
+  var kx=W/2, ky=GOAL.y1-26;
+  if(anim && anim.keeperZone>=0){
+    var kc=zoneCenter(anim.keeperZone);
+    kx += (kc.x-kx)*anim.t;
+    ky += (kc.y-ky)*anim.t*0.7;
+  }
+  ctx.font='52px Arial'; ctx.textAlign='center';
+  ctx.fillText(turn==='shoot' || anim ? '🧍' : '🧤', kx, ky+16);
+  /* ball */
+  var bx=W/2, by=348, br=13;
+  if(anim){
+    bx += (anim.target.x-bx)*anim.t;
+    by += (anim.target.y-by)*anim.t;
+    br = 13 - anim.t*4;
+    if(anim.outcome==='miss'){
+      bx += anim.t*anim.missDx;
+      by -= anim.t*30;
+    }
+  }
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(bx-3, by-3, br*0.32, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+4, by+4, br*0.24, 0, Math.PI*2); ctx.fill();
+  /* penalty spot + taker hint */
+  ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fillRect(W/2-14, 356, 28, 3);
+  if(!anim && playing){
+    ctx.fillStyle='#fbbf24'; ctx.font='bold 16px Arial'; ctx.textAlign='center';
+    ctx.fillText(turn==='shoot' ? '👆 CLICK IN THE GOAL TO SHOOT' : '🧤 CLICK A ZONE TO DIVE THERE', W/2, 392);
+  }
+  if(anim && anim.banner){
+    ctx.fillStyle= anim.outcome==='goal' ? '#4ade80' : '#f87171';
+    ctx.font='bold 34px Arial'; ctx.textAlign='center';
+    ctx.fillText(anim.banner, W/2, 46);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 27px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? (youScore>cpuScore ? '🏆 YOU WIN THE SHOOTOUT!' : '😖 CPU WINS THE SHOOTOUT') : '⚽ PENALTY SHOOTOUT', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Final: You '+youScore+' — '+cpuScore+' CPU · trophies: '+trophies+' — press START to play again' : 'Press START SHOOTOUT — 5 kicks each, then sudden death', W/2, H/2+18);
+  }
+}
+function decideWinnerEarly(){
+  if(suddenDeath) return false;
+  var youLeft=5-round, cpuLeft=5-round;
+  if(turn==='keep'){
+    if(youScore > cpuScore + cpuLeft + 1) return true;
+    if(cpuScore > youScore + youLeft) return true;
+  }
+  return false;
+}
+function finishKick(){
+  hud();
+  if(turn==='shoot'){
+    turn='keep';
+    el('msg').textContent='🧤 Your turn to keep! CPU shoots — click the zone you will dive to.';
+    draw();
+    return;
+  }
+  /* after cpu kick: round complete */
+  turn='shoot';
+  var done=false;
+  if(suddenDeath){
+    if(youScore!==cpuScore) done=true;
+  } else if(round>=5){
+    if(youScore!==cpuScore) done=true; else { suddenDeath=true; el('msg').textContent='😱 Level after 5 — SUDDEN DEATH!'; }
+  }
+  if(!done && decideWinnerEarly()) done=true;
+  if(done){
+    playing=false; over=true;
+    if(youScore>cpuScore){ trophies++; localStorage.setItem('makenPenaltyTrophies', trophies); }
+    el('msg').textContent= youScore>cpuScore ? '🏆 TROPHY YOURS! You won '+youScore+'–'+cpuScore+'.' : '😖 CPU takes it '+cpuScore+'–'+youScore+'. Read their shots better next time.';
+    beep(youScore>cpuScore?980:200, 0.2, 'sine', 0.06);
+    hud(); draw();
+    return;
+  }
+  if(!suddenDeath) round++;
+  el('msg').textContent='Round '+(suddenDeath?'SD':round)+' — your kick. Pick your spot!';
+  hud(); draw();
+}
+function animateKick(aimZone, keeperZone, outcome, isYou){
+  var target=zoneCenter(aimZone);
+  anim={ t:0, target:target, keeperZone:keeperZone, outcome:outcome, missDx: aimZone%3===0 ? -60 : aimZone%3===2 ? 60 : 0,
+    banner: outcome==='goal' ? 'GOAL! ⚽' : outcome==='saved' ? 'SAVED! 🧤' : 'MISSED! 😱' };
+  beep(300,0.06,'square',0.05);
+  var iv=setInterval(function(){
+    anim.t += 0.09;
+    if(anim.t>=1){
+      anim.t=1;
+      clearInterval(iv);
+      draw();
+      setTimeout(function(){
+        anim=null;
+        if(outcome==='goal'){ if(isYou){ youScore++; } else { cpuScore++; } }
+        if(isYou) youLog.push(outcome==='goal'?'⚽':outcome==='saved'?'🧤':'❌');
+        else cpuLog.push(outcome==='goal'?'⚽':outcome==='saved'?'🧤':'❌');
+        if(outcome==='goal') beep(880,0.12,'sine',0.06); else beep(220,0.14,'square',0.05);
+        el('msg').textContent= isYou
+          ? (outcome==='goal' ? '⚽ GOAL! Beautifully placed.' : outcome==='saved' ? '🧤 Saved by the keeper!' : '😱 Wide of the post!')
+          : (outcome==='goal' ? '⚽ CPU scores.' : outcome==='saved' ? '🧤 YOU SAVED IT! Brilliant!' : '😱 CPU misses!');
+        finishKick();
+      }, 650);
+    }
+    draw();
+  }, 30);
+  draw();
+}
+function clickGoal(px, py){
+  if(!playing || anim) return;
+  var z=zoneOf(px, py);
+  if(z<0){ el('msg').textContent='Click inside the goal frame!'; return; }
+  if(turn==='shoot'){
+    aimHistory.push(z);
+    var keeper=keeperPick(aimHistory.slice(0,-1), Math.random());
+    var out=shotOutcome(z, keeper, Math.random());
+    animateKick(z, keeper, out, true);
+  } else {
+    /* player is keeper: z is dive zone; CPU picks a shot (biased to corners) */
+    var cpuAim=[0,2,6,8,1,3,5,7,4][Math.floor(Math.random()*9)];
+    cpuHistory.push(cpuAim);
+    var out2=shotOutcome(cpuAim, z, Math.random());
+    animateKick(cpuAim, z, out2, false);
+  }
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+cvs.addEventListener('mousedown', function(e){ var p=posOf(e); clickGoal(p.x, p.y); });
+cvs.addEventListener('touchstart', function(e){ var p=posOf(e); clickGoal(p.x, p.y); e.preventDefault(); }, {passive:false});
+el('startBtn').addEventListener('click', function(){
+  reset();
+  playing=true;
+  el('msg').textContent='Round 1 — your kick first. Pick a corner… if you dare!';
+  hud(); draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ zoneOf:zoneOf, zoneCenter:zoneCenter, isCorner:isCorner, shotOutcome:shotOutcome, keeperPick:keeperPick, GOAL:GOAL };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
