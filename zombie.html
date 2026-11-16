@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zombie Shooting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play zombie shooting free online. Defend your barricade against wave after wave of the undead — headshots, reloads and rising panic. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#1a2332 0%,#232f42 55%,#2e4038 55.2%,#22352b 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🧟 ZOMBIE SHOOTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">WAVE <b id="wave">1</b></div>
+  <div class="stat">BARRICADE <b id="baseHp">100</b></div>
+  <div class="stat">AMMO <b id="ammo">12</b></div>
+  <div class="stat">KILLS <b id="kills">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Click START DEFENSE — then click on the zombies to shoot. Headshots kill in one!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START DEFENSE</button>
+  <button class="btn" id="reloadBtn">⟳ RELOAD (R)</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Body = 2 hits · head = 1 hit · runners are fast, brutes take 5 hits · if they reach the barricade they tear it down</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Zombie Shooting</h2>
+  <p>The dead are coming in waves and your barricade is all that stands between them and you. Hold the line with careful aim: pick off the runners first, drop the brutes with headshots, and never let the horde reach the fence.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Click or tap a zombie to shoot it. Body shots take two hits (five for the big brutes), a headshot kills instantly and scores double. You carry 12 rounds — press R or RELOAD before you run dry at the worst moment. Every wave is faster and thicker than the last; if the barricade health hits zero, the run is over.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three zombie types — shamblers, runners and armoured brutes</li>
+    <li>Endless escalating waves with a barricade to defend</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, GROUND=348, BASE_X=64;
+/* ---------- pure logic (testable) ---------- */
+var ZTYPES={
+  shambler:{ hp:2, speed:14, score:50, size:1 },
+  runner:{ hp:2, speed:34, score:80, size:0.92 },
+  brute:{ hp:5, speed:10, score:150, size:1.35 }
+};
+function waveComp(wave){
+  var out=[];
+  var n=4+wave*2;
+  for(var i=0;i<n;i++){
+    var r=Math.random();
+    if(wave>=3 && r<0.16) out.push('brute');
+    else if(wave>=2 && r<0.45) out.push('runner');
+    else out.push('shambler');
+  }
+  return out;
+}
+function hitPart(z, px, py){
+  /* zombie z has x (feet centre), y = ground line; head is a circle above */
+  var headY=z.y - 62*z.size, headR=11*z.size;
+  var dx=px-z.x, dy=py-headY;
+  if(dx*dx + dy*dy <= headR*headR) return 'head';
+  if(Math.abs(dx) <= 15*z.size && py >= headY && py <= z.y) return 'body';
+  return 'miss';
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, wave, baseHp, ammo, reloading, zombies, spawnQueue, spawnTimer, score, kills, shots, rafId, lastTick, muzzle;
+var best=+(localStorage.getItem('makenZombieBest')||0);
+el('best').textContent=best;
+function reset(){
+  playing=false; wave=1; baseHp=100; ammo=12; reloading=false;
+  zombies=[]; spawnQueue=[]; spawnTimer=0; score=0; kills=0; shots=0; muzzle=0;
+  hud(); draw();
+}
+function hud(){
+  el('wave').textContent=wave;
+  el('baseHp').textContent=Math.max(0, Math.round(baseHp));
+  el('ammo').textContent=ammo;
+  el('kills').textContent=kills;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenZombieBest',best); }
+  el('best').textContent=best;
+}
+function startWave(){
+  spawnQueue=waveComp(wave);
+  spawnTimer=0.4;
+  el('msg').textContent='🌊 Wave '+wave+' incoming — '+spawnQueue.length+' zombies!';
+}
+function draw(){
+  /* moon + skyline */
+  ctx.fillStyle='#e8e4c9'; ctx.beginPath(); ctx.arc(560, 52, 24, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#131c29';
+  ctx.fillRect(0,190,70,158); ctx.fillRect(420,205,60,143); ctx.fillRect(500,180,90,168);
+  ctx.fillStyle='#facc15';
+  [[20,220],[38,260],[440,240],[530,220],[545,275]].forEach(function(p){ ctx.globalAlpha=0.5; ctx.fillRect(p[0],p[1],7,9); });
+  ctx.globalAlpha=1;
+  /* ground */
+  ctx.fillStyle='#1d2f24'; ctx.fillRect(0, GROUND, W, H-GROUND);
+  ctx.strokeStyle='#31473a'; ctx.beginPath(); ctx.moveTo(0,GROUND); ctx.lineTo(W,GROUND); ctx.stroke();
+  /* barricade */
+  ctx.fillStyle='#7c5a36';
+  for(var i=0;i<5;i++) ctx.fillRect(BASE_X-8, GROUND-64+i*13, 34, 8);
+  ctx.fillStyle='#5d4429'; ctx.fillRect(BASE_X-12, GROUND-70, 6, 70); ctx.fillRect(BASE_X+22, GROUND-70, 6, 70);
+  ctx.fillStyle='#f87171'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText('BARRICADE '+Math.max(0,Math.round(baseHp))+'%', BASE_X+5, GROUND-78);
+  /* defender */
+  ctx.font='40px Arial'; ctx.fillText('🧍', BASE_X-38, GROUND+4);
+  if(muzzle>0){
+    ctx.fillStyle='rgba(250,204,21,'+(muzzle*0.8)+')';
+    ctx.beginPath(); ctx.arc(BASE_X-16, GROUND-34, 10*muzzle+4, 0, Math.PI*2); ctx.fill();
+  }
+  /* zombies */
+  zombies.forEach(function(z){
+    var t=ZTYPES[z.type];
+    ctx.save();
+    ctx.translate(z.x, z.y);
+    ctx.scale(t.size, t.size);
+    ctx.globalAlpha=z.flash>0 ? 0.55 : 1;
+    ctx.font='46px Arial'; ctx.textAlign='center';
+    ctx.fillText(z.type==='brute' ? '🧟' : '🧟', 0, 4);
+    ctx.restore();
+    /* hp pips */
+    if(z.hp < t.hp){
+      ctx.fillStyle='#111827'; ctx.fillRect(z.x-16, z.y-84*t.size, 32, 5);
+      ctx.fillStyle='#4ade80'; ctx.fillRect(z.x-16, z.y-84*t.size, 32*(z.hp/t.hp), 5);
+    }
+    if(z.flash>0) z.flash-=0.06;
+  });
+  if(reloading){
+    ctx.fillStyle='rgba(7,11,24,0.5)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fbbf24'; ctx.font='bold 22px Arial'; ctx.textAlign='center';
+    ctx.fillText('⟳ RELOADING…', W/2, 60);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(baseHp<=0 ? '🧟 THE BARRICADE HAS FALLEN' : '🧟 ZOMBIE SHOOTING', W/2, H/2-12);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(baseHp<=0 ? 'You survived to wave '+wave+' · score '+score+' — press START to try again' : 'Press START DEFENSE and hold the line', W/2, H/2+16);
+  }
+}
+function spawnOne(){
+  var type=spawnQueue.shift();
+  var t=ZTYPES[type];
+  zombies.push({ type:type, x:W+30+Math.random()*40, y:GROUND+Math.random()*8-4, hp:t.hp, size:t.size, flash:0, wob:Math.random()*6 });
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.05, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(spawnQueue.length){
+    spawnTimer-=dt;
+    if(spawnTimer<=0){ spawnOne(); spawnTimer=0.9+Math.random()*0.9; }
+  }
+  var speedMul=1 + (wave-1)*0.07;
+  zombies.forEach(function(z){
+    var t=ZTYPES[z.type];
+    z.x -= t.speed * speedMul * dt * (0.9 + 0.2*Math.sin(z.wob += dt*3));
+    if(z.x <= BASE_X+30){
+      baseHp -= 14*dt*3;
+      z.x = BASE_X+30;
+      if(baseHp<=0){
+        baseHp=0; playing=false;
+        el('msg').textContent='🧟 The barricade fell on wave '+wave+'. Final score: '+score+'.';
+        beep(140,0.4,'sawtooth',0.07);
+      }
+    }
+  });
+  if(muzzle>0) muzzle-=dt*5;
+  if(!spawnQueue.length && !zombies.length && playing){
+    wave++;
+    score+=100;
+    el('msg').textContent='✅ Wave cleared! +100 bonus. Reload while you can…';
+    beep(880,0.12,'sine',0.06);
+    startWave();
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+function reload(){
+  if(reloading || ammo===12 || !playing) return;
+  reloading=true; draw();
+  setTimeout(function(){
+    ammo=12; reloading=false;
+    beep(520,0.06,'square',0.05);
+    hud(); draw();
+  }, 1000);
+}
+function shootAt(px, py){
+  if(!playing || reloading) return;
+  if(ammo<=0){
+    el('msg').textContent='🔫 CLICK — empty! Reload (R) now!';
+    beep(170,0.07,'square',0.05);
+    return;
+  }
+  ammo--; shots++; muzzle=1;
+  beep(150,0.1,'sawtooth',0.06);
+  /* nearest zombie first (front of the horde = smallest x) */
+  var sorted=zombies.slice().sort(function(a,b){ return a.x-b.x; });
+  for(var i=0;i<sorted.length;i++){
+    var z=sorted[i];
+    var part=hitPart(z, px, py);
+    if(part!=='miss'){
+      z.flash=1;
+      if(part==='head'){ z.hp=0; }
+      else z.hp-=1;
+      if(z.hp<=0){
+        var pts=ZTYPES[z.type].score * (part==='head' ? 2 : 1);
+        score+=pts; kills++;
+        el('msg').textContent= part==='head' ? '💥 HEADSHOT! +'+pts : '🧟 Down! +'+pts;
+        beep(part==='head'?1000:700, 0.08, 'sine', 0.06);
+        zombies.splice(zombies.indexOf(z),1);
+      } else {
+        el('msg').textContent= part==='head' ? 'Grazed its head — finish it!' : 'Hit! '+(z.hp)+' hit(s) left on that one.';
+      }
+      hud(); draw();
+      return;
+    }
+  }
+  hud(); draw();
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+cvs.addEventListener('mousedown', function(e){ var p=posOf(e); shootAt(p.x, p.y); });
+cvs.addEventListener('touchstart', function(e){ var p=posOf(e); shootAt(p.x, p.y); e.preventDefault(); }, {passive:false});
+document.addEventListener('keydown', function(e){ if(e.key==='r' || e.key==='R') reload(); });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  startWave();
+  rafId=requestAnimationFrame(loop);
+});
+el('reloadBtn').addEventListener('click', reload);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ ZTYPES:ZTYPES, waveComp:waveComp, hitPart:hitPart };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
