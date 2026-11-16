@@ -23,11 +23,27 @@
   .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
   .controls button { background:#131c3a; color:#e8ecf8; border:1px solid #26335f; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; }
   footer { margin:10px 0 4px; font-size:12px; color:#5b6b96; text-align:center; }
+
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; text-align:center; }
+  .brand b { color:#f472b6; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .topnav a:hover { background:#1e2a4a; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
 </style>
 </head>
 <body>
 <header>
-  <h1>🦖 DINO RUNNER</h1>
+  <div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🦖 DINO RUNNER</h1>
   <p>SPACE / tap to jump — DOWN arrow to duck. How far can you run?</p>
 </header>
 
@@ -64,6 +80,22 @@
 </div>
 
 <!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Dino Runner</h2>
+  <p>The famous endless runner. Sprint across the desert as the T-Rex, leap over cacti, duck under pterodactyls and see how far you can get as the ground speeds up.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press SPACE or tap to jump, and the DOWN arrow to duck or fast-fall. Time double-jumps over wide cactus clusters and stay low when birds fly at head height.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Day-desert theme with smooth speed ramping</li>
+    <li>Jump, duck and fast-fall — the full runner moveset</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
 <div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;"><!-- ADSTERRA 300x250 (Subway site) -->
 <script>
   atOptions = {
