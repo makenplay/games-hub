@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chess Game — Play Free Online vs Computer | Maken Play</title>
+<meta name="description" content="Play chess free online against the computer or a friend. Full rules — castling, en passant, promotion, check and checkmate. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  #board { display:grid; grid-template-columns:repeat(8, 1fr); width:min(480px, 94vw); aspect-ratio:1; border:3px solid #26335f; border-radius:10px; overflow:hidden; }
+  .sq { display:flex; align-items:center; justify-content:center; font-size:clamp(26px, 7.5vw, 44px); cursor:pointer; position:relative; user-select:none; line-height:1; }
+  .sq.light { background:#ecdcb9; } .sq.dark { background:#b58863; }
+  .sq.sel { background:#f6c453 !important; }
+  .sq.last { background:#f0d48a !important; }
+  .sq.hint::after { content:''; position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(20,80,20,0.45); }
+  .sq.cap::after { content:''; position:absolute; inset:6%; border-radius:50%; border:4px solid rgba(180,30,30,0.6); }
+  .sq.check { background:#e06565 !important; }
+  .sq .coord { position:absolute; left:2px; top:1px; font-size:9px; color:rgba(0,0,0,0.5); font-weight:700; }
+  .wp { color:#fff; text-shadow:0 0 3px #000, 0 2px 2px rgba(0,0,0,0.6); }
+  .bp { color:#14100d; text-shadow:0 0 2px rgba(255,255,255,0.35); }
+  #msg { min-height:20px; font-size:14.5px; color:#fbbf24; font-weight:700; text-align:center; padding:6px 8px; }
+  .caps { min-height:24px; font-size:19px; text-align:center; letter-spacing:1px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:3px 0 6px; flex-wrap:wrap; }
+  .btn { padding:9px 15px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.mode.on { background:#8b5cf6; color:#fff; }
+  #log { width:min(480px,94vw); max-height:92px; overflow-y:auto; background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:6px 10px; font-size:12.5px; color:#9aa7c7; margin-bottom:8px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>♟️ CHESS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="caps" id="capsTop"></div>
+<div id="board"></div>
+<div class="caps" id="capsBottom"></div>
+<div id="msg">White to move — tap a piece, then tap a highlighted square.</div>
+<div class="row">
+  <button class="btn mode on" id="modeAI">🤖 Vs Computer</button>
+  <button class="btn mode" id="mode2P">👥 2 Players</button>
+  <button class="btn" id="diffBtn">AI: Medium</button>
+  <button class="btn primary" id="newBtn">↻ NEW GAME</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div id="log"></div>
+<div class="keys">Full rules: castling, en passant and promotion (to queen) included. In Vs Computer you play White.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* ================= engine (pure logic, testable) ================= */
+var VAL={ P:100, N:320, B:330, R:500, Q:900, K:0 };
+var GLYPH={ K:'♚', Q:'♛', R:'♜', B:'♝', N:'♞', P:'♟' };
+function idx(r,f){ return r*8+f; }
+function rowOf(i){ return (i/8)|0; }
+function fileOf(i){ return i%8; }
+function onBoard(r,f){ return r>=0 && r<8 && f>=0 && f<8; }
+function opp(c){ return c==='w' ? 'b' : 'w'; }
+function initialState(){
+  var b=new Array(64).fill(null);
+  var back=['R','N','B','Q','K','B','N','R'];
+  for(var f=0;f<8;f++){
+    b[idx(0,f)]='b'+back[f]; b[idx(1,f)]='bP';
+    b[idx(6,f)]='wP'; b[idx(7,f)]='w'+back[f];
+  }
+  return { board:b, turn:'w', castling:{wK:true,wQ:true,bK:true,bQ:true}, ep:-1, half:0 };
+}
+function isAttacked(board, sq, by){
+  var r=rowOf(sq), f=fileOf(sq);
+  /* pawns */
+  var pr = by==='w' ? r+1 : r-1;
+  for(var df=-1;df<=1;df+=2){ if(onBoard(pr, f+df) && board[idx(pr,f+df)]===by+'P') return true; }
+  /* knights */
+  var KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  for(var i=0;i<8;i++){ var nr=r+KN[i][0], nf=f+KN[i][1]; if(onBoard(nr,nf) && board[idx(nr,nf)]===by+'N') return true; }
+  /* king */
+  for(var dr=-1;dr<=1;dr++) for(var df2=-1;df2<=1;df2++){ if((dr||df2) && onBoard(r+dr,f+df2) && board[idx(r+dr,f+df2)]===by+'K') return true; }
+  /* sliders */
+  var rays=[[[-1,0],[1,0],[0,-1],[0,1],'RQ'],[[-1,-1],[-1,1],[1,-1],[1,1],'BQ']];
+  for(var g=0;g<2;g++){
+    var dirs=rays[g], types=dirs[4];
+    for(var d=0;d<4;d++){
+      var rr=r+dirs[d][0], ff=f+dirs[d][1];
+      while(onBoard(rr,ff)){
+        var pc=board[idx(rr,ff)];
+        if(pc){ if(pc[0]===by && types.indexOf(pc[1])>-1) return true; break; }
+        rr+=dirs[d][0]; ff+=dirs[d][1];
+      }
+    }
+  }
+  return false;
+}
+function findKing(board, color){
+  for(var i=0;i<64;i++) if(board[i]===color+'K') return i;
+  return -1;
+}
+function pseudoMoves(st, color){
+  var board=st.board, moves=[];
+  function add(from,to,flags){ moves.push({ from:from, to:to, flags:flags||{} }); }
+  for(var i=0;i<64;i++){
+    var pc=board[i];
+    if(!pc || pc[0]!==color) continue;
+    var t=pc[1], r=rowOf(i), f=fileOf(i);
+    if(t==='P'){
+      var dir = color==='w' ? -1 : 1;
+      var startRow = color==='w' ? 6 : 1;
+      var promoRow = color==='w' ? 0 : 7;
+      var one=idx(r+dir, f);
+      if(onBoard(r+dir,f) && !board[one]){
+        add(i, one, rowOf(one)===promoRow ? {promo:'Q'} : {});
+        var two=idx(r+2*dir, f);
+        if(r===startRow && !board[two]) add(i, two, {double:true});
+      }
+      for(var df=-1;df<=1;df+=2){
+        var cr=r+dir, cf=f+df;
+        if(!onBoard(cr,cf)) continue;
+        var ci=idx(cr,cf), target=board[ci];
+        if(target && target[0]!==color) add(i, ci, rowOf(ci)===promoRow ? {promo:'Q'} : {});
+        else if(ci===st.ep) add(i, ci, {ep:true});
+      }
+    } else if(t==='N' || t==='K'){
+      var offs = t==='N' ? [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]] : [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+      offs.forEach(function(o){
+        var nr=r+o[0], nf=f+o[1];
+        if(!onBoard(nr,nf)) return;
+        var tg=board[idx(nr,nf)];
+        if(!tg || tg[0]!==color) add(i, idx(nr,nf), {});
+      });
+      if(t==='K'){
+        var home = color==='w' ? 7 : 0;
+        var enemy=opp(color);
+        if(i===idx(home,4) && !isAttacked(board, i, enemy)){
+          var rights=st.castling;
+          if((color==='w'?rights.wK:rights.bK) && board[idx(home,7)]===color+'R' && !board[idx(home,5)] && !board[idx(home,6)]
+             && !isAttacked(board, idx(home,5), enemy) && !isAttacked(board, idx(home,6), enemy))
+            add(i, idx(home,6), {castle:'K'});
+          if((color==='w'?rights.wQ:rights.bQ) && board[idx(home,0)]===color+'R' && !board[idx(home,1)] && !board[idx(home,2)] && !board[idx(home,3)]
+             && !isAttacked(board, idx(home,3), enemy) && !isAttacked(board, idx(home,2), enemy))
+            add(i, idx(home,2), {castle:'Q'});
+        }
+      }
+    } else {
+      var dirs2 = t==='B' ? [[-1,-1],[-1,1],[1,-1],[1,1]] : t==='R' ? [[-1,0],[1,0],[0,-1],[0,1]] : [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+      dirs2.forEach(function(d){
+        var nr=r+d[0], nf=f+d[1];
+        while(onBoard(nr,nf)){
+          var tg2=board[idx(nr,nf)];
+          if(!tg2) add(i, idx(nr,nf), {});
+          else { if(tg2[0]!==color) add(i, idx(nr,nf), {}); break; }
+          nr+=d[0]; nf+=d[1];
+        }
+      });
+    }
+  }
+  return moves;
+}
+function applyMove(st, mv){
+  var board=st.board.slice();
+  var pc=board[mv.from];
+  var color=pc[0];
+  var captured = mv.flags.ep ? board[mv.to + (color==='w' ? 8 : -8)] : board[mv.to];
+  board[mv.to]= mv.flags.promo ? color+'Q' : pc;
+  board[mv.from]=null;
+  if(mv.flags.ep) board[mv.to + (color==='w' ? 8 : -8)]=null;
+  if(mv.flags.castle){
+    var home = color==='w' ? 7 : 0;
+    if(mv.flags.castle==='K'){ board[idx(home,5)]=board[idx(home,7)]; board[idx(home,7)]=null; }
+    else { board[idx(home,3)]=board[idx(home,0)]; board[idx(home,0)]=null; }
+  }
+  var cast=Object.assign({}, st.castling);
+  if(pc==='wK'){ cast.wK=false; cast.wQ=false; }
+  if(pc==='bK'){ cast.bK=false; cast.bQ=false; }
+  if(mv.from===idx(7,0) || mv.to===idx(7,0)) cast.wQ=false;
+  if(mv.from===idx(7,7) || mv.to===idx(7,7)) cast.wK=false;
+  if(mv.from===idx(0,0) || mv.to===idx(0,0)) cast.bQ=false;
+  if(mv.from===idx(0,7) || mv.to===idx(0,7)) cast.bK=false;
+  return { board:board, turn:opp(color), castling:cast,
+           ep: mv.flags.double ? (mv.from+mv.to)/2 : -1,
+           half: (pc[1]==='P' || captured) ? 0 : st.half+1,
+           captured:captured, move:mv };
+}
+function legalMoves(st, color){
+  color = color || st.turn;
+  return pseudoMoves(st, color).filter(function(mv){
+    var next=applyMove(Object.assign({}, st, {turn:color}), mv);
+    return !isAttacked(next.board, findKing(next.board, color), opp(color));
+  });
+}
+function evaluate(board){
+  var sc=0;
+  for(var i=0;i<64;i++){
+    var pc=board[i];
+    if(!pc) continue;
+    var v=VAL[pc[1]];
+    if(pc[1]==='N' && rowOf(i)>=2 && rowOf(i)<=5 && fileOf(i)>=2 && fileOf(i)<=5) v+=18;
+    if(pc[1]==='P' && fileOf(i)>=3 && fileOf(i)<=4) v+=6;
+    sc += pc[0]==='w' ? v : -v;
+  }
+  return sc;
+}
+function negamax(st, depth, alpha, beta, ply){
+  var moves=legalMoves(st);
+  var inCheck=isAttacked(st.board, findKing(st.board, st.turn), opp(st.turn));
+  if(!moves.length){
+    if(inCheck) return -100000 + ply; /* checkmated */
+    return 0; /* stalemate */
+  }
+  if(depth===0) return (st.turn==='w' ? 1 : -1) * evaluate(st.board);
+  var best=-Infinity;
+  /* captures first for better pruning */
+  moves.sort(function(a,b){
+    var ca=st.board[b.to]? VAL[st.board[b.to][1]] : 0;
+    var cb=st.board[a.to]? VAL[st.board[a.to][1]] : 0;
+    return ca-cb;
+  });
+  for(var i=0;i<moves.length;i++){
+    var sc2=-negamax(applyMove(st, moves[i]), depth-1, -beta, -alpha, ply+1);
+    if(sc2>best) best=sc2;
+    if(best>alpha) alpha=best;
+    if(alpha>=beta) break;
+  }
+  return best;
+}
+function bestMove(st, depth){
+  var moves=legalMoves(st);
+  if(!moves.length) return null;
+  var bestSc=-Infinity, bestMv=null;
+  moves.sort(function(){ return Math.random()-0.5; });
+  for(var i=0;i<moves.length;i++){
+    var sc2=-negamax(applyMove(st, moves[i]), depth-1, -Infinity, Infinity, 1);
+    if(sc2>bestSc){ bestSc=sc2; bestMv=moves[i]; }
+  }
+  return bestMv;
+}
+function moveName(st, mv){
+  var pc=st.board[mv.from];
+  var files='abcdefgh';
+  var sqName=function(i){ return files[fileOf(i)] + (8-rowOf(i)); };
+  if(mv.flags.castle) return mv.flags.castle==='K' ? 'O-O' : 'O-O-O';
+  var name = pc[1]==='P' ? '' : pc[1];
+  if(st.board[mv.to] || mv.flags.ep) name += (pc[1]==='P' ? files[fileOf(mv.from)] : '') + 'x';
+  name += sqName(mv.to);
+  if(mv.flags.promo) name += '=Q';
+  return name;
+}
+
+/* ================= UI ================= */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+var el=function(id){ return document.getElementById(id); };
+var st, selected, targets, mode='ai', depth=2, gameOverFlag, lastMove, capturedByW, capturedByB, moveNo;
+var boardEl=el('board');
+var sqEls=[];
+for(var s=0;s<64;s++){
+  var d=document.createElement('div');
+  d.className='sq ' + (((rowOf(s)+fileOf(s))%2===0) ? 'light' : 'dark');
+  d.dataset.i=s;
+  if(fileOf(s)===0){ var c=document.createElement('span'); c.className='coord'; c.textContent=8-rowOf(s); d.appendChild(c); }
+  boardEl.appendChild(d); sqEls.push(d);
+}
+function reset(){
+  st=initialState(); selected=-1; targets=[]; gameOverFlag=false; lastMove=null;
+  capturedByW=[]; capturedByB=[]; moveNo=1;
+  el('log').innerHTML='';
+  render();
+  el('msg').textContent='White to move — tap a piece, then tap a highlighted square.';
+}
+function render(){
+  var inCheckW=isAttacked(st.board, findKing(st.board,'w'), 'b');
+  var inCheckB=isAttacked(st.board, findKing(st.board,'b'), 'w');
+  for(var i=0;i<64;i++){
+    var sq=sqEls[i], pc=st.board[i];
+    sq.className='sq ' + (((rowOf(i)+fileOf(i))%2===0) ? 'light' : 'dark');
+    if(i===selected) sq.classList.add('sel');
+    if(lastMove && (i===lastMove.from || i===lastMove.to)) sq.classList.add('last');
+    if(pc==='wK' && inCheckW && st.turn==='w') sq.classList.add('check');
+    if(pc==='bK' && inCheckB && st.turn==='b') sq.classList.add('check');
+    var isTarget=targets.some(function(m){ return m.to===i; });
+    if(isTarget) sq.classList.add(st.board[i] ? 'cap' : 'hint');
+    var glyph = sq.querySelector('.glyph');
+    if(!glyph){ glyph=document.createElement('span'); glyph.className='glyph'; sq.appendChild(glyph); }
+    if(pc){ glyph.textContent=GLYPH[pc[1]]; glyph.className='glyph ' + (pc[0]==='w' ? 'wp' : 'bp'); }
+    else glyph.textContent='';
+  }
+  el('capsTop').textContent = capturedByW.map(function(p){ return GLYPH[p[1]]; }).join(' ');
+  el('capsTop').style.color='#14100d';
+  el('capsBottom').textContent = capturedByB.map(function(p){ return GLYPH[p[1]]; }).join(' ');
+  el('capsBottom').style.color='#fff';
+}
+function afterMove(mv, name){
+  var mover=opp(st.turn);
+  var captured=st.captured;
+  if(captured){ (mover==='w' ? capturedByW : capturedByB).push(captured); beep(220,0.07,'square',0.05); }
+  else beep(420,0.045,'square',0.04);
+  lastMove=mv;
+  var moves=legalMoves(st);
+  var inCheck=isAttacked(st.board, findKing(st.board, st.turn), opp(st.turn));
+  var logLine = (mover==='w' ? moveNo+'. ' : '') + name + (inCheck ? (moves.length? '+' : '#') : '');
+  el('log').innerHTML += (mover==='w' ? '' : ' · ') + logLine + (mover==='b' ? '<br>' : '');
+  el('log').scrollTop=el('log').scrollHeight;
+  if(mover==='b') moveNo++;
+  if(!moves.length){
+    gameOverFlag=true;
+    el('msg').textContent = inCheck ? '🏆 CHECKMATE — '+(mover==='w'?'White':'Black')+' wins!' : '🤝 STALEMATE — the game is a draw.';
+    beep(784,0.14,'sine',0.07); setTimeout(function(){ beep(1046,0.2,'sine',0.07); }, 150);
+  } else if(inCheck){
+    el('msg').textContent='⚠️ CHECK! '+(st.turn==='w'?'White':'Black')+' to move.';
+    beep(660,0.09,'square',0.05);
+  } else {
+    el('msg').textContent=(st.turn==='w'?'White':'Black')+' to move.';
+  }
+  selected=-1; targets=[];
+  render();
+  if(!gameOverFlag && mode==='ai' && st.turn==='b'){
+    el('msg').textContent='🤖 Computer is thinking…';
+    setTimeout(function(){
+      var bm=bestMove(st, depth);
+      if(bm){ var nm=moveName(st, bm); st=applyMove(st, bm); afterMove(bm, nm); }
+    }, 350);
+  }
+}
+boardEl.addEventListener('click', function(e){
+  if(gameOverFlag) return;
+  if(mode==='ai' && st.turn==='b') return;
+  var sqEl=e.target.closest('.sq');
+  if(!sqEl) return;
+  var i=+sqEl.dataset.i;
+  if(selected>-1){
+    var mv=targets.find(function(m){ return m.to===i; });
+    if(mv){ var nm=moveName(st, mv); st=applyMove(st, mv); afterMove(mv, nm); return; }
+  }
+  var pc=st.board[i];
+  if(pc && pc[0]===st.turn){
+    selected=i;
+    targets=legalMoves(st).filter(function(m){ return m.from===i; });
+    beep(520,0.03,'square',0.03);
+  } else { selected=-1; targets=[]; }
+  render();
+});
+el('newBtn').addEventListener('click', reset);
+el('modeAI').addEventListener('click', function(){ mode='ai'; this.classList.add('on'); el('mode2P').classList.remove('on'); reset(); });
+el('mode2P').addEventListener('click', function(){ mode='2p'; this.classList.add('on'); el('modeAI').classList.remove('on'); reset(); });
+el('diffBtn').addEventListener('click', function(){
+  depth = depth===1 ? 2 : depth===2 ? 3 : 1;
+  this.textContent='AI: ' + (depth===1?'Easy':depth===2?'Medium':'Hard');
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ initialState:initialState, legalMoves:legalMoves, applyMove:applyMove, isAttacked:isAttacked, findKing:findKing, evaluate:evaluate, bestMove:bestMove, moveName:moveName };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

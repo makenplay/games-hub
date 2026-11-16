@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Carrom Pool Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play carrom free online. Flick the striker, pocket the coins, cover the queen and clear the board. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#e8c07a; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; max-width:600px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🎯 CARROM POOL</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">COINS LEFT <b id="left">19</b></div>
+  <div class="stat">SHOTS <b id="shots">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="560" height="560"></canvas>
+<div id="msg">Slide the striker on the bottom line, then pull back and release to shoot!</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW BOARD</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">⚪ White = 10 · ⚫ Black = 20 · 🔴 Queen = 50 — but you must pocket another coin right after her ("cover") or she comes back! Pocketing the striker is a foul (−25).</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=560, H=560, MARGIN=38, POCKET_R=25, COIN_R=13, STRIKER_R=16;
+var BASE_Y=H-86, BASE_X1=120, BASE_X2=W-120, CENTER={x:W/2, y:H/2};
+var POCKETS=[{x:MARGIN,y:MARGIN},{x:W-MARGIN,y:MARGIN},{x:MARGIN,y:H-MARGIN},{x:W-MARGIN,y:H-MARGIN}];
+/* ---------- pure logic (testable) ---------- */
+function pocketAt(x, y){
+  for(var i=0;i<4;i++){
+    var dx=x-POCKETS[i].x, dy=y-POCKETS[i].y;
+    if(dx*dx + dy*dy < POCKET_R*POCKET_R) return i;
+  }
+  return -1;
+}
+function coinValue(type){ return type==='white' ? 10 : type==='black' ? 20 : type==='queen' ? 50 : 0; }
+function collideDiscs(a, b){
+  /* equal-mass elastic collision along the line of centers */
+  var dx=b.x-a.x, dy=b.y-a.y;
+  var dist=Math.hypot(dx,dy) || 0.001;
+  var nx=dx/dist, ny=dy/dist;
+  var rvx=b.vx-a.vx, rvy=b.vy-a.vy;
+  var rel=rvx*nx + rvy*ny;
+  if(rel >= 0) return false;
+  var impulse=-rel;
+  a.vx -= impulse*nx; a.vy -= impulse*ny;
+  b.vx += impulse*nx; b.vy += impulse*ny;
+  return true;
+}
+function queenOutcome(queenPending, pocketedCoinThisShot){
+  if(!queenPending) return 'none';
+  return pocketedCoinThisShot ? 'covered' : 'returned';
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.04; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var coins, striker, phase, aiming, aimVec, score, shots, queenPending, pocketedThisShot, rafId, finished;
+var best=+(localStorage.getItem('makenCarromBest')||0);
+el('best').textContent=best;
+function makeCoins(){
+  var arr=[{ x:CENTER.x, y:CENTER.y, vx:0, vy:0, type:'queen', active:true }];
+  var i, ang;
+  for(i=0;i<6;i++){
+    ang=i/6*Math.PI*2;
+    arr.push({ x:CENTER.x+Math.cos(ang)*27, y:CENTER.y+Math.sin(ang)*27, vx:0, vy:0, type: i%2 ? 'white' : 'black', active:true });
+  }
+  for(i=0;i<12;i++){
+    ang=(i+0.5)/12*Math.PI*2;
+    arr.push({ x:CENTER.x+Math.cos(ang)*54, y:CENTER.y+Math.sin(ang)*54, vx:0, vy:0, type: i%2 ? 'black' : 'white', active:true });
+  }
+  return arr;
+}
+function reset(){
+  coins=makeCoins();
+  striker={ x:W/2, y:BASE_Y, vx:0, vy:0, active:true };
+  phase='place'; aiming=false; aimVec=null;
+  score=0; shots=0; queenPending=false; pocketedThisShot=false; finished=false;
+  hud(); draw();
+}
+function hud(){
+  el('score').textContent=score;
+  el('left').textContent=coins.filter(function(c){ return c.active; }).length;
+  el('shots').textContent=shots;
+  if(score>best){ best=score; localStorage.setItem('makenCarromBest',best); }
+  el('best').textContent=best;
+}
+function draw(){
+  /* board frame + surface */
+  ctx.fillStyle='#a4713a'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#e8c07a'; ctx.fillRect(22,22,W-44,H-44);
+  /* arrows + baselines deco */
+  ctx.strokeStyle='rgba(150,60,40,0.7)'; ctx.lineWidth=3;
+  ctx.strokeRect(BASE_X1-24, BASE_Y-24, (BASE_X2-BASE_X1)+48, 48);
+  ctx.beginPath(); ctx.moveTo(BASE_X1, BASE_Y); ctx.lineTo(BASE_X2, BASE_Y); ctx.stroke();
+  [86, H-86].forEach(function(y){
+    ctx.beginPath(); ctx.moveTo(BASE_X1, y); ctx.lineTo(BASE_X2, y); ctx.stroke();
+  });
+  /* center circles */
+  ctx.beginPath(); ctx.arc(CENTER.x, CENTER.y, 62, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(CENTER.x, CENTER.y, 17, 0, Math.PI*2);
+  ctx.fillStyle='rgba(200,40,40,0.5)'; ctx.fill();
+  /* pockets */
+  POCKETS.forEach(function(p){
+    ctx.beginPath(); ctx.arc(p.x, p.y, POCKET_R, 0, Math.PI*2);
+    ctx.fillStyle='#1a120b'; ctx.fill();
+    ctx.strokeStyle='#7c4a21'; ctx.lineWidth=4; ctx.stroke();
+  });
+  /* aim guide */
+  if(phase==='place' && !finished){
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.setLineDash([5,7]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(striker.x, striker.y); ctx.lineTo(striker.x, 60); ctx.stroke();
+    ctx.setLineDash([]);
+    if(aiming && aimVec){
+      var power=Math.min(1, Math.hypot(aimVec.x, aimVec.y)/130);
+      ctx.strokeStyle='#ef4444'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(striker.x, striker.y);
+      ctx.lineTo(striker.x - aimVec.x*1.6, striker.y - aimVec.y*1.6); ctx.stroke();
+      ctx.fillStyle='#111'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+      ctx.fillText('POWER '+Math.round(power*100)+'%', striker.x, striker.y+44);
+    }
+  }
+  /* coins */
+  coins.forEach(function(c){
+    if(!c.active) return;
+    ctx.beginPath(); ctx.arc(c.x, c.y, COIN_R, 0, Math.PI*2);
+    ctx.fillStyle = c.type==='white' ? '#f5efe0' : c.type==='black' ? '#2b2320' : '#d92626';
+    ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x, c.y, 5, 0, Math.PI*2);
+    ctx.strokeStyle = c.type==='black' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)'; ctx.lineWidth=1.5; ctx.stroke();
+  });
+  /* striker */
+  if(striker.active){
+    ctx.beginPath(); ctx.arc(striker.x, striker.y, STRIKER_R, 0, Math.PI*2);
+    ctx.fillStyle='#fdfdfd'; ctx.fill();
+    ctx.strokeStyle='#c02626'; ctx.lineWidth=3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(striker.x, striker.y, 6, 0, Math.PI*2);
+    ctx.fillStyle='#c02626'; ctx.fill();
+  }
+  if(queenPending){
+    ctx.fillStyle='#b91c1c'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔴 QUEEN — pocket another coin NOW to cover her!', W/2, 18);
+  }
+}
+function allStopped(){
+  var discs=coins.concat([striker]);
+  return discs.every(function(d){ return !d.active || Math.hypot(d.vx, d.vy) < 0.06; });
+}
+function stepPhysics(){
+  var discs=coins.filter(function(c){ return c.active; }).concat(striker.active ? [striker] : []);
+  discs.forEach(function(d){
+    d.x += d.vx; d.y += d.vy;
+    d.vx *= 0.988; d.vy *= 0.988;
+    if(Math.hypot(d.vx, d.vy) < 0.05){ d.vx=0; d.vy=0; }
+    /* walls (inside frame, pockets handled separately) */
+    var lo=22+ (d===striker?STRIKER_R:COIN_R), hi=W-22-(d===striker?STRIKER_R:COIN_R);
+    if(d.x < lo){ d.x=lo; d.vx=Math.abs(d.vx)*0.82; }
+    if(d.x > hi){ d.x=hi; d.vx=-Math.abs(d.vx)*0.82; }
+    if(d.y < lo){ d.y=lo; d.vy=Math.abs(d.vy)*0.82; }
+    if(d.y > H-22-(d===striker?STRIKER_R:COIN_R)){ d.y=H-22-(d===striker?STRIKER_R:COIN_R); d.vy=-Math.abs(d.vy)*0.82; }
+  });
+  /* collisions */
+  for(var i=0;i<discs.length;i++){
+    for(var j=i+1;j<discs.length;j++){
+      var a=discs[i], b=discs[j];
+      var dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy);
+      var minD=(a===striker||b===striker) ? STRIKER_R+COIN_R : COIN_R*2;
+      if(dist>0 && dist<minD){
+        var nx=dx/dist, ny=dy/dist, overlap=(minD-dist)/2;
+        a.x-=nx*overlap; a.y-=ny*overlap;
+        b.x+=nx*overlap; b.y+=ny*overlap;
+        if(collideDiscs(a,b)) beep(500+Math.random()*300, 0.02, 'square', 0.02);
+      }
+    }
+  }
+  /* pockets */
+  coins.forEach(function(c){
+    if(c.active && pocketAt(c.x, c.y) > -1){
+      c.active=false; c.vx=0; c.vy=0;
+      onCoinPocketed(c);
+    }
+  });
+  if(striker.active && pocketAt(striker.x, striker.y) > -1){
+    striker.active=false; striker.vx=0; striker.vy=0;
+    onStrikerFoul();
+  }
+}
+function onCoinPocketed(c){
+  if(c.type==='queen'){
+    queenPending=true;
+    el('msg').textContent='🔴 QUEEN pocketed! You must pocket another coin on this same break to cover her (+50)!';
+    beep(880,0.12,'sine',0.06);
+    hud(); return;
+  }
+  var v=coinValue(c.type);
+  score += v;
+  pocketedThisShot=true;
+  if(queenPending){
+    score += 50; queenPending=false;
+    el('msg').textContent='👑 QUEEN COVERED! +50, plus '+v+' for that coin!';
+    beep(1046,0.14,'sine',0.06);
+  } else {
+    el('msg').textContent='🎯 '+(c.type==='white'?'White':'Black')+' coin pocketed! +'+v;
+    beep(740,0.07,'sine',0.05);
+  }
+  hud();
+}
+function onStrikerFoul(){
+  score=Math.max(0, score-25);
+  if(queenPending){
+    queenPending=false;
+    coins.forEach(function(c){ if(c.type==='queen'){ c.active=true; c.x=CENTER.x; c.y=CENTER.y; c.vx=0; c.vy=0; } });
+    el('msg').textContent='🚫 FOUL! Striker pocketed (−25) and the uncovered queen returns to the center.';
+  } else {
+    el('msg').textContent='🚫 FOUL! Striker pocketed — penalty −25.';
+  }
+  beep(160,0.25,'sawtooth',0.06);
+  hud();
+}
+function endOfShot(){
+  phase='place';
+  striker.active=true; striker.x=W/2; striker.y=BASE_Y; striker.vx=0; striker.vy=0;
+  if(queenPending && !pocketedThisShot){
+    /* queen was pocketed on an earlier shot? No — queen must be covered on the SAME shot she fell.
+       Here: if she fell this shot and nothing else followed, she returns. */
+  }
+  if(queenPending){
+    queenPending=false;
+    coins.forEach(function(c){ if(c.type==='queen' && !c.active){ c.active=true; c.x=CENTER.x; c.y=CENTER.y; c.vx=0; c.vy=0; } });
+    el('msg').textContent='🔴 Queen NOT covered — she returns to the center!';
+    beep(300,0.15,'square',0.05);
+  }
+  pocketedThisShot=false;
+  var left=coins.filter(function(c){ return c.active; }).length;
+  if(left===0){
+    finished=true;
+    var bonus=Math.max(0, 300 - shots*10);
+    score += bonus;
+    el('msg').textContent='🏆 BOARD CLEARED in '+shots+' shots! Speed bonus +'+bonus+' — final score '+score+'.';
+    beep(880,0.12,'sine',0.07); setTimeout(function(){ beep(1174,0.18,'sine',0.07); }, 130);
+  }
+  hud(); draw();
+}
+function loop(){
+  if(phase==='moving'){
+    stepPhysics();
+    draw();
+    if(allStopped()){ endOfShot(); return; }
+    rafId=requestAnimationFrame(loop);
+  }
+}
+function shoot(vx, vy){
+  striker.vx=vx; striker.vy=vy;
+  shots++; phase='moving'; pocketedThisShot=false;
+  beep(240,0.05,'square',0.05);
+  hud();
+  cancelAnimationFrame(rafId); rafId=requestAnimationFrame(loop);
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+cvs.addEventListener('mousedown', function(e){
+  if(phase!=='place' || finished) return;
+  var p=posOf(e);
+  if(Math.hypot(p.x-striker.x, p.y-striker.y) < 56){ aiming=true; aimVec={x:0,y:0}; }
+  else striker.x=Math.max(BASE_X1, Math.min(BASE_X2, p.x));
+  draw();
+});
+cvs.addEventListener('mousemove', function(e){
+  if(phase!=='place' || finished) return;
+  var p=posOf(e);
+  if(aiming) aimVec={ x:p.x-striker.x, y:p.y-striker.y };
+  else if(e.buttons===0) striker.x=Math.max(BASE_X1, Math.min(BASE_X2, p.x));
+  draw();
+});
+document.addEventListener('mouseup', function(){
+  if(!aiming) return;
+  aiming=false;
+  if(aimVec && Math.hypot(aimVec.x, aimVec.y) > 14){
+    var power=Math.min(1, Math.hypot(aimVec.x, aimVec.y)/130);
+    var len=Math.hypot(aimVec.x, aimVec.y);
+    shoot(-aimVec.x/len * power * 17, -aimVec.y/len * power * 17);
+  }
+  aimVec=null; draw();
+});
+cvs.addEventListener('touchstart', function(e){
+  if(phase!=='place' || finished) return;
+  var p=posOf(e);
+  if(Math.hypot(p.x-striker.x, p.y-striker.y) < 64){ aiming=true; aimVec={x:0,y:0}; }
+  else striker.x=Math.max(BASE_X1, Math.min(BASE_X2, p.x));
+  draw(); e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchmove', function(e){
+  if(phase!=='place' || finished) return;
+  var p=posOf(e);
+  if(aiming) aimVec={ x:p.x-striker.x, y:p.y-striker.y };
+  else striker.x=Math.max(BASE_X1, Math.min(BASE_X2, p.x));
+  draw(); e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchend', function(){
+  if(!aiming) return;
+  aiming=false;
+  if(aimVec && Math.hypot(aimVec.x, aimVec.y) > 14){
+    var power=Math.min(1, Math.hypot(aimVec.x, aimVec.y)/130);
+    var len=Math.hypot(aimVec.x, aimVec.y);
+    shoot(-aimVec.x/len * power * 17, -aimVec.y/len * power * 17);
+  }
+  aimVec=null; draw();
+});
+el('newBtn').addEventListener('click', function(){ cancelAnimationFrame(rafId); reset(); el('msg').textContent='New board — slide the striker and shoot!'; });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ pocketAt:pocketAt, coinValue:coinValue, collideDiscs:collideDiscs, queenOutcome:queenOutcome, POCKETS:POCKETS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
