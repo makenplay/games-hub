@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Temple Dash Runner Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play the famous temple endless runner free online. Sprint through the temple, jump barriers, slide under traps, switch lanes and grab coins. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .ad-slot { width:100%; max-width:728px; min-height:50px; margin:6px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:11px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#1a2f1a 0%,#0d1f0d 60%,#0a0f22 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:58px; height:50px; font-size:20px; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🏛️ TEMPLE DASH</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">DISTANCE <b id="dist">0m</b></div>
+  <div class="stat">COINS <b id="coins">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="540"></canvas>
+<div id="msg">Press START — dodge, jump and slide through the temple!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pLeft">◀</button><button id="pJump">⬆</button><button id="pSlide">⬇</button><button id="pRight">▶</button>
+</div>
+<div class="keys">← → switch lane · ↑ / SPACE jump the barrier · ↓ slide under the trap · swipe works too</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=540, HORIZON=120, PLAYER_Y=452;
+var LANES_X=[92, 210, 328], VP_X=210;
+/* ---------- pure logic (testable) ---------- */
+function project(z){
+  /* z from 1 (far) to 0 (at player) -> scale + y */
+  var t = 1 - z;
+  return { scale: 0.15 + 0.85*t*t, y: HORIZON + (PLAYER_Y-HORIZON)*t*t };
+}
+function laneScreenX(lane, scale){
+  return VP_X + (LANES_X[lane]-VP_X)*scale;
+}
+function hitsObstacle(player, ob){
+  if(ob.z > 0.06 || ob.z < -0.05) return false;
+  if(ob.lane !== player.lane) return false;
+  if(ob.type === 'barrier') return player.state !== 'jump';
+  if(ob.type === 'trap') return player.state !== 'slide';
+  return true; /* block: any state hits */
+}
+function finalScore(dist, coins){ return Math.floor(dist) + coins*25; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var player, obstacles, coinsArr, dist, coinCount, speed, running, spawnT, lastTs;
+var best=+(localStorage.getItem('makenTempleBest')||0);
+el('best').textContent=best;
+function reset(){
+  player={ lane:1, x:LANES_X[1], state:'run', stateT:0 };
+  obstacles=[]; coinsArr=[]; dist=0; coinCount=0; speed=0.30; spawnT=0;
+}
+function spawn(){
+  var lane=(Math.random()*3)|0;
+  var roll=Math.random();
+  if(roll<0.62){
+    var types=['barrier','trap','block'];
+    obstacles.push({ lane:lane, z:1.15, type:types[(Math.random()*3)|0] });
+  } else {
+    for(var i=0;i<4;i++) coinsArr.push({ lane:lane, z:1.15 + i*0.09 });
+  }
+}
+function hud(){
+  el('dist').textContent=Math.floor(dist)+'m';
+  el('coins').textContent=coinCount;
+  var sc=finalScore(dist, coinCount);
+  el('score').textContent=sc;
+  if(sc>best){ best=sc; localStorage.setItem('makenTempleBest',best); }
+  el('best').textContent=best;
+}
+function draw(){
+  /* jungle bg */
+  ctx.fillStyle='#12260f'; ctx.fillRect(0,0,W,HORIZON);
+  ctx.fillStyle='#1d3a17';
+  for(var i=0;i<7;i++){ var tx=(i*67 + 30) % W; ctx.fillRect(tx, 40, 10, HORIZON-40); ctx.beginPath(); ctx.arc(tx+5, 36, 22, 0, Math.PI*2); ctx.fill(); }
+  /* track */
+  ctx.fillStyle='#3f3a2e';
+  ctx.beginPath();
+  ctx.moveTo(VP_X-26, HORIZON); ctx.lineTo(VP_X+26, HORIZON); ctx.lineTo(W-14, H); ctx.lineTo(14, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(250,204,21,0.35)'; ctx.lineWidth=2;
+  [0,1].forEach(function(k){
+    var lx1=VP_X + ((k===0? LANES_X[0]+59 : LANES_X[1]+59)-VP_X)*0.15;
+    ctx.beginPath(); ctx.moveTo(VP_X + ((k===0?151:269)-VP_X)*0.15, HORIZON);
+    ctx.lineTo(k===0?151:269, PLAYER_Y+58); ctx.stroke();
+  });
+  /* distance stripes */
+  ctx.fillStyle='rgba(255,255,255,0.10)';
+  for(var s=0;s<6;s++){
+    var zz=((dist*0.02 + s/6) % 1);
+    var pr=project(1-zz);
+    ctx.fillRect(30, pr.y, W-60, 3*pr.scale);
+  }
+  /* coins */
+  coinsArr.forEach(function(c){
+    var p=project(c.z), x=laneScreenX(c.lane, p.scale);
+    ctx.fillStyle='#facc15';
+    ctx.beginPath(); ctx.arc(x, p.y-26*p.scale, 10*p.scale, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#a16207';
+    ctx.beginPath(); ctx.arc(x, p.y-26*p.scale, 5*p.scale, 0, Math.PI*2); ctx.fill();
+  });
+  /* obstacles */
+  obstacles.forEach(function(ob){
+    var p=project(ob.z), x=laneScreenX(ob.lane, p.scale), w=64*p.scale;
+    if(ob.type==='barrier'){
+      ctx.fillStyle='#92400e'; ctx.fillRect(x-w/2, p.y-26*p.scale, w, 26*p.scale);
+      ctx.fillStyle='#f59e0b'; ctx.fillRect(x-w/2, p.y-26*p.scale, w, 6*p.scale);
+    } else if(ob.type==='trap'){
+      ctx.fillStyle='#57534e'; ctx.fillRect(x-w/2, p.y-64*p.scale, w, 20*p.scale);
+      ctx.fillStyle='#a8a29e'; ctx.fillRect(x-w/2, p.y-48*p.scale, 6*p.scale, 48*p.scale); ctx.fillRect(x+w/2-6*p.scale, p.y-48*p.scale, 6*p.scale, 48*p.scale);
+    } else {
+      ctx.fillStyle='#44403c'; ctx.fillRect(x-w/2, p.y-58*p.scale, w, 58*p.scale);
+      ctx.fillStyle='#78716c'; ctx.fillRect(x-w/2, p.y-58*p.scale, w, 8*p.scale);
+      ctx.fillStyle='#1c1917'; ctx.font=Math.round(26*p.scale)+'px Arial'; ctx.textAlign='center';
+      ctx.fillText('🗿', x, p.y-16*p.scale);
+    }
+  });
+  /* player */
+  var px=player.x, py=PLAYER_Y;
+  var jumpLift = player.state==='jump' ? Math.sin(Math.min(1, player.stateT/34)*Math.PI)*64 : 0;
+  var slideSquash = player.state==='slide' ? 16 : 0;
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(px, PLAYER_Y+34, 24, 7, 0, 0, Math.PI*2); ctx.fill();
+  ctx.font=(44-slideSquash)+'px Arial'; ctx.textAlign='center';
+  ctx.fillText('🏃', px, py - jumpLift + 30 - slideSquash);
+  if(player.state==='jump'){ ctx.fillStyle='#fbbf24'; ctx.font='13px Arial'; ctx.fillText('JUMP!', px, py-jumpLift-26); }
+  if(player.state==='slide'){ ctx.fillStyle='#7dd3fc'; ctx.font='13px Arial'; ctx.fillText('SLIDE!', px, py-44); }
+}
+function gameOver(){
+  running=false;
+  el('msg').textContent='💥 You crashed! Score '+finalScore(dist,coinCount)+' — press START to run again.';
+  beep(130,0.45,'sawtooth',0.08);
+  el('startBtn').textContent='▶ RUN AGAIN';
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7;
+  dist += speed*step*2.2;
+  speed = Math.min(0.85, speed + 0.00012*step*16);
+  spawnT -= dt;
+  if(spawnT<=0){ spawn(); spawnT = 620 - Math.min(300, dist*0.12) + Math.random()*260; }
+  var dz = speed*0.011*step;
+  obstacles.forEach(function(ob){ ob.z -= dz; });
+  coinsArr.forEach(function(c){ c.z -= dz; });
+  /* player lane glide */
+  player.x += (LANES_X[player.lane]-player.x)*0.28*step;
+  if(player.state!=='run'){
+    player.stateT += step;
+    if(player.stateT > (player.state==='jump'?34:26)){ player.state='run'; player.stateT=0; }
+  }
+  /* collisions + pickups */
+  for(var i=obstacles.length-1;i>=0;i--){
+    var ob=obstacles[i];
+    if(ob.z < -0.08){ obstacles.splice(i,1); continue; }
+    if(hitsObstacle(player, ob)){ draw(); gameOver(); return; }
+  }
+  for(var j=coinsArr.length-1;j>=0;j--){
+    var c=coinsArr[j];
+    if(c.z < -0.08){ coinsArr.splice(j,1); continue; }
+    if(Math.abs(c.z) < 0.06 && c.lane===player.lane && player.state!=='jump'){
+      coinsArr.splice(j,1); coinCount++; beep(920,0.06,'sine',0.06); hud();
+    }
+  }
+  hud(); draw();
+  requestAnimationFrame(loop);
+}
+function setLane(d){
+  if(!running) return;
+  player.lane=Math.max(0, Math.min(2, player.lane+d));
+  beep(280,0.03,'square',0.03);
+}
+function doJump(){ if(running && player.state==='run'){ player.state='jump'; player.stateT=0; beep(520,0.07,'sine',0.05); } }
+function doSlide(){ if(running && player.state==='run'){ player.state='slide'; player.stateT=0; beep(240,0.07,'sine',0.05); } }
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowLeft'){ setLane(-1); e.preventDefault(); }
+  else if(e.key==='ArrowRight'){ setLane(1); e.preventDefault(); }
+  else if(e.key==='ArrowUp' || e.key===' '){ doJump(); e.preventDefault(); }
+  else if(e.key==='ArrowDown'){ doSlide(); e.preventDefault(); }
+});
+function bindPad(id, fn){ var b=el(id); b.addEventListener('touchstart', function(e){ e.preventDefault(); fn(); }, {passive:false}); b.addEventListener('click', fn); }
+bindPad('pLeft', function(){ setLane(-1); });
+bindPad('pRight', function(){ setLane(1); });
+bindPad('pJump', doJump);
+bindPad('pSlide', doSlide);
+var tsX=null, tsY=null;
+cvs.addEventListener('touchstart', function(e){ tsX=e.touches[0].clientX; tsY=e.touches[0].clientY; }, {passive:true});
+cvs.addEventListener('touchend', function(e){
+  if(tsX===null) return;
+  var dx=e.changedTouches[0].clientX-tsX, dy=e.changedTouches[0].clientY-tsY;
+  if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>24) setLane(dx>0?1:-1); }
+  else { if(dy<-24) doJump(); else if(dy>24) doSlide(); }
+  tsX=null;
+}, {passive:true});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='Run! 🏃 Grab the gold coins.';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); draw();
+if(typeof module!=='undefined') module.exports={ project:project, laneScreenX:laneScreenX, hitsObstacle:hitsObstacle, finalScore:finalScore };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
