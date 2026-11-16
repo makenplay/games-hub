@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Checkers (Draughts) — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Checkers free online against the computer. Forced captures, multi-jumps, flying kings — classic draughts rules. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔴 CHECKERS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🔴 YOU <b id="youCount">12</b></div>
+  <div class="stat">⚫ CPU <b id="cpuCount">12</b></div>
+  <div class="stat">CAPTURED <b id="captured">0</b></div>
+  <div class="stat">WINS <b id="wins">0</b></div>
+</div>
+
+<canvas id="cv" width="440" height="440"></canvas>
+<div id="msg">Press NEW GAME. You are red — tap one of your pieces, then tap a glowing square.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW GAME</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Captures are FORCED — if you can jump, you must · chain multi-jumps in one turn · reach the far row to be crowned 👑</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Checkers</h2>
+  <p>Classic draughts against the computer, with the real rules: captures are forced, multi-jumps chain, and a piece that reaches the far row is crowned king and can move backwards. You play red, moving up the board; take all twelve black pieces — or block them so they can't move — to win.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap one of your red pieces: its legal squares glow (when a capture exists, only capturing pieces can move — that's the rule). Tap a glowing square to move. After a jump, if the same piece can jump again it stays selected — keep going. The CPU thinks two moves deep and never misses a forced capture, so guard your pieces and set traps.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Full rules engine: forced captures, multi-jumps and kinging</li>
+    <li>A two-ply CPU that values material, kings and advancement</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* board: 8x8 array; 0 empty, 1 red man, 2 red king, -1 black man, -2 black king. Red moves up (row decreasing). */
+/* ---------- pure logic (testable) ---------- */
+function startBoard(){
+  var b=[];
+  for(var r=0;r<8;r++){
+    b.push([]);
+    for(var c=0;c<8;c++){
+      var v=0;
+      if((r+c)%2===1){
+        if(r<3) v=-1;
+        else if(r>4) v=1;
+      }
+      b[r].push(v);
+    }
+  }
+  return b;
+}
+function sideOf(v){ return v>0 ? 1 : v<0 ? -1 : 0; }
+function dirsFor(v){
+  if(Math.abs(v)===2) return [[-1,-1],[-1,1],[1,-1],[1,1]];
+  return v>0 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
+}
+function inB(r, c){ return r>=0 && r<8 && c>=0 && c<8; }
+function capturesFrom(board, r, c){
+  var v=board[r][c];
+  if(!v) return [];
+  var out=[];
+  dirsFor(v).forEach(function(d){
+    var mr=r+d[0], mc=c+d[1], lr=r+2*d[0], lc=c+2*d[1];
+    if(inB(lr, lc) && board[mr][mc]!==0 && sideOf(board[mr][mc])===-sideOf(v) && board[lr][lc]===0){
+      out.push({ from:[r, c], to:[lr, lc], cap:[mr, mc] });
+    }
+  });
+  return out;
+}
+function stepsFrom(board, r, c){
+  var v=board[r][c];
+  if(!v) return [];
+  var out=[];
+  dirsFor(v).forEach(function(d){
+    var nr=r+d[0], nc=c+d[1];
+    if(inB(nr, nc) && board[nr][nc]===0) out.push({ from:[r, c], to:[nr, nc], cap:null });
+  });
+  return out;
+}
+function legalMoves(board, side){
+  var caps=[];
+  var r, c;
+  for(r=0;r<8;r++) for(c=0;c<8;c++){
+    if(sideOf(board[r][c])===side) caps=caps.concat(capturesFrom(board, r, c));
+  }
+  if(caps.length) return caps;
+  var steps=[];
+  for(r=0;r<8;r++) for(c=0;c<8;c++){
+    if(sideOf(board[r][c])===side) steps=steps.concat(stepsFrom(board, r, c));
+  }
+  return steps;
+}
+function applyMove(board, move){
+  var nb=board.map(function(row){ return row.slice(); });
+  var v=nb[move.from[0]][move.from[1]];
+  nb[move.from[0]][move.from[1]]=0;
+  if(move.cap) nb[move.cap[0]][move.cap[1]]=0;
+  if(v===1 && move.to[0]===0) v=2;
+  if(v===-1 && move.to[0]===7) v=-2;
+  nb[move.to[0]][move.to[1]]=v;
+  return nb;
+}
+function countPieces(board){
+  var red=0, black=0;
+  board.forEach(function(row){ row.forEach(function(v){ if(v>0) red++; else if(v<0) black++; }); });
+  return { red:red, black:black };
+}
+function evaluate(board){
+  /* from black's (CPU) perspective */
+  var score=0;
+  board.forEach(function(row, r){
+    row.forEach(function(v){
+      if(v===1) score-=100 + (7-r)*4;
+      else if(v===2) score-=300;
+      else if(v===-1) score+=100 + r*4;
+      else if(v===-2) score+=300;
+    });
+  });
+  return score;
+}
+function cpuBestMove(board){
+  var moves=legalMoves(board, -1);
+  if(!moves.length) return null;
+  var best=null, bestScore=-Infinity;
+  moves.forEach(function(m){
+    var b1=applyMove(board, m);
+    /* after a capture, the same piece may capture again — model as: opponent's best reply value, plus capture chains counted by re-checking */
+    var score;
+    var replies=legalMoves(b1, 1);
+    if(!replies.length) score=100000;
+    else {
+      var worst=Infinity;
+      replies.forEach(function(rm){
+        var b2=applyMove(b1, rm);
+        var e=evaluate(b2);
+        if(e<worst) worst=e;
+      });
+      score=worst;
+    }
+    if(m.cap) score+=1; /* tiny nudge to prefer captures among equals */
+    if(score>bestScore){ bestScore=score; best=m; }
+  });
+  return best;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var CELL=55;
+var board, selected, playing, capturedByYou, chainPiece, gameOver;
+var wins=+(localStorage.getItem('makenCheckersWins')||0);
+el('wins').textContent=wins;
+function hud(){
+  var counts=countPieces(board);
+  el('youCount').textContent=counts.red;
+  el('cpuCount').textContent=counts.black;
+  el('captured').textContent=capturedByYou;
+  el('wins').textContent=wins;
+}
+function legalTargets(){
+  if(!selected) return [];
+  var moves=legalMoves(board, 1);
+  return moves.filter(function(m){ return m.from[0]===selected[0] && m.from[1]===selected[1]; });
+}
+function draw(){
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    ctx.fillStyle= (r+c)%2===0 ? '#e7d3ac' : '#9a6a3a';
+    ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+  }
+  var targets=legalTargets();
+  targets.forEach(function(m){
+    ctx.fillStyle='rgba(250,204,21,0.55)';
+    ctx.fillRect(m.to[1]*CELL+4, m.to[0]*CELL+4, CELL-8, CELL-8);
+  });
+  if(selected){
+    ctx.strokeStyle='#38bdf8'; ctx.lineWidth=3.4;
+    ctx.strokeRect(selected[1]*CELL+2, selected[0]*CELL+2, CELL-4, CELL-4);
+  }
+  for(var r2=0;r2<8;r2++) for(var c2=0;c2<8;c2++){
+    var v=board[r2][c2];
+    if(!v) continue;
+    var x=c2*CELL+CELL/2, y=r2*CELL+CELL/2;
+    ctx.fillStyle= v>0 ? '#dc2626' : '#1f2937';
+    ctx.beginPath(); ctx.arc(x, y, 21, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle= v>0 ? '#f87171' : '#4b5563';
+    ctx.beginPath(); ctx.arc(x, y-3, 15.5, 0, Math.PI*2); ctx.fill();
+    if(Math.abs(v)===2){
+      ctx.font='17px Arial'; ctx.textAlign='center';
+      ctx.fillText('👑', x, y+6);
+    }
+  }
+  if(!playing && !gameOver){
+    ctx.fillStyle='rgba(7,11,24,0.5)'; ctx.fillRect(0, 0, 440, 440);
+    ctx.fillStyle='#fff'; ctx.font='bold 23px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔴 CHECKERS', 220, 214);
+    ctx.font='14.5px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Press NEW GAME — you are red', 220, 242);
+  }
+  hud();
+}
+function reset(){
+  board=startBoard();
+  selected=null;
+  playing=false;
+  gameOver=false;
+  capturedByYou=0;
+  chainPiece=null;
+  draw();
+}
+function checkEnd(){
+  var counts=countPieces(board);
+  var redMoves=legalMoves(board, 1).length;
+  var blackMoves=legalMoves(board, -1).length;
+  if(counts.black===0 || blackMoves===0){
+    gameOver=true; playing=false;
+    wins++;
+    localStorage.setItem('makenCheckersWins', wins);
+    el('msg').textContent='🎉 YOU WIN! '+(counts.black===0 ? 'All black pieces captured.' : 'Black has no legal moves.');
+    beep(1180,0.2,'sine',0.06);
+    draw();
+    return true;
+  }
+  if(counts.red===0 || redMoves===0){
+    gameOver=true; playing=false;
+    el('msg').textContent='🤖 CPU WINS — '+(counts.red===0 ? 'all your pieces were captured.' : 'you have no legal moves.');
+    beep(150,0.26,'sawtooth',0.07);
+    draw();
+    return true;
+  }
+  return false;
+}
+function playerMove(move){
+  board=applyMove(board, move);
+  if(move.cap){ capturedByYou++; beep(760,0.06,'sine',0.05); }
+  else beep(520,0.04,'square',0.03);
+  /* chain capture? */
+  if(move.cap){
+    var more=capturesFrom(board, move.to[0], move.to[1]);
+    if(more.length){
+      selected=move.to;
+      chainPiece=move.to;
+      el('msg').textContent='🔴 Jump again! Multi-capture in progress…';
+      draw();
+      return;
+    }
+  }
+  selected=null;
+  chainPiece=null;
+  draw();
+  if(checkEnd()) return;
+  el('msg').textContent='⚫ CPU is thinking…';
+  setTimeout(cpuTurn, 550);
+}
+function cpuTurn(){
+  if(gameOver) return;
+  var move=cpuBestMove(board);
+  if(!move){ checkEnd(); return; }
+  board=applyMove(board, move);
+  beep(420,0.04,'square',0.03);
+  if(move.cap){
+    var more=capturesFrom(board, move.to[0], move.to[1]);
+    if(more.length){
+      draw();
+      el('msg').textContent='⚫ CPU jumps again…';
+      setTimeout(function(){
+        /* continue the chain with the best capture from that piece */
+        var caps=capturesFrom(board, move.to[0], move.to[1]);
+        var next=caps[0];
+        board=applyMove(board, next);
+        beep(420,0.04,'square',0.03);
+        var more2=capturesFrom(board, next.to[0], next.to[1]);
+        draw();
+        if(more2.length){ setTimeout(cpuTurnChain, 450, next.to); return; }
+        if(checkEnd()) return;
+        el('msg').textContent='🔴 Your move.';
+        draw();
+      }, 550);
+      return;
+    }
+  }
+  draw();
+  if(checkEnd()) return;
+  el('msg').textContent='🔴 Your move.'+(legalMoves(board, 1).length && legalMoves(board, 1)[0].cap ? ' A capture is available — captures are forced!' : '');
+  draw();
+}
+function cpuTurnChain(pos){
+  if(gameOver) return;
+  var caps=capturesFrom(board, pos[0], pos[1]);
+  if(!caps.length){
+    if(checkEnd()) return;
+    el('msg').textContent='🔴 Your move.';
+    draw();
+    return;
+  }
+  var next=caps[0];
+  board=applyMove(board, next);
+  beep(420,0.04,'square',0.03);
+  draw();
+  var more=capturesFrom(board, next.to[0], next.to[1]);
+  if(more.length){ setTimeout(cpuTurnChain, 450, next.to); return; }
+  if(checkEnd()) return;
+  el('msg').textContent='🔴 Your move.';
+  draw();
+}
+function cellFromEvent(e){
+  var r=cvs.getBoundingClientRect();
+  var x=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var y=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  var c=Math.floor(x*(440/r.width)/CELL), rr=Math.floor(y*(440/r.height)/CELL);
+  if(rr<0 || c<0 || rr>=8 || c>=8) return null;
+  return [rr, c];
+}
+function tapCell(cell){
+  if(!playing || gameOver) return;
+  var r=cell[0], c=cell[1];
+  if(chainPiece){
+    var targets=legalTargets();
+    for(var i=0;i<targets.length;i++){
+      if(targets[i].to[0]===r && targets[i].to[1]===c){ playerMove(targets[i]); return; }
+    }
+    return;
+  }
+  if(selected){
+    var t2=legalTargets();
+    for(var j=0;j<t2.length;j++){
+      if(t2[j].to[0]===r && t2[j].to[1]===c){ playerMove(t2[j]); return; }
+    }
+  }
+  if(sideOf(board[r][c])===1){
+    /* only allow selecting pieces that have a legal move */
+    var moves=legalMoves(board, 1).filter(function(m){ return m.from[0]===r && m.from[1]===c; });
+    if(moves.length){
+      selected=[r, c];
+      beep(600,0.03,'square',0.025);
+      draw();
+    } else if(legalMoves(board, 1).length && legalMoves(board, 1)[0].cap){
+      el('msg').textContent='🔴 A capture is forced — only the glowing pieces can move.';
+    }
+  }
+}
+cvs.addEventListener('mousedown', function(e){
+  var cell=cellFromEvent(e);
+  if(cell) tapCell(cell);
+});
+cvs.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  var cell=cellFromEvent(e);
+  if(cell) tapCell(cell);
+}, {passive:false});
+el('startBtn').addEventListener('click', function(){
+  reset();
+  playing=true;
+  el('msg').textContent='🔴 Your move — tap a red piece.';
+  draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ startBoard:startBoard, legalMoves:legalMoves, capturesFrom:capturesFrom, applyMove:applyMove, countPieces:countPieces, cpuBestMove:cpuBestMove, evaluate:evaluate };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

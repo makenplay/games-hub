@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dominoes — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Dominoes free online against the computer. Match the ends, draw from the boneyard, empty your hand or win on pips. First to 100. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #table { background:#14532d; border:2px solid #166534; border-radius:14px; padding:14px 10px 18px; width:min(780px,96vw); }
+  .zone { text-align:center; margin-bottom:10px; }
+  .zone .lbl { font-size:11.5px; letter-spacing:2px; color:#bbf7d0; margin-bottom:5px; }
+  .hand { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; min-height:66px; }
+  .tile { background:#f8fafc; color:#111827; border:1.5px solid #94a3b8; border-radius:7px; font-weight:900; display:flex; align-items:center; justify-content:center; gap:3px; box-shadow:0 1px 3px rgba(0,0,0,0.35); user-select:none; }
+  .tile.h { width:62px; height:32px; font-size:15.5px; }
+  .tile.v { width:32px; height:62px; font-size:15.5px; flex-direction:column; }
+  .tile .sep { background:#94a3b8; }
+  .tile.h .sep { width:2px; height:20px; }
+  .tile.v .sep { width:20px; height:2px; }
+  .tile.back { background:repeating-linear-gradient(45deg,#0f766e,#0f766e 6px,#115e59 6px,#115e59 12px); border-color:#042f2e; color:transparent; }
+  .tile.playable { cursor:pointer; box-shadow:0 0 0 3px #facc15; }
+  .tile.sel { box-shadow:0 0 0 3.5px #38bdf8; transform:translateY(-5px); }
+  .tile.dim { opacity:0.55; }
+  #chain { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; align-items:center; min-height:70px; background:rgba(0,0,0,0.22); border-radius:10px; padding:8px; margin:6px 0; }
+  #ends { text-align:center; font-size:13.5px; color:#fde68a; font-weight:700; min-height:18px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn:disabled { opacity:0.42; cursor:default; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🁢 DOMINOES</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">YOU <b id="scoreYou">0</b></div>
+  <div class="stat">CPU <b id="scoreCpu">0</b></div>
+  <div class="stat">ROUND <b id="round">1</b></div>
+  <div class="stat">🂠 BONEYARD <b id="boneyard">14</b></div>
+  <div class="stat">FIRST TO <b>100</b></div>
+</div>
+
+<div id="table">
+  <div class="zone">
+    <div class="lbl">🤖 CPU TILES · <span id="cpuCount">7</span></div>
+    <div class="hand" id="cpuHand"></div>
+  </div>
+  <div id="ends"></div>
+  <div id="chain"></div>
+  <div class="zone">
+    <div class="lbl">🧑 YOUR TILES — gold outline = playable</div>
+    <div class="hand" id="yourHand"></div>
+  </div>
+</div>
+<div id="msg">Press NEW ROUND. Playable tiles glow gold — click one, then pick an end if it fits both.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW ROUND</button>
+  <button class="btn" id="drawBtn" disabled>🂠 DRAW TILE</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Classic draw game with a double-6 set · match either open end · no play? Draw until you can — or pass when the boneyard is empty</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Dominoes</h2>
+  <p>The classic double-6 draw game against the computer. Seven tiles each, a growing chain on the table, and one simple rule: match an open end. Empty your hand to score everything left in the CPU's hand — or, if the game blocks, the lower pip count wins the difference. First to 100 takes the match.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Your playable tiles glow gold. Click one to play it — if it fits both ends you'll be asked which side; if it fits only one, it goes there automatically. No matching tile? DRAW from the boneyard until you find one (drawing ends your turn once you play). The CPU plays by the same rules. Watch the open ends and hold onto your doubles — they're the hardest tiles to shed.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Full double-6 set with boneyard draws and blocked-game pip scoring</li>
+    <li>Playable-tile highlighting and both-ends choice, no rule lookups needed</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* tile: [a, b] with a<=b */
+/* ---------- pure logic (testable) ---------- */
+function makeSet(){
+  var set=[];
+  for(var a=0;a<=6;a++) for(var b=a;b<=6;b++) set.push([a, b]);
+  for(var i=set.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=set[i]; set[i]=set[j]; set[j]=t;
+  }
+  return set;
+}
+function pips(hand){
+  return hand.reduce(function(sum, t){ return sum+t[0]+t[1]; }, 0);
+}
+function fits(tile, end){
+  return tile[0]===end || tile[1]===end;
+}
+function playableTiles(hand, left, right){
+  if(left===null) return hand.map(function(_, i){ return i; });
+  var out=[];
+  hand.forEach(function(t, i){
+    if(fits(t, left) || fits(t, right)) out.push(i);
+  });
+  return out;
+}
+function orient(tile, end, side){
+  /* returns the [inner, outer] arrangement when placed on the given side */
+  if(side==='L'){
+    /* tile's right half touches the chain's left end: result [outer, inner] with inner === end */
+    return tile[1]===end ? [tile[0], tile[1]] : [tile[1], tile[0]];
+  }
+  /* side R: tile's left half touches the chain's right end */
+  return tile[0]===end ? [tile[0], tile[1]] : [tile[1], tile[0]];
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var you, cpu, boneyard, chain, round, scoreYou, scoreCpu, turn, roundOver, selectedIdx, passes;
+function ends(){
+  if(!chain.length) return { left:null, right:null };
+  return { left:chain[0][0], right:chain[chain.length-1][1] };
+}
+function hud(){
+  el('scoreYou').textContent=scoreYou;
+  el('scoreCpu').textContent=scoreCpu;
+  el('round').textContent=round;
+  el('boneyard').textContent=boneyard ? boneyard.length : 0;
+  el('cpuCount').textContent=cpu ? cpu.length : 0;
+  var e=ends();
+  el('ends').textContent= chain && chain.length ? 'Open ends: ◀ '+e.left+' · '+e.right+' ▶' : 'The chain is empty — any tile starts.';
+  el('drawBtn').disabled= !(turn==='you' && !roundOver);
+}
+function tileEl(tile, cls, vertical){
+  var d=document.createElement('div');
+  d.className='tile '+(vertical ? 'v' : 'h')+(cls ? ' '+cls : '');
+  d.innerHTML='<span>'+tile[0]+'</span><span class="sep"></span><span>'+tile[1]+'</span>';
+  return d;
+}
+function render(){
+  var cpuEl=el('cpuHand');
+  cpuEl.innerHTML='';
+  cpu.forEach(function(){
+    var b=tileEl([0,0], 'back', false);
+    b.innerHTML='';
+    cpuEl.appendChild(b);
+  });
+  var chainEl=el('chain');
+  chainEl.innerHTML='';
+  chain.forEach(function(t){ chainEl.appendChild(tileEl(t, '', false)); });
+  var yourEl=el('yourHand');
+  yourEl.innerHTML='';
+  var e=ends();
+  var play= turn==='you' && !roundOver ? playableTiles(you, e.left, e.right) : [];
+  you.forEach(function(t, idx){
+    var isPlay=play.indexOf(idx)>=0;
+    var ce=tileEl(t, (isPlay ? 'playable' : 'dim')+(selectedIdx===idx ? ' sel' : ''), false);
+    (function(i){
+      ce.addEventListener('click', function(){ clickTile(i); });
+    })(idx);
+    yourEl.appendChild(ce);
+  });
+  hud();
+}
+function newRound(){
+  var set=makeSet();
+  you=set.slice(0, 7);
+  cpu=set.slice(7, 14);
+  boneyard=set.slice(14);
+  chain=[];
+  selectedIdx=null;
+  passes=0;
+  roundOver=false;
+  /* highest double starts; else the player with the heaviest tile starts — simplified: you start round 1, then alternate */
+  turn= (round%2===1) ? 'you' : 'cpu';
+  el('msg').textContent= turn==='you' ? '🎲 Round '+round+' — you open. Click any tile to start the chain.' : '🎲 Round '+round+' — CPU opens.';
+  render();
+  if(turn==='cpu') setTimeout(cpuTurn, 700);
+}
+function placeTile(hand, idx, side){
+  var tile=hand.splice(idx, 1)[0];
+  var e=ends();
+  if(e.left===null){
+    chain.push([tile[0], tile[1]]);
+    return tile;
+  }
+  if(side==='L'){
+    var placedL=orient(tile, e.left, 'L');
+    chain.unshift(placedL);
+  } else {
+    var placedR=orient(tile, e.right, 'R');
+    chain.push(placedR);
+  }
+  return tile;
+}
+function clickTile(idx){
+  if(roundOver || turn!=='you') return;
+  var e=ends();
+  var tile=you[idx];
+  if(e.left===null){
+    placeTile(you, idx, 'R');
+    afterYourMove('You opened with '+tile[0]+'-'+tile[1]+'.');
+    return;
+  }
+  var fitL=fits(tile, e.left), fitR=fits(tile, e.right);
+  if(!fitL && !fitR) return;
+  if(fitL && fitR && e.left!==e.right){
+    if(selectedIdx===idx){
+      placeTile(you, idx, 'R');
+      selectedIdx=null;
+      afterYourMove('Played '+tile[0]+'-'+tile[1]+' on the right.');
+    } else {
+      selectedIdx=idx;
+      el('msg').textContent='🁢 That tile fits BOTH ends — click it again for the RIGHT end, or click the ◀ LEFT button that appears.';
+      showLeftButton(idx);
+      render();
+    }
+    return;
+  }
+  placeTile(you, idx, fitL ? 'L' : 'R');
+  afterYourMove('Played '+tile[0]+'-'+tile[1]+'.');
+}
+function showLeftButton(idx){
+  var msg=el('msg');
+  var b=document.createElement('button');
+  b.className='btn';
+  b.textContent='◀ PLAY LEFT';
+  b.style.marginLeft='8px';
+  b.addEventListener('click', function(){
+    var tile=you[idx];
+    placeTile(you, idx, 'L');
+    selectedIdx=null;
+    afterYourMove('Played '+tile[0]+'-'+tile[1]+' on the left.');
+  });
+  msg.appendChild(b);
+}
+function afterYourMove(text){
+  selectedIdx=null;
+  beep(620,0.04,'square',0.03);
+  if(you.length===0){ endRound('you'); return; }
+  if(checkBlocked()) return;
+  turn='cpu';
+  el('msg').textContent=text+' CPU is thinking…';
+  render();
+  setTimeout(cpuTurn, 700);
+}
+function cpuTurn(){
+  if(roundOver) return;
+  var e=ends();
+  var play=playableTiles(cpu, e.left, e.right);
+  while(play.length===0 && boneyard.length){
+    cpu.push(boneyard.pop());
+    play=playableTiles(cpu, ends().left, ends().right);
+  }
+  if(play.length===0){
+    el('msg').textContent='🤖 CPU has no play and the boneyard is empty — it passes.';
+    if(checkBlocked(true)) return;
+    turn='you';
+    render();
+    return;
+  }
+  /* CPU: play the tile with the most pips, preferring the end that keeps its options open (simple: highest pips) */
+  var bestI=play[0], bestPips=-1;
+  play.forEach(function(i){
+    var p=cpu[i][0]+cpu[i][1];
+    if(p>bestPips){ bestPips=p; bestI=i; }
+  });
+  var tile=cpu[bestI];
+  var ee=ends();
+  var side= fits(tile, ee.left) && !fits(tile, ee.right) ? 'L' : 'R';
+  if(ee.left===null) side='R';
+  placeTile(cpu, bestI, side);
+  beep(500,0.04,'square',0.03);
+  if(cpu.length===0){ endRound('cpu'); return; }
+  if(checkBlocked()) return;
+  turn='you';
+  var e2=ends();
+  var yourPlay=playableTiles(you, e2.left, e2.right);
+  el('msg').textContent='🤖 CPU played '+tile[0]+'-'+tile[1]+'. '+(yourPlay.length ? 'Your turn.' : 'You have no match — DRAW a tile.');
+  render();
+}
+function checkBlocked(cpuJustPassed){
+  var e=ends();
+  if(!chain.length) return false;
+  var youCan=playableTiles(you, e.left, e.right).length>0;
+  var cpuCan=playableTiles(cpu, e.left, e.right).length>0;
+  if(boneyard.length===0 && !youCan && !cpuCan){
+    endRound('blocked');
+    return true;
+  }
+  return false;
+}
+function endRound(how){
+  roundOver=true;
+  var youPips=pips(you), cpuPips=pips(cpu);
+  var text='';
+  if(how==='you'){
+    scoreYou+=cpuPips;
+    text='🎉 You emptied your hand! +'+cpuPips+' points (CPU\u2019s leftover pips).';
+  } else if(how==='cpu'){
+    scoreCpu+=youPips;
+    text='🤖 CPU emptied its hand. It scores +'+youPips+' (your leftover pips).';
+  } else {
+    if(youPips<cpuPips){
+      var gain=cpuPips-youPips;
+      scoreYou+=gain;
+      text='🎉 Blocked game — your '+youPips+' pips beat CPU\u2019s '+cpuPips+'. +'+gain+' points.';
+    } else if(cpuPips<youPips){
+      var cgain=youPips-cpuPips;
+      scoreCpu+=cgain;
+      text='🤖 Blocked game — CPU\u2019s '+cpuPips+' pips beat your '+youPips+'. CPU +'+cgain+'.';
+    } else {
+      text='🤝 Blocked game, pips tied at '+youPips+' — no points.';
+    }
+  }
+  beep(880,0.16,'sine',0.055);
+  if(scoreYou>=100 || scoreCpu>=100){
+    text+=' 🏆 MATCH OVER: '+(scoreYou>=100 ? 'YOU WIN!' : 'CPU wins.')+' Press NEW ROUND for a fresh match.';
+    round=1; scoreYou=0; scoreCpu=0;
+  } else {
+    round++;
+    text+=' Press NEW ROUND for round '+round+'.';
+  }
+  el('msg').textContent=text;
+  turn='over';
+  render();
+}
+el('startBtn').addEventListener('click', newRound);
+el('drawBtn').addEventListener('click', function(){
+  if(roundOver || turn!=='you') return;
+  var e=ends();
+  if(playableTiles(you, e.left, e.right).length>0){
+    el('msg').textContent='🁢 You already have a playable tile — no need to draw.';
+    return;
+  }
+  if(boneyard.length){
+    you.push(boneyard.pop());
+    beep(520,0.04,'square',0.03);
+    var e2=ends();
+    el('msg').textContent= playableTiles(you, e2.left, e2.right).length ? '🂠 Drew a tile — and it plays! Click it.' : '🂠 Drew a tile — still no match. Draw again or it passes to the CPU when the boneyard empties.';
+    if(!boneyard.length && playableTiles(you, e2.left, e2.right).length===0){
+      if(checkBlocked()) return;
+      turn='cpu';
+      setTimeout(cpuTurn, 700);
+    }
+    render();
+  }
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+round=1; scoreYou=0; scoreCpu=0;
+you=[]; cpu=[]; boneyard=makeSet().slice(0, 14); chain=[]; turn='you'; roundOver=true; selectedIdx=null;
+render();
+if(typeof module!=='undefined') module.exports={ makeSet:makeSet, pips:pips, fits:fits, playableTiles:playableTiles, orient:orient };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
