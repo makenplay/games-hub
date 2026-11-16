@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Formula Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play formula racing free online. Three laps of a full grand prix circuit against 3 rival cars — stay on the tarmac, grass is slow. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#3f6212; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏎️ FORMULA RACING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LAP <b id="lap">1 / 3</b></div>
+  <div class="stat">POSITION <b id="pos">4th</b></div>
+  <div class="stat">⏱️ <b id="time">0.0</b></div>
+  <div class="stat">BEST LAP <b id="bestLap">–</b></div>
+  <div class="stat">PODIUMS <b id="wins">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Lights out! Follow the gold checkpoint arrow — grass kills your speed, so clip the corners on tarmac.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ LIGHTS OUT!</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">W/↑ gas · S/↓ brake · A/D steer · 3 laps · checkpoints must be taken in order — no shortcutting the circuit</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Formula Racing</h2>
+  <p>A full grand prix circuit in miniature: one long loop with sweepers and a hairpin, three laps, and three rival cars that race the same racing line. Positions are live, lap times are kept, and the grass is exactly as slow as it should be.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Accelerate with W/↑ or GAS, brake with S/↓, steer with A/D. Pass each gold checkpoint in order (the arrow points to the next one) to advance your lap. The race ends after 3 laps — finish in the top 3 for a podium, win it for the trophy count.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A real closed circuit with checkpoint-verified laps — no cutting corners</li>
+    <li>Three AI rivals with individual pace, live positions and lap timing</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, ROAD=86;
+/* circuit centreline loop (world coords; world is 640x400 fitted, no scrolling) */
+var LINE=[[110,320],[300,330],[470,318],[548,262],[520,176],[560,96],[430,66],[300,86],[176,64],[96,120],[128,214],[92,272]];
+var CPS=[];
+(function(){
+  /* checkpoints at every line vertex */
+  for(var i=0;i<LINE.length;i++) CPS.push({ x:LINE[i][0], y:LINE[i][1] });
+})();
+/* ---------- pure logic (testable) ---------- */
+function distToSeg(px, py, ax, ay, bx, by){
+  var dx=bx-ax, dy=by-ay;
+  var L2=dx*dx+dy*dy;
+  var t= L2 ? ((px-ax)*dx + (py-ay)*dy)/L2 : 0;
+  t=Math.max(0, Math.min(1, t));
+  var cx=ax+t*dx, cy=ay+t*dy;
+  return Math.hypot(px-cx, py-cy);
+}
+function distToLine(x, y){
+  var best=1e9;
+  for(var i=0;i<LINE.length;i++){
+    var a=LINE[i], b=LINE[(i+1)%LINE.length];
+    var d=distToSeg(x, y, a[0], a[1], b[0], b[1]);
+    if(d<best) best=d;
+  }
+  return best;
+}
+function onTrack(x, y){
+  return distToLine(x, y) <= ROAD/2;
+}
+function progressOf(car){
+  /* total progress = laps*1000 + cp index*10 - dist to next cp (smaller=further) */
+  return car.lap*10000 + car.nextCp*100 - Math.min(99, Math.hypot(car.x-CPS[car.nextCp].x, car.y-CPS[car.nextCp].y));
+}
+function positionOf(you, rivals){
+  var p=1, yp=progressOf(you);
+  rivals.forEach(function(r){ if(progressOf(r) > yp) p++; });
+  return p;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, you, rivals, raceTime, lapStart, bestLap, finished, keys, rafId, lastTick, countdown;
+var wins=+(localStorage.getItem('makenFormulaWins')||0);
+el('wins').textContent=wins;
+function mkCar(x, y, ang, color, ai){
+  return { x:x, y:y, ang:ang, vx:0, vy:0, nextCp:1, lap:0, color:color, ai:ai, pace:0.92+Math.random()*0.14, finished:false, et:0 };
+}
+function reset(){
+  playing=false; finished=false;
+  you=mkCar(110, 306, 0, '#2563eb', false);
+  rivals=[
+    mkCar(110, 334, 0, '#dc2626', true),
+    mkCar(66, 306, 0, '#f59e0b', true),
+    mkCar(66, 334, 0, '#16a34a', true)
+  ];
+  raceTime=0; lapStart=0; bestLap=0; countdown=0;
+  keys={};
+  hud(); draw();
+}
+function hud(){
+  el('lap').textContent=Math.min(3, you.lap+1)+' / 3';
+  var p=positionOf(you, rivals);
+  el('pos').textContent= p+(p===1?'st':p===2?'nd':p===3?'rd':'th');
+  el('time').textContent=raceTime.toFixed(1);
+  el('bestLap').textContent= bestLap ? bestLap.toFixed(1)+'s' : '–';
+  el('wins').textContent=wins;
+}
+function drawCarShape(c, isYou){
+  ctx.save();
+  ctx.translate(c.x, c.y);
+  ctx.rotate(c.ang);
+  ctx.fillStyle='#111827';
+  ctx.fillRect(-13, -13, 9, 26);      /* rear wing */
+  ctx.fillRect(13, -11, 7, 22);       /* nose wing */
+  ctx.fillStyle=c.color;
+  ctx.fillRect(-11, -6, 24, 12);
+  ctx.fillRect(2, -3.4, 14, 6.8);
+  ctx.fillStyle='#e5e7eb';
+  ctx.beginPath(); ctx.arc(-1, 0, 3.4, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if(isYou){
+    ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+    ctx.fillText('YOU', c.x, c.y-18);
+  }
+}
+function draw(){
+  /* grass texture */
+  ctx.fillStyle='rgba(0,0,0,0.08)';
+  for(var i=0;i<40;i++) ctx.fillRect((i*97)%W, (i*61)%H, 22, 3);
+  /* track: thick polyline loop */
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.strokeStyle='#d6d3d1'; ctx.lineWidth=ROAD+10;
+  ctx.beginPath();
+  LINE.forEach(function(p, i){ i===0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]); });
+  ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle='#404040'; ctx.lineWidth=ROAD;
+  ctx.beginPath();
+  LINE.forEach(function(p, i){ i===0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]); });
+  ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=2; ctx.setLineDash([12,12]);
+  ctx.beginPath();
+  LINE.forEach(function(p, i){ i===0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]); });
+  ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  /* start line */
+  ctx.save();
+  ctx.translate(110, 320);
+  for(var s=0;s<6;s++){
+    ctx.fillStyle= s%2 ? '#111' : '#fff';
+    ctx.fillRect(-3, -ROAD/2 + s*(ROAD/6), 6, ROAD/6);
+  }
+  ctx.restore();
+  /* next checkpoint marker */
+  var cp=CPS[you.nextCp];
+  ctx.fillStyle='rgba(250,204,21,0.85)';
+  ctx.beginPath(); ctx.arc(cp.x, cp.y, 10+Math.sin(performance.now()/220)*2.4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText('CP', cp.x, cp.y+4);
+  rivals.forEach(function(r){ drawCarShape(r, false); });
+  drawCarShape(you, true);
+  /* direction arrow */
+  if(playing){
+    var a=Math.atan2(cp.y-you.y, cp.x-you.x);
+    ctx.save();
+    ctx.translate(you.x + Math.cos(a)*30, you.y + Math.sin(a)*30);
+    ctx.rotate(a);
+    ctx.fillStyle='#facc15';
+    ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-5, -5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  if(countdown>0){
+    ctx.fillStyle='rgba(7,11,24,0.45)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 54px Arial'; ctx.textAlign='center';
+    ctx.fillText(Math.ceil(countdown), W/2, H/2);
+  }
+  if(!playing && countdown<=0){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    var p=positionOf(you, rivals);
+    ctx.fillText(finished ? (p===1 ? '🏆 GRAND PRIX WINNER!' : '🏁 FINISHED '+p+(p===2?'nd':p===3?'rd':'th')) : '🏎️ FORMULA RACING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'Best lap '+bestLap.toFixed(1)+'s — press LIGHTS OUT for another race' : 'Press LIGHTS OUT! — 3 laps, 4 cars, one circuit', W/2, H/2+18);
+  }
+}
+function advanceCp(c){
+  var cp=CPS[c.nextCp];
+  if(Math.hypot(c.x-cp.x, c.y-cp.y) < 46){
+    c.nextCp++;
+    if(c.nextCp>=CPS.length){
+      c.nextCp=0;
+      c.lap++;
+      if(c===you){
+        var lt=raceTime-lapStart;
+        lapStart=raceTime;
+        if(!bestLap || lt<bestLap) bestLap=lt;
+        if(you.lap>=3){
+          playing=false; finished=true;
+          you.et=raceTime;
+          var p=positionOf(you, rivals);
+          if(p===1){ wins++; localStorage.setItem('makenFormulaWins', wins); }
+          el('msg').textContent= p===1 ? '🏆 YOU WIN THE GRAND PRIX! Best lap '+bestLap.toFixed(1)+'s.' : '🏁 Finished '+p+(p===2?'nd':p===3?'rd':'th')+'. Best lap '+bestLap.toFixed(1)+'s.';
+          beep(p===1?980:520, 0.2, 'sine', 0.07);
+        } else {
+          el('msg').textContent='🏁 Lap '+(you.lap+1)+'! Last lap time '+lt.toFixed(1)+'s.';
+          beep(760,0.1,'sine',0.06);
+        }
+      }
+    }
+    return true;
+  }
+  return false;
+}
+function driveAI(c, dt){
+  var target=CPS[c.nextCp];
+  /* aim slightly ahead along line */
+  var want=Math.atan2(target.y-c.y, target.x-c.x);
+  var diff=((want - c.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+  c.ang += Math.max(-2.4*dt, Math.min(2.4*dt, diff*3.2*dt*3));
+  var sp=Math.hypot(c.vx, c.vy);
+  var topSpeed=196*c.pace;
+  if(sp < topSpeed){
+    c.vx += Math.cos(c.ang)*210*dt;
+    c.vy += Math.sin(c.ang)*210*dt;
+  }
+  if(!onTrack(c.x, c.y)){ c.vx*=Math.pow(0.25, dt); c.vy*=Math.pow(0.25, dt); }
+  c.x += c.vx*dt;
+  c.y += c.vy*dt;
+  advanceCp(c);
+  if(c.lap>=3 && !c.finished){ c.finished=true; c.et=raceTime; }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(countdown>0){
+    countdown-=dt;
+    draw();
+    if(countdown>0){ rafId=requestAnimationFrame(loop); return; }
+    el('msg').textContent='🟢 GO!';
+    beep(880,0.15,'sine',0.07);
+  }
+  raceTime+=dt;
+  var gas=keys.KeyW || keys.ArrowUp || keys.__gas;
+  var brake=keys.KeyS || keys.ArrowDown;
+  var steer=0;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) steer=-1;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) steer=1;
+  var sp=Math.hypot(you.vx, you.vy);
+  you.ang += steer * (0.85 + sp/120) * dt * (sp>4 ? 1 : 0);
+  if(gas){ you.vx += Math.cos(you.ang)*250*dt; you.vy += Math.sin(you.ang)*250*dt; }
+  if(brake){ you.vx -= Math.cos(you.ang)*180*dt; you.vy -= Math.sin(you.ang)*180*dt; }
+  /* grip toward heading */
+  if(sp>1){
+    var velAng=Math.atan2(you.vy, you.vx);
+    var diff=((you.ang - velAng + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    var newA=velAng + diff * Math.min(1, 7.5*dt);
+    var drag= onTrack(you.x, you.y) ? Math.pow(0.72, dt) : Math.pow(0.18, dt);
+    var nsp=sp*drag;
+    if(!onTrack(you.x, you.y) && sp>60) el('msg').textContent='🌿 On the grass — get back on the tarmac!';
+    you.vx=Math.cos(newA)*nsp;
+    you.vy=Math.sin(newA)*nsp;
+  }
+  you.x += you.vx*dt;
+  you.y += you.vy*dt;
+  you.x=Math.max(16, Math.min(W-16, you.x));
+  you.y=Math.max(16, Math.min(H-16, you.y));
+  advanceCp(you);
+  rivals.forEach(function(r){ if(!r.finished) driveAI(r, dt); });
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true;
+  countdown=3;
+  lastTick=performance.now();
+  el('msg').textContent='🔴🔴🔴 Lights…';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ LINE:LINE, CPS:CPS, distToSeg:distToSeg, distToLine:distToLine, onTrack:onTrack, progressOf:progressOf, positionOf:positionOf };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

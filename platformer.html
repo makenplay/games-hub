@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Platform Runner Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a classic platform runner free online. Run, jump, stomp goombas-style baddies, grab coins and reach the flag in 3 worlds. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#38bdf8 0%,#7dd3fc 62%,#bae6fd 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.jump { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🍄 PLATFORM RUNNER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">WORLD <b id="world">1 / 3</b></div>
+  <div class="stat">❤️ <b id="lives">3</b></div>
+  <div class="stat">🪙 <b id="coins">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Run with A/D, jump with SPACE/W. Stomp baddies from above — touching them from the side costs a heart!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn jump" id="jumpBtn">⬆ JUMP</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Hold jump for a higher leap · bricks and ? blocks hide coins · the flag ends the world</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Platform Runner</h2>
+  <p>The timeless run-and-jump adventure, rebuilt for the browser: three worlds of brick platforms, patrolling baddies, coin blocks and bottomless pits, ending at the flagpole. Stomp from above, never barge in from the side.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Run with A/D or the arrow buttons and jump with SPACE/W/↑ (hold for higher). Land on a baddie's head to squash it for 100 points; side contact costs a heart. Bump ? blocks and bricks from below for coins. Reach the flag to clear the world — three worlds, three hearts.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three hand-built worlds with pipes, stairs and gap jumps</li>
+    <li>Stomp mechanics, coin blocks and a flagpole finish</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, TILE=32, GRAV=1500;
+/* level maps: # ground/brick, ? coin block, B brick, P pipe top, p pipe body, E enemy spawn, C coin, F flag, . empty */
+var LEVELS=[
+[
+"................................................................................",
+"................................................................................",
+"................................................................................",
+"................................................................................",
+"....................C.C.C.......................................................",
+"..........C........#######...........E..........C.C.............................",
+".........###....................##########.....#####...........E................",
+"..................?..B.?..B.......................E.........#######.............",
+"#####......................E.........P..........................................",
+"#####..E.........#####################....#############.............F...........",
+"#####..........#####################......############...........#####..........",
+"#########....#######################......############....E......#####....######",
+"#########..#########################......############.........########..#######",
+"#########..#########################......############.........########..#######"
+],
+[
+"................................................................................",
+"................................................................................",
+"..................C.............................................................",
+".........C.......###......C.C..........E..........C.............................",
+"........###.............########......#####......###.........E..................",
+".................E......................................#########...............",
+"#####......###########.....P.........E..........P....................F..........",
+"#####.....................##.......######......##......E........#######.........",
+"#####..E..........E......##...................##....#######.....................",
+"#########....#############......########......#################..........E......",
+"#########....#############......########......#################.....############",
+"#########....#############......########......#################.....############",
+"#########....#############......########......#################.....############",
+"#########....#############......########......#################.....############"
+],
+[
+"................................................................................",
+"................C.C.........C...............C.C.C...............................",
+"...............#####.......###.............#######...........E..................",
+"..........E..........................E..............................C.C.........",
+".........####......?..B..?......#########......P..........E........#####........",
+"................................................................................",
+"#####.........E...........E.....................#########.......................",
+"#####....##########....########....E.................................F..........",
+"#####.................########...#####....E.........P...........#########.......",
+"#########......E................#####....#######...##...........................",
+"#########....#########....E....#####....#######...##.....E......##########......",
+"#########....#########.......#####....#######...##...........##########.........",
+"#########....#########.......#####....#######...##...........##########.........",
+"#########....#########.......#####....#######...##...........##########........."
+]
+];
+/* ---------- pure logic (testable) ---------- */
+function isSolid(ch){ return ch==='#' || ch==='?' || ch==='B' || ch==='P' || ch==='p'; }
+function parseLevel(rows){
+  var solids=[], coins=[], enemies=[], flag=null, spawn={x:40,y:40};
+  rows.forEach(function(row, ry){
+    for(var rx=0; rx<row.length; rx++){
+      var ch=row[rx];
+      var px=rx*TILE, py=ry*TILE;
+      if(isSolid(ch)) solids.push({ x:px, y:py, w:TILE, h:TILE, ch:ch, used:false });
+      else if(ch==='C') coins.push({ x:px+8, y:py+8, r:8, taken:false });
+      else if(ch==='E') enemies.push({ x:px+4, y:py+6, w:24, h:26, vx:-32, dead:false });
+      else if(ch==='F') flag={ x:px+10, y:py };
+    }
+  });
+  return { solids:solids, coins:coins, enemies:enemies, flag:flag, spawn:spawn, width: rows[0].length*TILE };
+}
+function aabb(a, b){
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, worldIdx, level, player, camX, lives, coinsGot, score, finished, keys, jumpHeld, invulnT, rafId, lastTick;
+var best=+(localStorage.getItem('makenPlatBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('world').textContent=Math.min(3, worldIdx+1)+' / 3';
+  el('lives').textContent=lives;
+  el('coins').textContent=coinsGot;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenPlatBest',best); }
+  el('best').textContent=best;
+}
+function loadWorld(){
+  level=parseLevel(LEVELS[worldIdx]);
+  player={ x:40, y:300, w:22, h:28, vx:0, vy:0, grounded:false, face:1 };
+  camX=0; invulnT=0;
+}
+function reset(){
+  playing=false; finished=false;
+  worldIdx=0; lives=3; coinsGot=0; score=0;
+  keys={};
+  loadWorld();
+  hud(); draw();
+}
+function drawTile(s){
+  var x=s.x-camX, y=s.y;
+  if(x<-TILE || x>W+TILE) return;
+  if(s.ch==='#'){
+    ctx.fillStyle='#b45309'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.fillStyle='#92400e'; ctx.fillRect(x, y+TILE-6, TILE, 6);
+    ctx.fillStyle='#4ade80'; ctx.fillRect(x, y, TILE, 5);
+  } else if(s.ch==='B'){
+    ctx.fillStyle='#c2692e'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.strokeStyle='#7c2d12'; ctx.lineWidth=2;
+    ctx.strokeRect(x+1, y+1, TILE-2, TILE-2);
+    ctx.beginPath(); ctx.moveTo(x, y+TILE/2); ctx.lineTo(x+TILE, y+TILE/2); ctx.stroke();
+  } else if(s.ch==='?'){
+    ctx.fillStyle= s.used ? '#a16207' : '#f59e0b';
+    ctx.fillRect(x, y, TILE, TILE);
+    ctx.strokeStyle='#92400e'; ctx.strokeRect(x+1, y+1, TILE-2, TILE-2);
+    ctx.fillStyle='#fff'; ctx.font='bold 19px Arial'; ctx.textAlign='center';
+    ctx.fillText(s.used ? '·' : '?', x+TILE/2, y+22);
+  } else if(s.ch==='P' || s.ch==='p'){
+    ctx.fillStyle='#16a34a'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.fillStyle='#15803d'; ctx.fillRect(x+3, y, 4, TILE);
+    if(s.ch==='P'){ ctx.fillStyle='#22c55e'; ctx.fillRect(x-2, y, TILE+4, 10); }
+  }
+}
+function draw(){
+  /* hills + clouds */
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  [70, 300, 520].forEach(function(cx, i){
+    var x=((cx - camX*0.3) % (W+160) + W+160) % (W+160) - 80;
+    ctx.beginPath(); ctx.arc(x, 52+i*16, 17, 0, Math.PI*2); ctx.arc(x+18, 58+i*16, 13, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle='#4ade80';
+  ctx.beginPath(); ctx.arc(120 - (camX*0.5 % (W+200)), 368, 90, Math.PI, 0); ctx.fill();
+  level.solids.forEach(drawTile);
+  /* coins */
+  level.coins.forEach(function(c){
+    if(c.taken) return;
+    var x=c.x-camX;
+    if(x<-20 || x>W+20) return;
+    ctx.fillStyle='#facc15';
+    ctx.beginPath(); ctx.arc(x, c.y + Math.sin(performance.now()/300 + c.x)*2, c.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#a16207'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+    ctx.fillText('¢', x, c.y+3.4);
+  });
+  /* flag */
+  if(level.flag){
+    var fx=level.flag.x-camX;
+    ctx.strokeStyle='#374151'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(fx, level.flag.y-70); ctx.lineTo(fx, level.flag.y+64); ctx.stroke();
+    ctx.fillStyle='#22c55e';
+    ctx.beginPath(); ctx.moveTo(fx, level.flag.y-70); ctx.lineTo(fx+26, level.flag.y-61); ctx.lineTo(fx, level.flag.y-52); ctx.closePath(); ctx.fill();
+  }
+  /* enemies */
+  level.enemies.forEach(function(e){
+    if(e.dead) return;
+    var x=e.x-camX;
+    if(x<-40 || x>W+40) return;
+    ctx.fillStyle='#92400e';
+    ctx.beginPath(); ctx.arc(x+e.w/2, e.y+e.h/2, e.w/2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(x+e.w/2-5, e.y+e.h/2-2, 3.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+e.w/2+5, e.y+e.h/2-2, 3.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111827';
+    ctx.beginPath(); ctx.arc(x+e.w/2-5, e.y+e.h/2-2, 1.7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+e.w/2+5, e.y+e.h/2-2, 1.7, 0, Math.PI*2); ctx.fill();
+  });
+  /* player */
+  var px=player.x-camX, py=player.y;
+  if(!(invulnT>0 && Math.floor(performance.now()/90)%2===0)){
+    ctx.fillStyle='#dc2626'; ctx.fillRect(px+2, py, 18, 8);
+    ctx.fillStyle='#f59e0b'; ctx.fillRect(px+13, py+1, 9, 5);
+    ctx.fillStyle='#fcd9b8'; ctx.fillRect(px+4, py+8, 14, 9);
+    ctx.fillStyle='#2563eb'; ctx.fillRect(px+3, py+17, 16, 7);
+    ctx.fillStyle='#dc2626'; ctx.fillRect(px+1, py+17, 5, 7); ctx.fillRect(px+16, py+17, 5, 7);
+    ctx.fillStyle='#78350f';
+    if(player.grounded && Math.abs(player.vx)>10 && Math.floor(performance.now()/110)%2===0){
+      ctx.fillRect(px+3, py+24, 6, 4); ctx.fillRect(px+13, py+24, 6, 4);
+    } else {
+      ctx.fillRect(px+4, py+24, 5, 4); ctx.fillRect(px+13, py+24, 5, 4);
+    }
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(finished ? '🏆 ALL WORLDS CLEARED!' : lives<=0 ? '💀 GAME OVER' : '🍄 PLATFORM RUNNER', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'Final score '+score+' · coins '+coinsGot+' — press START to play again' : lives<=0 ? 'Score '+score+' — press START to try again' : 'Press START — 3 worlds of classic platforming', W/2, H/2+18);
+  }
+}
+function hurt(){
+  lives--;
+  invulnT=1.6;
+  el('msg').textContent='💔 Ouch! '+lives+' heart'+(lives===1?'':'s')+' left.';
+  beep(160,0.18,'sawtooth',0.07);
+  hud();
+  if(lives<=0){
+    playing=false;
+    el('msg').textContent='💀 Game over. Score: '+score+'.';
+    draw();
+  }
+}
+function collideMove(dt){
+  /* X axis */
+  player.x += player.vx*dt;
+  var box={ x:player.x, y:player.y+1, w:player.w, h:player.h-2 };
+  level.solids.forEach(function(s){
+    if(aabb(box, s)){
+      if(player.vx>0) player.x = s.x - player.w - 0.01;
+      else if(player.vx<0) player.x = s.x + s.w + 0.01;
+      box.x=player.x;
+    }
+  });
+  /* Y axis */
+  player.y += player.vy*dt;
+  player.grounded=false;
+  box={ x:player.x+1, y:player.y, w:player.w-2, h:player.h };
+  level.solids.forEach(function(s){
+    if(aabb(box, s)){
+      if(player.vy>0){
+        player.y = s.y - player.h;
+        player.vy=0;
+        player.grounded=true;
+      } else if(player.vy<0){
+        player.y = s.y + s.h + 0.01;
+        player.vy=0;
+        if((s.ch==='?' || s.ch==='B') && !s.used){
+          s.used=true;
+          coinsGot++; score+=25;
+          el('msg').textContent='🪙 Coin from the block! +25.';
+          beep(1180,0.07,'sine',0.06);
+        }
+      }
+      box.y=player.y;
+    }
+  });
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(invulnT>0) invulnT-=dt;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  var jump=keys.Space || keys.KeyW || keys.ArrowUp || keys.__jump;
+  player.vx=0;
+  if(left){ player.vx=-186; player.face=-1; }
+  if(right){ player.vx=186; player.face=1; }
+  if(jump && player.grounded && !jumpHeld){
+    player.vy = -600;
+    player.grounded=false;
+    beep(520,0.07,'square',0.04);
+  }
+  if(!jump && player.vy < -205) player.vy = -205; /* variable jump height */
+  jumpHeld=!!jump;
+  player.vy += GRAV*dt;
+  if(player.vy>640) player.vy=640;
+  collideMove(dt);
+  if(player.x<0) player.x=0;
+  /* pit fall */
+  if(player.y > H+60){
+    lives--;
+    el('msg').textContent='🕳️ Down the pit! '+lives+' hearts left.';
+    beep(140,0.2,'sawtooth',0.07);
+    hud();
+    if(lives<=0){ playing=false; draw(); return; }
+    player.x=Math.max(20, player.x-120);
+    player.y=120; player.vy=0;
+  }
+  /* coins */
+  level.coins.forEach(function(c){
+    if(!c.taken && Math.hypot(player.x+11-(c.x), player.y+14-c.y) < 24){
+      c.taken=true; coinsGot++; score+=15;
+      beep(1180,0.05,'sine',0.05);
+    }
+  });
+  /* enemies */
+  level.enemies.forEach(function(e){
+    if(e.dead) return;
+    e.x += e.vx*dt;
+    /* turn at platform edges / walls: simple patrol flip on solid contact */
+    var ahead={ x: e.vx<0 ? e.x-2 : e.x+e.w+2, y:e.y+e.h-4, w:2, h:4 };
+    var groundBelow=false, wallAhead=false;
+    level.solids.forEach(function(s){
+      if(aabb({ x:e.x+2, y:e.y+e.h, w:e.w-4, h:3 }, s)) groundBelow=true;
+      if(aabb(ahead, s)) wallAhead=true;
+      if(aabb({ x: e.vx<0 ? e.x+e.w-13 : e.x+11, y:e.y+e.h, w:2, h:6 }, s)) groundBelow=groundBelow || false;
+    });
+    var edgeProbe={ x: e.vx<0 ? e.x-4 : e.x+e.w+2, y:e.y+e.h+2, w:3, h:4 };
+    var edgeSolid=false;
+    level.solids.forEach(function(s){ if(aabb(edgeProbe, s)) edgeSolid=true; });
+    if(wallAhead || (groundBelow && !edgeSolid)) e.vx = -e.vx;
+    /* gravity settle */
+    var eb={ x:e.x+1, y:e.y+2, w:e.w-2, h:e.h };
+    var onG=false;
+    level.solids.forEach(function(s){ if(aabb(eb, s)) onG=true; });
+    if(!onG) e.y += 120*dt;
+    /* player contact */
+    if(aabb({ x:player.x, y:player.y, w:player.w, h:player.h }, e)){
+      if(player.vy > 60 && player.y + player.h - e.y < 16){
+        e.dead=true;
+        player.vy=-330;
+        score+=100;
+        el('msg').textContent='🦶 Stomped! +100.';
+        beep(300,0.08,'square',0.06);
+      } else if(invulnT<=0){
+        hurt();
+        player.vx = player.x < e.x ? -120 : 120;
+        player.x += player.x < e.x ? -14 : 14;
+      }
+    }
+  });
+  /* flag */
+  if(level.flag && player.x + player.w > level.flag.x && player.x < level.flag.x+8){
+    score += 300 + lives*50;
+    worldIdx++;
+    if(worldIdx>=LEVELS.length){
+      playing=false; finished=true;
+      el('msg').textContent='🏆 All 3 worlds cleared! Final score: '+score+'.';
+      beep(980,0.22,'sine',0.07);
+    } else {
+      el('msg').textContent='🚩 World '+(worldIdx)+' cleared! On to World '+(worldIdx+1)+'.';
+      beep(880,0.15,'sine',0.06);
+      loadWorld();
+    }
+    hud(); draw();
+    if(playing) rafId=requestAnimationFrame(loop);
+    return;
+  }
+  camX=Math.max(0, Math.min(level.width-W, player.x-220));
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('jumpBtn','__jump');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🍄 World 1 — go!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ LEVELS:LEVELS, TILE:TILE, isSolid:isSolid, parseLevel:parseLevel, aabb:aabb };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
