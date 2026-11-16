@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Monster Truck Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play monster truck free online. Crush car rows, fly off ramps and put on a 2-minute stadium show. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#1e293b 0%,#334155 46%,#57534e 46.2%,#44403c 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .btn.brake { background:linear-gradient(180deg,#dc2626,#991b1b); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🛻 MONSTER TRUCK</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱️ <b id="time">120</b></div>
+  <div class="stat">CARS CRUSHED <b id="crushed">0 / 12</b></div>
+  <div class="stat">BIG AIR <b id="air">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Two minutes, one stadium. Drive OVER the cars to crush them, hit the ramps at speed for big air!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START SHOW</button>
+  <button class="btn brake" id="brakeBtn">◀ REV</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS (hold)</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">← → drive both ways · in the air the pedals tilt the truck · a crushed car is worth 50, big air up to 150</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Monster Truck</h2>
+  <p>A stadium freestyle show in a giant-wheeled truck. Twelve sacrificial cars are lined up in rows and stacks around two ramps — crush every one you can, catch the biggest air you dare, and keep the crowd's score climbing for two full minutes.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Drive with GAS (→) and REV (←), tilting with the pedals in the air. Roll over a car to crush it flat for 50 points — crushed cars stay crushed. Hit a ramp fast and your air time scores up to 150 points; land on your wheels to keep it. The show ends at 0:00.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Big-wheel physics with crushable cars that squash flat</li>
+    <li>Two ramps, twelve cars and an air-time scoring system</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, FLOOR=342, ARENA=1560;
+/* ramps: triangles {x, w, h, dir} dir=1 launches rightward-up on right side */
+var RAMPS=[ {x:420, w:120, h:56}, {x:1020, w:120, h:56} ];
+var CARS=[
+  {x:210},{x:262},{x:314},
+  {x:640},{x:692},
+  {x:880},{x:932},{x:984},
+  {x:1230},{x:1282},
+  {x:1450},{x:1502}
+];
+/* ---------- pure logic (testable) ---------- */
+function rampHeightAt(x){
+  for(var i=0;i<RAMPS.length;i++){
+    var r=RAMPS[i];
+    if(x>=r.x && x<=r.x+r.w){
+      var t=(x-r.x)/r.w;
+      return r.h * (t<0.5 ? t*2 : (1-t)*2);
+    }
+  }
+  return 0;
+}
+function groundYAt(x){
+  return FLOOR - rampHeightAt(x);
+}
+function airScore(airSeconds){
+  return Math.min(150, Math.floor(airSeconds*90));
+}
+function crushCheck(truckX, cars){
+  var hit=[];
+  for(var i=0;i<cars.length;i++){
+    if(!cars[i].crushed && Math.abs(truckX - (cars[i].x+20)) < 44) hit.push(i);
+  }
+  return hit;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, truck, camX, timeLeft, score, crushed, airTime, bigAirs, carsState, over, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenMonsterBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('time').textContent=Math.max(0, Math.ceil(timeLeft));
+  el('crushed').textContent=crushed+' / 12';
+  el('air').textContent=bigAirs;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenMonsterBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false; over=false;
+  truck={ x:110, y:groundYAt(110)-20, vx:0, vy:0, ang:0, va:0, grounded:true };
+  camX=0; timeLeft=120; score=0; crushed=0; airTime=0; bigAirs=0;
+  carsState=CARS.map(function(c){ return { x:c.x, crushed:false }; });
+  keys={};
+  hud(); draw();
+}
+function drawCarProp(c){
+  var sx=c.x-camX;
+  if(sx<-60 || sx>W+60) return;
+  var gy=FLOOR;
+  if(c.crushed){
+    ctx.fillStyle='#6b7280';
+    ctx.fillRect(sx, gy-7, 42, 7);
+    ctx.fillStyle='#4b5563';
+    ctx.fillRect(sx+8, gy-11, 24, 5);
+  } else {
+    ctx.fillStyle='#94a3b8';
+    ctx.fillRect(sx, gy-15, 42, 10);
+    ctx.fillStyle='#64748b';
+    ctx.fillRect(sx+9, gy-22, 24, 8);
+    ctx.fillStyle='#bae6fd'; ctx.fillRect(sx+13, gy-21, 8, 6);
+    ctx.fillStyle='#1f2937';
+    ctx.beginPath(); ctx.arc(sx+10, gy-3, 4.6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx+33, gy-3, 4.6, 0, Math.PI*2); ctx.fill();
+  }
+}
+function draw(){
+  /* stadium crowd */
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  for(var i=0;i<90;i++) ctx.fillRect((i*53)%W, 14+(i*19)%86, 3.4, 3.4);
+  ctx.fillStyle='#f8fafc'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+  ctx.fillText('🏟️ MONSTER JAM ARENA', W/2, 130);
+  /* dirt floor + ramps */
+  ctx.fillStyle='#78716c';
+  ctx.fillRect(0, FLOOR, W, H-FLOOR);
+  RAMPS.forEach(function(r){
+    var sx=r.x-camX;
+    if(sx+r.w<-10 || sx>W+10) return;
+    ctx.fillStyle='#a8a29e';
+    ctx.beginPath();
+    ctx.moveTo(sx, FLOOR);
+    ctx.lineTo(sx+r.w/2, FLOOR-r.h);
+    ctx.lineTo(sx+r.w, FLOOR);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#facc15'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+    ctx.fillText('RAMP', sx+r.w/2, FLOOR-r.h-6);
+  });
+  carsState.forEach(drawCarProp);
+  /* truck */
+  var px=truck.x-camX, py=truck.y;
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(truck.ang);
+  ctx.fillStyle='#16a34a';
+  ctx.fillRect(-30, -26, 60, 16);
+  ctx.fillRect(-12, -38, 30, 13);
+  ctx.fillStyle='#bae6fd'; ctx.fillRect(-6, -36, 11, 9);
+  ctx.fillStyle='#facc15'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillText('MAKEN', 2, -14);
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(-21, 0, 14.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22, 0, 14.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#d1d5db';
+  ctx.beginPath(); ctx.arc(-21, 0, 6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22, 0, 6, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? '⏱️ SHOW OVER!' : '🛻 MONSTER TRUCK', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Final score '+score+' · '+crushed+' cars crushed — press START SHOW for an encore' : 'Press START SHOW — 2 minutes, 12 cars, 2 ramps', W/2, H/2+18);
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    playing=false; over=true;
+    el('msg').textContent='⏱️ Show over! Score '+score+' — '+crushed+'/12 cars crushed, '+bigAirs+' big airs.';
+    beep(700,0.2,'sine',0.07);
+    hud(); draw();
+    return;
+  }
+  var fwd=keys.KeyD || keys.ArrowRight || keys.__gas;
+  var rev=keys.KeyA || keys.ArrowLeft || keys.__brake;
+  if(truck.grounded){
+    if(fwd) truck.vx += 300*dt;
+    if(rev) truck.vx -= 300*dt;
+    truck.vx *= Math.pow(0.45, dt);
+    truck.vx=Math.max(-215, Math.min(295, truck.vx));
+    var prevY=truck.y;
+    truck.x += truck.vx*dt;
+    var gy=groundYAt(truck.x)-20;
+    /* launch off ramp peak when moving fast */
+    if(gy > truck.y + 16 && Math.abs(truck.vx) > 95){
+      truck.grounded=false;
+      truck.vy = -(Math.abs(truck.vx)*0.42);
+      truck.va = truck.vx>0 ? 0.35 : -0.35;
+      airTime=0;
+    } else {
+      truck.y = gy;
+      var slopeA=Math.atan2(groundYAt(truck.x+16) - groundYAt(truck.x-16), 32);
+      truck.ang += ((-slopeA) - truck.ang) * Math.min(1, dt*9);
+    }
+    /* crushing */
+    var hits=crushCheck(truck.x, carsState);
+    hits.forEach(function(idx){
+      carsState[idx].crushed=true;
+      crushed++;
+      score += 50;
+      el('msg').textContent='💥 CRUSHED! Car #'+crushed+' flat. +50 pts.';
+      beep(180,0.12,'sawtooth',0.07);
+      truck.vy = -40;
+    });
+  } else {
+    truck.vy += 620*dt;
+    truck.x += truck.vx*dt;
+    truck.y += truck.vy*dt;
+    airTime += dt;
+    if(fwd) truck.va -= 2.4*dt;
+    if(rev) truck.va += 2.4*dt;
+    truck.ang += truck.va*dt*2.0;
+    var gy2=groundYAt(truck.x)-20;
+    if(truck.y>=gy2 && truck.vy>0){
+      var diff=((truck.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+      truck.y=gy2;
+      if(Math.abs(diff) > 0.95){
+        el('msg').textContent='💥 Rough landing — the crowd groans! No air points.';
+        beep(130,0.2,'sawtooth',0.07);
+        score=Math.max(0, score-30);
+      } else {
+        var pts=airScore(airTime);
+        if(pts>=40){
+          bigAirs++;
+          score += pts;
+          el('msg').textContent='🚀 BIG AIR! '+airTime.toFixed(1)+'s in the sky — +'+pts+' pts!';
+          beep(990,0.14,'sine',0.07);
+        }
+        var hits2=crushCheck(truck.x, carsState);
+        hits2.forEach(function(idx){
+          carsState[idx].crushed=true;
+          crushed++;
+          score += 50;
+          el('msg').textContent='💥 Landing crush! +50 pts.';
+          beep(180,0.12,'sawtooth',0.07);
+        });
+      }
+      truck.grounded=true;
+      truck.vy=0;
+      truck.ang=0;
+    }
+  }
+  truck.x=Math.max(40, Math.min(ARENA-40, truck.x));
+  camX=Math.max(0, Math.min(ARENA-W+40, truck.x-300));
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('brakeBtn','__brake');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🛻 SHOWTIME! Crush the row on your right!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ RAMPS:RAMPS, CARS:CARS, rampHeightAt:rampHeightAt, groundYAt:groundYAt, airScore:airScore, crushCheck:crushCheck };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

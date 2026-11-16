@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Offroad Jeep Driving Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play offroad jeep driving free online. Mud pits, river crossings and rock crawls on one expedition trail — reach the finish without wrecking the jeep. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .dmgwrap { width:min(640px,94vw); height:12px; background:#111a33; border:1px solid #26335f; border-radius:6px; overflow:hidden; margin:2px 0; }
+  .dmgwrap i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#f59e0b,#dc2626); transition:width .2s; }
+  canvas#cv { background:linear-gradient(180deg,#7dd3fc 0%,#bae6fd 58%,#fef3c7 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .btn.brake { background:linear-gradient(180deg,#dc2626,#991b1b); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🚙 OFFROAD JEEP</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">TRAIL <b id="prog">0%</b></div>
+  <div class="stat">CHECKPOINT <b id="cp">0 / 4</b></div>
+  <div class="stat">⏱️ <b id="time">0.0s</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST TIME <b id="best">–</b></div>
+</div>
+<div class="dmgwrap"><i id="dmgBar" style="width:100%"></i></div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">One trail, four checkpoints. Mud and water slow you to a crawl — momentum is everything, but hard landings wreck the jeep!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START TRAIL</button>
+  <button class="btn brake" id="brakeBtn">🛑 BRAKE</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS (hold)</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">D / → = gas · A / ← = brake/reverse · in the air the pedals tilt the jeep · the green bar is your jeep's health</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Offroad Jeep Driving</h2>
+  <p>A single expedition trail with real offroad problems: mud pits that swallow your momentum, a river crossing that drags you sideways-slow, and a rock crawl where full throttle just breaks things. Four checkpoints, one finish line, one jeep that remembers every hard landing.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Drive with GAS (D / →) and BRAKE (A / ←), tilting with the same pedals while airborne. Enter mud and water with speed — crawling in is fine, stopping in them is not. Land softly: drops and roof hits add damage, and 100% damage ends the run. Checkpoints repair 30% and bank your progress.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Surface physics — mud, water and rock each drive differently</li>
+    <li>Damage model with checkpoint repairs across a 380 m trail</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* trail polyline (world units = px, 10px = 1m) */
+var PTS=[[0,320],[300,320],[420,268],[560,320],[820,320],[900,338],[1080,338],[1160,320],[1420,320],[1560,238],[1700,238],[1820,320],[2140,320],[2260,286],[2400,286],[2540,320],[2900,320],[3020,262],[3180,262],[3320,320],[3800,320]];
+var FINISH=3720;
+var ZONES=[
+  { from:820, to:1080, type:'mud' },
+  { from:2140, to:2400, type:'water' },
+  { from:1420, to:1820, type:'rock' }
+];
+var CHECKPOINTS=[760, 1380, 2080, 2860];
+/* ---------- pure logic (testable) ---------- */
+function groundYAt(x){
+  if(x<=PTS[0][0]) return PTS[0][1];
+  for(var i=0;i<PTS.length-1;i++){
+    var a=PTS[i], b=PTS[i+1];
+    if(x>=a[0] && x<=b[0]){
+      var t=(x-a[0])/((b[0]-a[0])||1);
+      return a[1] + (b[1]-a[1])*t;
+    }
+  }
+  return PTS[PTS.length-1][1];
+}
+function surfaceAt(x){
+  for(var i=0;i<ZONES.length;i++){
+    if(x>=ZONES[i].from && x<=ZONES[i].to) return ZONES[i].type;
+  }
+  return 'dirt';
+}
+function surfaceDrag(type){
+  return type==='mud' ? 0.32 : type==='water' ? 0.45 : type==='rock' ? 0.8 : 1.0;
+}
+function surfacePower(type){
+  return type==='mud' ? 0.55 : type==='water' ? 0.7 : type==='rock' ? 0.85 : 1.0;
+}
+function landingDamage(fallSpeed, angleDiff){
+  var dmg=0;
+  if(fallSpeed > 300) dmg += (fallSpeed-300)/22;
+  if(Math.abs(angleDiff) > 0.5) dmg += (Math.abs(angleDiff)-0.5)*46;
+  return Math.round(Math.min(60, dmg)*10)/10;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, car, camX, damage, cpHit, timeMs, score, finished, wrecked, keys, rafId, lastTick;
+var bestTime=+(localStorage.getItem('makenOffroadBest')||0);
+el('best').textContent= bestTime ? (bestTime/1000).toFixed(1)+'s' : '–';
+function hud(){
+  el('prog').textContent=Math.max(0, Math.min(100, Math.floor(car.x/FINISH*100)))+'%';
+  el('cp').textContent=cpHit+' / 4';
+  el('time').textContent=(timeMs/1000).toFixed(1)+'s';
+  el('score').textContent=score;
+  el('dmgBar').style.width=Math.max(0, 100-damage)+'%';
+  el('best').textContent= bestTime ? (bestTime/1000).toFixed(1)+'s' : '–';
+}
+function reset(){
+  playing=false; finished=false; wrecked=false;
+  car={ x:70, y:groundYAt(70)-16, vx:0, vy:0, ang:0, va:0, grounded:true };
+  camX=0; damage=0; cpHit=0; timeMs=0; score=0;
+  keys={};
+  hud(); draw();
+}
+function draw(){
+  /* backdrop: mountains + trees */
+  ctx.fillStyle='#86c06c';
+  ctx.beginPath(); ctx.moveTo(0, 320);
+  for(var bx=0; bx<=W; bx+=32){
+    var wx=bx + camX*0.35;
+    ctx.lineTo(bx, 258 - Math.abs(Math.sin(wx/300))*66);
+  }
+  ctx.lineTo(W, 400); ctx.lineTo(0, 400); ctx.closePath(); ctx.fill();
+  /* ground */
+  ctx.fillStyle='#8a6844';
+  ctx.beginPath();
+  ctx.moveTo(-4, groundYAt(camX-4));
+  for(var x=0;x<=W;x+=8) ctx.lineTo(x, groundYAt(camX+x));
+  ctx.lineTo(W+4, H); ctx.lineTo(-4, H); ctx.closePath(); ctx.fill();
+  /* surface zones */
+  ZONES.forEach(function(z){
+    var x0=z.from-camX, x1=z.to-camX;
+    if(x1<-10 || x0>W+10) return;
+    ctx.fillStyle= z.type==='mud' ? 'rgba(90,55,25,0.75)' : z.type==='water' ? 'rgba(37,99,235,0.55)' : 'rgba(107,114,128,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(Math.max(0,x0), groundYAt(z.from));
+    for(var x=Math.max(z.from, camX); x<=Math.min(z.to, camX+W); x+=10) ctx.lineTo(x-camX, groundYAt(x));
+    ctx.lineTo(Math.min(W,x1), H); ctx.lineTo(Math.max(0,x0), H); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+    var mid=(z.from+z.to)/2 - camX;
+    if(mid>20 && mid<W-20) ctx.fillText(z.type==='mud' ? '🟤 MUD' : z.type==='water' ? '🌊 RIVER' : '🪨 ROCK CRAWL', mid, groundYAt((z.from+z.to)/2)-34);
+  });
+  /* checkpoints */
+  CHECKPOINTS.forEach(function(cp, i){
+    var sx=cp-camX;
+    if(sx<-20 || sx>W+20) return;
+    ctx.strokeStyle= i<cpHit ? '#22c55e' : '#f8fafc'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(sx, groundYAt(cp)); ctx.lineTo(sx, groundYAt(cp)-52); ctx.stroke();
+    ctx.fillStyle= i<cpHit ? '#22c55e' : '#f59e0b';
+    ctx.beginPath(); ctx.moveTo(sx, groundYAt(cp)-52); ctx.lineTo(sx+22, groundYAt(cp)-45); ctx.lineTo(sx, groundYAt(cp)-38); ctx.closePath(); ctx.fill();
+  });
+  /* finish */
+  var fx=FINISH-camX;
+  if(fx>-30 && fx<W+30){
+    ctx.strokeStyle='#111827'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(fx, groundYAt(FINISH)); ctx.lineTo(fx, groundYAt(FINISH)-62); ctx.stroke();
+    ctx.fillStyle='#111827'; ctx.fillRect(fx, groundYAt(FINISH)-62, 26, 15);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(fx+3, groundYAt(FINISH)-59, 6, 5); ctx.fillRect(fx+14, groundYAt(FINISH)-59, 6, 5);
+    ctx.fillRect(fx+8, groundYAt(FINISH)-53, 6, 5); ctx.fillRect(fx+19, groundYAt(FINISH)-53, 6, 5);
+  }
+  /* jeep */
+  var px=car.x-camX, py=car.y;
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(car.ang);
+  ctx.fillStyle='#b45309';
+  ctx.fillRect(-25, -14, 50, 13);
+  ctx.fillRect(-9, -27, 27, 14);
+  ctx.fillStyle='#bae6fd'; ctx.fillRect(-4, -25, 10, 9);
+  ctx.fillStyle='#facc15'; ctx.beginPath(); ctx.arc(-14, -19, 4.6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(-16, 2, 9.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(17, 2, 9.4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#9ca3af';
+  ctx.beginPath(); ctx.arc(-16, 2, 3.8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(17, 2, 3.8, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if(damage>55){
+    ctx.fillStyle='#ef4444'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+    ctx.fillText('⚠️ JEEP DAMAGE '+Math.floor(damage)+'%', px, py-44);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(finished ? '🏁 TRAIL COMPLETE!' : wrecked ? '💥 JEEP WRECKED' : '🚙 OFFROAD JEEP', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'Time '+(timeMs/1000).toFixed(1)+'s · score '+score+' — press START TRAIL to run it again' : wrecked ? 'Too much damage — press START TRAIL and land softer' : 'Press START TRAIL — 380 m of mud, river and rock', W/2, H/2+18);
+  }
+}
+function endRun(kind){
+  playing=false;
+  if(kind==='wreck'){ wrecked=true; el('msg').textContent='💥 The jeep is wrecked at '+Math.floor(car.x/10)+' m. Score: '+score+'.'; }
+  if(kind==='finish'){
+    finished=true;
+    score += Math.max(0, 900 - Math.floor(timeMs/100)) + Math.round(100-damage)*3;
+    if(!bestTime || timeMs<bestTime){ bestTime=timeMs; localStorage.setItem('makenOffroadBest', bestTime); }
+    el('msg').textContent='🏁 Finished in '+(timeMs/1000).toFixed(1)+'s with '+Math.floor(damage)+'% damage! Score: '+score+'.';
+    beep(980,0.2,'sine',0.07);
+  } else beep(140,0.3,'sawtooth',0.08);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeMs += dt*1000;
+  var gas=keys.KeyD || keys.ArrowRight || keys.__gas;
+  var brake=keys.KeyA || keys.ArrowLeft || keys.__brake;
+  var surf=surfaceAt(car.x);
+  var slope=Math.atan2(groundYAt(car.x+13) - groundYAt(car.x-13), 26);
+  if(car.grounded){
+    var power=265*surfacePower(surf);
+    if(gas) car.vx += power*dt;
+    if(brake) car.vx -= 215*dt;
+    car.vx += Math.sin(slope)*175*dt;
+    car.vx *= Math.pow(1 - 0.5*surfaceDrag(surf), dt);
+    if(surf==='mud' || surf==='water') car.vx *= Math.pow(0.45, dt);
+    car.vx=Math.max(-95, Math.min(280, car.vx));
+    car.x += car.vx*dt;
+    car.y = groundYAt(car.x)-16;
+    car.ang += (slope - car.ang) * Math.min(1, dt*11);
+    var aheadDrop=groundYAt(car.x+18) - (car.y+16);
+    if(aheadDrop > 15 && car.vx > 55){
+      car.grounded=false;
+      car.vy=-(aheadDrop)*1.05;
+      car.va=car.vx/360;
+    }
+  } else {
+    car.vy += 660*dt;
+    car.x += car.vx*dt;
+    car.y += car.vy*dt;
+    if(gas) car.va -= 2.5*dt;
+    if(brake) car.va += 2.5*dt;
+    car.ang += car.va*dt*2.1;
+    var gy=groundYAt(car.x)-16;
+    if(car.y>=gy && car.vy>0){
+      var lslope=Math.atan2(groundYAt(car.x+13) - groundYAt(car.x-13), 26);
+      var diff=((car.ang - lslope + Math.PI*3) % (Math.PI*2)) - Math.PI;
+      var dmg=landingDamage(car.vy, diff);
+      if(Math.abs(diff) > 1.05){ damage=100; endRun('wreck'); return; }
+      if(dmg>0){
+        damage += dmg;
+        el('msg').textContent='💥 Hard landing! +'+dmg+'% damage ('+Math.floor(damage)+'% total).';
+        beep(150,0.16,'sawtooth',0.07);
+        if(damage>=100){ endRun('wreck'); return; }
+      } else if(car.vy>240){
+        el('msg').textContent='✅ Clean landing.';
+      }
+      car.y=gy; car.grounded=true; car.vy=0; car.ang=lslope;
+    }
+  }
+  if(car.x<40) car.x=40;
+  /* checkpoints */
+  if(cpHit<CHECKPOINTS.length && car.x>=CHECKPOINTS[cpHit]){
+    cpHit++;
+    damage=Math.max(0, damage-30);
+    score += 150;
+    el('msg').textContent='🚩 Checkpoint '+cpHit+'/4! +150 pts, jeep patched up (-30% damage).';
+    beep(880,0.13,'sine',0.06);
+  }
+  if(car.x>=FINISH){ endRun('finish'); return; }
+  score += dt*2.2;
+  score=Math.floor(score);
+  camX=Math.max(0, Math.min(3800-W+60, car.x-190));
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('brakeBtn','__brake');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🚙 Trail open! Mud pit ahead at 82 m — hit it with speed!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ PTS:PTS, ZONES:ZONES, CHECKPOINTS:CHECKPOINTS, FINISH:FINISH, groundYAt:groundYAt, surfaceAt:surfaceAt, surfaceDrag:surfaceDrag, surfacePower:surfacePower, landingDamage:landingDamage };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
