@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Taxi Driving Simulator Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play taxi driver simulator free online. Pick up passengers, race them to their destination and earn big fares with tips. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#241a3f 0%,#3b2a63 55%,#0a0f22 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:58px; height:50px; font-size:20px; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🚕 TAXI DRIVER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SPEED <b id="speed">0</b> km/h</div>
+  <div class="stat">FARES <b id="fares">$0</b></div>
+  <div class="stat">TRIPS <b id="trips">0</b></div>
+  <div class="stat">LIVES <b id="lives">❤️❤️❤️</b></div>
+  <div class="stat">BEST <b id="best">$0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="540"></canvas>
+<div id="msg">Press START — stop by the 🧍 passenger on the right, then race them to the 🏁!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START SHIFT</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pLeft">◀</button><button id="pGas">⏫</button><button id="pBrake">⏬</button><button id="pRight">▶</button>
+</div>
+<div class="keys">← → steer · ↑ gas · ↓ brake · stop in the RIGHT lane under 25 km/h to pick up & drop off</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=540, HORIZON=110, GROUND_Y=462;
+var LANES_X=[100, 210, 320], VP_X=210, CURB_X=368;
+var TRAFFIC=['🚗','🚙','🛻','🚓'];
+/* ---------- pure logic (testable) ---------- */
+function project(z){
+  var t=1-z;
+  return { scale: 0.12 + 0.88*t*t, y: HORIZON + (GROUND_Y-HORIZON)*t*t };
+}
+function laneScreenX(lane, scale){ return VP_X + (LANES_X[lane]-VP_X)*scale; }
+function crashTest(taxiX, carX, carZ){
+  if(carZ > 0.05 || carZ < -0.04) return false;
+  return Math.abs(taxiX - carX) < 50;
+}
+function atCurb(taxiX, speedKmh, targetZ){
+  if(targetZ > 0.05 || targetZ < -0.05) return false;
+  return taxiX > 285 && speedKmh <= 25;
+}
+function fareFor(tripMeters, secondsTaken){
+  var base = 20 + Math.round(tripMeters/6);
+  var tip = Math.max(0, 45 - Math.floor(secondsTaken)) ;
+  if(secondsTaken > 45) tip = 0;
+  return base + tip;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var taxiX, traffic, passenger, dropZone, dist, fares, trips, lives, speedKmh, running, spawnT, lastTs, invincibleUntil, steer, tripStartDist, tripStartTime;
+var best=+(localStorage.getItem('makenTaxiBest')||0);
+el('best').textContent='$'+best;
+function reset(){
+  taxiX=LANES_X[1]; traffic=[]; dist=0; fares=0; trips=0; lives=3;
+  speedKmh=0; spawnT=800; invincibleUntil=0; steer=0;
+  passenger={ z:1.25, served:false }; dropZone=null;
+}
+function hud(){
+  el('speed').textContent=Math.round(speedKmh);
+  el('fares').textContent='$'+fares;
+  el('trips').textContent=trips;
+  el('lives').textContent='❤️'.repeat(Math.max(0,lives));
+  if(fares>best){ best=fares; localStorage.setItem('makenTaxiBest',best); }
+  el('best').textContent='$'+best;
+}
+function draw(now){
+  ctx.fillStyle='#4a3577'; ctx.fillRect(0,0,W,HORIZON);
+  ctx.fillStyle='#5d4494';
+  for(var i=0;i<8;i++){ var bx=i*56+4, bh=24+((i*37)%30); ctx.fillRect(bx, HORIZON-bh, 36, bh); }
+  ctx.fillStyle='#2b2b33';
+  ctx.beginPath();
+  ctx.moveTo(VP_X-20, HORIZON); ctx.lineTo(VP_X+20, HORIZON); ctx.lineTo(W-8, H); ctx.lineTo(8, H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#4b5563';
+  ctx.beginPath();
+  ctx.moveTo(VP_X+20, HORIZON); ctx.lineTo(VP_X+30, HORIZON); ctx.lineTo(W, H); ctx.lineTo(W-8, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(VP_X-20, HORIZON); ctx.lineTo(8, H); ctx.stroke();
+  ctx.strokeStyle='rgba(250,204,21,0.6)'; ctx.setLineDash([16,22]); ctx.lineDashOffset=-(dist*8 % 38);
+  [LANES_X[0]+55, LANES_X[1]+55].forEach(function(bottomX){
+    ctx.beginPath(); ctx.moveTo(VP_X + (bottomX-VP_X)*0.12, HORIZON); ctx.lineTo(bottomX, H); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  /* passenger waiting */
+  if(passenger){
+    var p=project(passenger.z), sx=CURB_X - (1-p.scale)*120;
+    ctx.font=Math.round(36*p.scale)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText('🧍', sx, p.y);
+    ctx.font=Math.round(16*p.scale+6)+'px Arial';
+    ctx.fillText('💬 TAXI!', sx, p.y - 34*p.scale - 4);
+  }
+  /* drop zone */
+  if(dropZone){
+    var pd=project(dropZone.z), dx=CURB_X - (1-pd.scale)*120;
+    ctx.font=Math.round(40*pd.scale)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText('🏁', dx, pd.y);
+  }
+  /* traffic */
+  traffic.forEach(function(car){
+    var p=project(car.z), x=laneScreenX(car.lane, p.scale);
+    ctx.font=Math.round(54*p.scale)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText(car.icon, x, p.y+6);
+  });
+  /* player taxi */
+  var blink = running && now < invincibleUntil && Math.floor(now/120)%2===0;
+  if(!blink){
+    ctx.font='66px Arial'; ctx.textAlign='center';
+    ctx.fillText('🚕', taxiX, GROUND_Y+56);
+    if(dropZone){
+      ctx.fillStyle='#facc15'; ctx.font='bold 12px Arial';
+      ctx.fillText('FARE ABOARD', taxiX, GROUND_Y-16);
+    }
+  }
+  /* guide banner */
+  ctx.font='bold 13px Arial'; ctx.textAlign='center';
+  if(dropZone){
+    ctx.fillStyle='#4ade80';
+    ctx.fillText('🏁 Destination in '+Math.max(0, Math.ceil(dropZone.remain))+'m — stop at the flag on the right!', W/2, 24);
+  } else if(passenger){
+    ctx.fillStyle='#fbbf24';
+    ctx.fillText('🧍 Passenger waiting ahead on the right — pull over slowly!', W/2, 24);
+  }
+}
+function endGame(reason, now){
+  running=false;
+  el('msg').textContent=reason+' You earned $'+fares+' in '+trips+' trips — press START for a new shift.';
+  el('startBtn').textContent='▶ NEW SHIFT';
+  draw(now);
+}
+function crash(now){
+  lives--; hud(); beep(120,0.4,'sawtooth',0.09);
+  if(lives<=0){ endGame('💥 Your taxi is wrecked!', now); return; }
+  el('msg').textContent='💥 Crash! '+lives+' lives left — passengers hate crashes!';
+  invincibleUntil=now+2000;
+  traffic = traffic.filter(function(c){ return c.z < 0.4; });
+  speedKmh=Math.min(speedKmh, 30);
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  var distDelta = speedKmh*0.026*step;
+  dist += distDelta;
+  taxiX += steer*4.4*step;
+  taxiX = Math.max(42, Math.min(W-30, taxiX));
+  var dz=(speedKmh/6800)*step;
+  /* passenger logic */
+  if(passenger){
+    passenger.z -= dz;
+    if(atCurb(taxiX, speedKmh, passenger.z)){
+      var tripMeters = 280 + Math.random()*260;
+      dropZone = { z: 1.3, remain: tripMeters };
+      tripStartDist = dist; tripStartTime = now;
+      passenger = null;
+      el('msg').textContent='🚕 Passenger aboard! Destination '+Math.round(tripMeters)+'m — go go go!';
+      beep(760,0.08,'sine',0.06);
+    } else if(passenger.z < -0.15){
+      passenger = { z:1.3, served:false };
+      el('msg').textContent='😞 That passenger gave up — another one is waiting ahead.';
+    }
+  }
+  if(dropZone){
+    dropZone.remain -= distDelta;
+    dropZone.z = Math.max(0, Math.min(1.3, dropZone.remain/160));
+    if(atCurb(taxiX, speedKmh, dropZone.z) && dropZone.remain <= 12){
+      var seconds = (now - tripStartTime)/1000;
+      var fare = fareFor(dist - tripStartDist, seconds);
+      fares += fare; trips++;
+      el('msg').textContent='💰 Fare paid: $'+fare+' — '+(seconds<45 ? 'nice tip for the fast ride!' : 'no tip, too slow.');
+      beep(880,0.09,'sine',0.06); setTimeout(function(){ beep(1174,0.1,'sine',0.06); }, 90);
+      dropZone = null;
+      passenger = { z:1.3, served:false };
+      hud();
+    }
+  }
+  /* traffic */
+  spawnT -= dt;
+  if(spawnT<=0 && speedKmh>15){
+    traffic.push({ lane:(Math.random()*3)|0, z:1.15, icon:TRAFFIC[(Math.random()*TRAFFIC.length)|0] });
+    spawnT = 1100 + Math.random()*450;
+  }
+  for(var i=traffic.length-1;i>=0;i--){
+    var car=traffic[i]; car.z -= dz;
+    var p=project(Math.max(0,car.z)), cx=laneScreenX(car.lane, p.scale);
+    if(car.z < 0.06 && car.z > -0.12 && crashTest(taxiX, cx, car.z) && now>=invincibleUntil){
+      crash(now); if(!running) return;
+    }
+    if(car.z < -0.15) traffic.splice(i,1);
+  }
+  hud(); draw(now);
+  requestAnimationFrame(loop);
+}
+var keys={};
+document.addEventListener('keydown', function(e){
+  keys[e.key]=true;
+  if(e.key==='ArrowLeft'){ steer=-1; e.preventDefault(); }
+  if(e.key==='ArrowRight'){ steer=1; e.preventDefault(); }
+  if(e.key==='ArrowUp'){ speedKmh=Math.min(120, speedKmh+6); e.preventDefault(); }
+  if(e.key==='ArrowDown'){ speedKmh=Math.max(0, speedKmh-8); e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e){
+  keys[e.key]=false;
+  if(e.key==='ArrowLeft' && steer<0) steer = keys['ArrowRight'] ? 1 : 0;
+  if(e.key==='ArrowRight' && steer>0) steer = keys['ArrowLeft'] ? -1 : 0;
+});
+function holdBtn(id, down, up){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); down(); }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); if(up) up(); }, {passive:false});
+  b.addEventListener('mousedown', down); b.addEventListener('mouseup', function(){ if(up) up(); });
+}
+holdBtn('pLeft', function(){ steer=-1; }, function(){ if(steer<0) steer=0; });
+holdBtn('pRight', function(){ steer=1; }, function(){ if(steer>0) steer=0; });
+holdBtn('pGas', function(){ speedKmh=Math.min(120, speedKmh+7); });
+holdBtn('pBrake', function(){ speedKmh=Math.max(0, speedKmh-10); });
+cvs.addEventListener('touchmove', function(e){
+  var rect=cvs.getBoundingClientRect();
+  taxiX = Math.max(42, Math.min(W-30, (e.touches[0].clientX-rect.left)*(W/rect.width)));
+  e.preventDefault();
+}, {passive:false});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0; speedKmh=35;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='🚕 Shift started — your first passenger is waiting!';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); draw(0);
+if(typeof module!=='undefined') module.exports={ project:project, laneScreenX:laneScreenX, crashTest:crashTest, atCurb:atCurb, fareFor:fareFor };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
