@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Connect Four Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Connect Four online for free. Play against the computer or a friend. Drop discs, connect 4 in a row to win.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1020; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+  header { text-align:center; margin:8px 0 4px; }
+  header h1 { font-size:26px; letter-spacing:1px; color:#60a5fa; text-shadow:0 0 14px rgba(96,165,250,.45); }
+  header p { font-size:13px; color:#9aa7c7; margin-top:2px; }
+  .ad-slot { width:100%; max-width:728px; min-height:60px; margin:8px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:12px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:8px 0; }
+  .hud .box { background:#131c3a; border:1px solid #26335f; border-radius:10px; padding:6px 14px; text-align:center; min-width:92px; }
+  .hud .box b { display:block; font-size:19px; color:#fff; }
+  .hud .box span { font-size:11px; color:#9aa7c7; letter-spacing:1px; }
+  #status { font-size:16px; font-weight:700; margin:4px 0 8px; min-height:22px; }
+  #wrap { position:relative; width:min(94vw, 460px); }
+  canvas { width:100%; height:auto; display:block; border-radius:12px; touch-action:none; cursor:pointer; }
+  .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
+  .controls button { background:#131c3a; color:#e8ecf8; border:1px solid #26335f; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; }
+  .controls button.on { background:#1d4ed8; border-color:#3b82f6; color:#fff; }
+  footer { margin:10px 0 4px; font-size:12px; color:#5b6b96; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔴 CONNECT FOUR 🟡</h1>
+  <p>Click a column to drop your disc. First to connect 4 in a row wins!</p>
+</header>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="box"><b id="redWins">0</b><span id="redLabel">🔴 YOU</span></div>
+  <div class="box"><b id="yellowWins">0</b><span id="yellowLabel">🟡 COMPUTER</span></div>
+  <div class="box"><b id="draws">0</b><span>DRAWS</span></div>
+</div>
+<div id="status">Your turn — click a column</div>
+
+<div id="wrap">
+  <canvas id="game" width="460" height="452"></canvas>
+</div>
+
+<div class="controls">
+  <button id="modeAi" class="on">🤖 Vs Computer</button>
+  <button id="mode2p">👥 2 Players</button>
+  <button id="restartBtn">↻ New Round</button>
+  <button id="soundBtn">🔊 Sound: On</button>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<footer>Maken Play — free online games. More games coming soon.</footer>
+
+<script>
+(function(){
+  "use strict";
+  var COLS = 7, ROWS = 6, CELL = 62, PAD = 12, TOP = 44;
+  var W = PAD*2 + COLS*CELL, H = TOP + ROWS*CELL + PAD;
+  var canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  canvas.width = W; canvas.height = H;
+  var statusEl = document.getElementById('status');
+  var wins = { 1: parseInt(localStorage.getItem('c4_red')||'0',10)||0, 2: parseInt(localStorage.getItem('c4_yellow')||'0',10)||0, 0: parseInt(localStorage.getItem('c4_draws')||'0',10)||0 };
+  var soundOn = true, AC = null;
+  function beep(freq, dur, type){
+    if(!soundOn) return;
+    try{
+      if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.05, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+    }catch(e){}
+  }
+  function syncWins(){
+    document.getElementById('redWins').textContent = wins[1];
+    document.getElementById('yellowWins').textContent = wins[2];
+    document.getElementById('draws').textContent = wins[0];
+    localStorage.setItem('c4_red', String(wins[1]));
+    localStorage.setItem('c4_yellow', String(wins[2]));
+    localStorage.setItem('c4_draws', String(wins[0]));
+  }
+
+  var board, turn, over, winLine, hoverCol, falling, vsAi;
+  function newBoard(){
+    var b = [];
+    for(var r=0;r<ROWS;r++){ b.push([0,0,0,0,0,0,0]); }
+    return b;
+  }
+  function dropRow(b, col){
+    for(var r=ROWS-1;r>=0;r--){ if(b[r][col] === 0) return r; }
+    return -1;
+  }
+  function checkWin(b, p){
+    var dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++){
+      if(b[r][c] !== p) continue;
+      for(var d=0;d<4;d++){
+        var dr = dirs[d][0], dc = dirs[d][1], cells = [[r,c]], ok = true;
+        for(var k=1;k<4;k++){
+          var rr = r+dr*k, cc = c+dc*k;
+          if(rr<0||rr>=ROWS||cc<0||cc>=COLS||b[rr][cc] !== p){ ok = false; break; }
+          cells.push([rr,cc]);
+        }
+        if(ok) return cells;
+      }
+    }
+    return null;
+  }
+  function boardFull(b){
+    for(var c=0;c<COLS;c++) if(b[0][c] === 0) return false;
+    return true;
+  }
+  function aiMove(){
+    // 1) win if possible  2) block player's win  3) build: prefer center + safe moves
+    var c, r, test;
+    for(c=0;c<COLS;c++){ r = dropRow(board, c); if(r<0) continue; test = board.map(function(row){return row.slice();}); test[r][c] = 2; if(checkWin(test, 2)) return c; }
+    for(c=0;c<COLS;c++){ r = dropRow(board, c); if(r<0) continue; test = board.map(function(row){return row.slice();}); test[r][c] = 1; if(checkWin(test, 1)) return c; }
+    var order = [3,2,4,1,5,0,6];
+    var safe = [];
+    for(var i=0;i<order.length;i++){
+      c = order[i]; r = dropRow(board, c); if(r<0) continue;
+      test = board.map(function(row){return row.slice();}); test[r][c] = 2;
+      // avoid giving the player an immediate winning reply on top
+      var danger = false;
+      if(r > 0){ var t2 = test.map(function(row){return row.slice();}); t2[r-1][c] = 1; if(checkWin(t2, 1)) danger = true; }
+      if(!danger) safe.push(c);
+    }
+    var pool = safe.length ? safe : order.filter(function(cc){ return dropRow(board, cc) >= 0; });
+    // prefer a move that creates two-in-a-row threats (simple heuristic: count own neighbours)
+    var bestC = pool[0], bestScore = -1;
+    pool.forEach(function(cc){
+      var rr = dropRow(board, cc); var s = 0;
+      [[0,1],[1,0],[1,1],[1,-1]].forEach(function(d){
+        var n = 0;
+        for(var k=1;k<4;k++){ var r2 = rr + d[0]*k, c2 = cc + d[1]*k; if(r2<0||r2>=ROWS||c2<0||c2>=COLS) break; if(board[r2][c2] === 2) n++; else if(board[r2][c2] === 0) {} else break; }
+        for(var k2=1;k2<4;k2++){ var r3 = rr - d[0]*k2, c3 = cc - d[1]*k2; if(r3<0||r3>=ROWS||c3<0||c3>=COLS) break; if(board[r3][c3] === 2) n++; else if(board[r3][c3] === 0) {} else break; }
+        s += n;
+      });
+      s += (3 - Math.abs(3 - cc)) * 0.3 + Math.random()*0.4;
+      if(s > bestScore){ bestScore = s; bestC = cc; }
+    });
+    return bestC;
+  }
+  function reset(){
+    board = newBoard(); turn = 1; over = false; winLine = null; hoverCol = -1; falling = null;
+    setStatus();
+    draw();
+  }
+  function setStatus(){
+    if(over) return;
+    if(vsAi) statusEl.textContent = turn === 1 ? 'Your turn — click a column' : 'Computer is thinking…';
+    else statusEl.textContent = turn === 1 ? "🔴 Red's turn" : "🟡 Yellow's turn";
+    statusEl.style.color = turn === 1 ? '#f87171' : '#facc15';
+  }
+  function doDrop(col){
+    if(over || falling) return;
+    var r = dropRow(board, col); if(r < 0) return;
+    falling = { col: col, row: r, y: TOP - CELL, player: turn };
+    beep(240, 0.05, 'square');
+  }
+  function landDisc(){
+    var f = falling; falling = null;
+    board[f.row][f.col] = f.player;
+    beep(160, 0.07, 'square');
+    var win = checkWin(board, f.player);
+    if(win){
+      over = true; winLine = win; wins[f.player]++; syncWins();
+      statusEl.textContent = vsAi ? (f.player === 1 ? '🎉 You win!' : '🤖 Computer wins!') : (f.player === 1 ? '🎉 Red wins!' : '🎉 Yellow wins!');
+      statusEl.style.color = f.player === 1 ? '#f87171' : '#facc15';
+      beep(660, 0.12, 'triangle'); setTimeout(function(){ beep(880, 0.18, 'triangle'); }, 130);
+    } else if(boardFull(board)){
+      over = true; wins[0]++; syncWins();
+      statusEl.textContent = "🤝 It's a draw!"; statusEl.style.color = '#e8ecf8';
+    } else {
+      turn = turn === 1 ? 2 : 1;
+      setStatus();
+      if(vsAi && turn === 2 && !over){
+        setTimeout(function(){ doDrop(aiMove()); }, 420);
+      }
+    }
+    draw();
+  }
+  function discColor(p){ return p === 1 ? '#ef4444' : '#facc15'; }
+  function drawDisc(x, y, p, highlight){
+    ctx.beginPath(); ctx.arc(x, y, CELL/2 - 5, 0, Math.PI*2);
+    ctx.fillStyle = discColor(p); ctx.fill();
+    ctx.lineWidth = highlight ? 4 : 2; ctx.strokeStyle = highlight ? '#fff' : 'rgba(0,0,0,.35)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x - 6, y - 7, 7, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fill();
+  }
+  function draw(){
+    ctx.fillStyle = '#0b1020'; ctx.fillRect(0,0,W,H);
+    // hover ghost
+    if(hoverCol >= 0 && !over && !falling && !(vsAi && turn === 2)){
+      if(dropRow(board, hoverCol) >= 0){
+        ctx.globalAlpha = 0.45;
+        drawDisc(PAD + hoverCol*CELL + CELL/2, TOP - CELL/2 + 6, turn, false);
+        ctx.globalAlpha = 1;
+      }
+    }
+    // board panel
+    ctx.fillStyle = '#1d4ed8';
+    ctx.beginPath();
+    var bx = PAD - 6, by = TOP - 6, bw = COLS*CELL + 12, bh = ROWS*CELL + 12;
+    ctx.roundRect(bx, by, bw, bh, 12); ctx.fill();
+    for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++){
+      var x = PAD + c*CELL + CELL/2, y = TOP + r*CELL + CELL/2;
+      ctx.beginPath(); ctx.arc(x, y, CELL/2 - 5, 0, Math.PI*2);
+      ctx.fillStyle = '#0b1020'; ctx.fill();
+      if(board[r][c] !== 0){
+        var hl = winLine && winLine.some(function(cell){ return cell[0] === r && cell[1] === c; });
+        drawDisc(x, y, board[r][c], hl);
+      }
+    }
+    if(falling){
+      drawDisc(PAD + falling.col*CELL + CELL/2, falling.y, falling.player, false);
+    }
+  }
+  function animLoop(){
+    if(falling){
+      var targetY = TOP + falling.row*CELL + CELL/2;
+      falling.y += 26;
+      if(falling.y >= targetY){ falling.y = targetY; landDisc(); }
+      draw();
+    }
+    requestAnimationFrame(animLoop);
+  }
+  function colFromEvent(e){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    var x = (cx - rect.left) * (W / rect.width);
+    var col = Math.floor((x - PAD) / CELL);
+    return col >= 0 && col < COLS ? col : -1;
+  }
+  canvas.addEventListener('mousemove', function(e){ hoverCol = colFromEvent(e); if(!falling) draw(); });
+  canvas.addEventListener('mouseleave', function(){ hoverCol = -1; draw(); });
+  canvas.addEventListener('click', function(e){ var col = colFromEvent(e); if(col >= 0) doDrop(col); });
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); var col = colFromEvent(e); if(col >= 0) doDrop(col); }, {passive:false});
+  document.getElementById('restartBtn').addEventListener('click', reset);
+  var modeAi = document.getElementById('modeAi'), mode2p = document.getElementById('mode2p');
+  function setMode(ai){
+    vsAi = ai;
+    modeAi.className = ai ? 'on' : ''; mode2p.className = ai ? '' : 'on';
+    document.getElementById('redLabel').textContent = '🔴 YOU';
+    document.getElementById('yellowLabel').textContent = ai ? '🟡 COMPUTER' : '🟡 PLAYER 2';
+    reset();
+  }
+  modeAi.addEventListener('click', function(){ setMode(true); });
+  mode2p.addEventListener('click', function(){ setMode(false); });
+  document.getElementById('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off'; });
+  vsAi = true;
+  syncWins();
+  reset();
+  requestAnimationFrame(animLoop);
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>
