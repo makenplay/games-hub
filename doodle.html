@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Doodle Jump Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a doodle-jump-style endless jumper free online. Bounce platform to platform, ride springs, dodge the void — how high can you climb? No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#fef9c3 0%,#fef3c7 55%,#fde68a 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🦘 DOODLE JUMP</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">HEIGHT <b id="height">0m</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="560"></canvas>
+<div id="msg">Steer with ◀ ▶ or A/D. You bounce automatically — brown platforms break, springs launch you!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Walk off one edge and you wrap to the other · higher = faster score · don't fall!</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Doodle Jump</h2>
+  <p>The endless vertical climber that launched a thousand imitators. Your doodler bounces on its own — you just steer. Green platforms are safe, blue ones slide side to side, brown ones snap under your feet, and springs catapult you skyward.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Steer with A/D, the arrow keys or the on-screen buttons. Landing on a platform bounces you automatically. The screen wraps — exit left, enter right. The camera only moves up, so every missed platform can end the run. Score grows with every metre climbed.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three platform types plus spring boosts</li>
+    <li>Endless, ever-faster climbing with a saved best score</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=560, GRAV=1500, BOUNCE=-760, SPRING=-1420;
+/* ---------- pure logic (testable) ---------- */
+function makePlatform(y, rnd){
+  var r=rnd();
+  var type='static';
+  if(r>0.86) type='break';
+  else if(r>0.62) type='move';
+  return {
+    x: Math.floor(rnd()*(W-74)),
+    y: y,
+    w: 74,
+    h: 13,
+    type: type,
+    vx: type==='move' ? (rnd()<0.5 ? -1 : 1) * (55+rnd()*55) : 0,
+    spring: rnd() < 0.14,
+    broken: false
+  };
+}
+function bounceVelocity(platform){
+  return platform.spring ? SPRING : BOUNCE;
+}
+function scoreForHeight(maxY){
+  return Math.floor(maxY/10);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, player, platforms, camY, maxY, score, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenDoodleBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('height').textContent=Math.floor(maxY/10)+'m';
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenDoodleBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false;
+  player={ x:W/2-15, y:420, w:30, h:30, vx:0, vy:BOUNCE, face:1 };
+  platforms=[{ x:W/2-50, y:470, w:100, h:13, type:'static', vx:0, spring:false, broken:false }];
+  var y=400;
+  while(y>-H){
+    y -= 52 + Math.random()*38;
+    platforms.push(makePlatform(y, Math.random));
+  }
+  camY=0; maxY=0; score=0;
+  keys={};
+  hud(); draw();
+}
+function draw(){
+  /* notebook grid */
+  ctx.strokeStyle='rgba(59,130,246,0.16)'; ctx.lineWidth=1;
+  for(var gy=-(camY%28); gy<H; gy+=28){ ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+  ctx.strokeStyle='rgba(239,68,68,0.3)';
+  ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(34, H); ctx.stroke();
+  /* platforms */
+  platforms.forEach(function(p){
+    var sy=p.y-camY;
+    if(sy<-20 || sy>H+20) return;
+    if(p.broken){
+      ctx.fillStyle='rgba(146,64,14,0.5)';
+      ctx.fillRect(p.x, sy+5, p.w/2-2, 7);
+      ctx.fillRect(p.x+p.w/2+2, sy+8, p.w/2-2, 7);
+      return;
+    }
+    ctx.fillStyle= p.type==='break' ? '#b45309' : p.type==='move' ? '#2563eb' : '#16a34a';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(p.x, sy, p.w, p.h, 6); else ctx.rect(p.x, sy, p.w, p.h);
+    ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.35)';
+    ctx.fillRect(p.x+4, sy+2, p.w-8, 3);
+    if(p.spring){
+      ctx.fillStyle='#6b7280'; ctx.fillRect(p.x+p.w/2-9, sy-5, 18, 5);
+      ctx.fillStyle='#dc2626'; ctx.fillRect(p.x+p.w/2-11, sy-9, 22, 5);
+    }
+  });
+  /* doodler */
+  var px=player.x, py=player.y-camY;
+  ctx.fillStyle='#65a30d';
+  ctx.beginPath(); ctx.ellipse(px+15, py+16, 15, 13, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#84cc16';
+  ctx.beginPath(); ctx.ellipse(px+15+(player.face*3), py+7, 9, 7, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#365314';
+  ctx.beginPath();
+  ctx.moveTo(px+15+(player.face*3), py+2);
+  ctx.lineTo(px+15+(player.face*11), py-6);
+  ctx.lineTo(px+15+(player.face*5), py+4);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(px+15+(player.face*5), py+7, 2.2, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f59e0b';
+  ctx.fillRect(px+3, py+26, 8, 4.4);
+  ctx.fillRect(px+19, py+26, 8, 4.4);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(score>0 ? '💥 YOU FELL!' : '🦘 DOODLE JUMP', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fde68a';
+    ctx.fillText(score>0 ? 'Score '+score+' — press START to climb again' : 'Press START — bounce as high as you can', W/2, H/2+18);
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  player.vx=0;
+  if(left){ player.vx=-268; player.face=-1; }
+  if(right){ player.vx=268; player.face=1; }
+  player.x += player.vx*dt;
+  if(player.x < -player.w+6) player.x = W-6;
+  if(player.x > W-6) player.x = -player.w+6;
+  player.vy += GRAV*dt;
+  player.y += player.vy*dt;
+  /* moving platforms */
+  platforms.forEach(function(p){
+    if(p.type==='move' && !p.broken){
+      p.x += p.vx*dt;
+      if(p.x<0){ p.x=0; p.vx=Math.abs(p.vx); }
+      if(p.x>W-p.w){ p.x=W-p.w; p.vx=-Math.abs(p.vx); }
+    }
+  });
+  /* bounce (only while falling) */
+  if(player.vy>0){
+    for(var i=0;i<platforms.length;i++){
+      var p=platforms[i];
+      if(p.broken) continue;
+      var feet=player.y+player.h;
+      if(player.x+player.w-5 > p.x && player.x+5 < p.x+p.w && feet >= p.y && feet <= p.y+p.h+player.vy*dt+2){
+        if(p.type==='break'){
+          p.broken=true;
+          beep(190,0.08,'sawtooth',0.05);
+        } else {
+          player.y = p.y - player.h;
+          player.vy = bounceVelocity(p);
+          beep(p.spring ? 880 : 440, p.spring ? 0.12 : 0.05, 'square', 0.045);
+        }
+        break;
+      }
+    }
+  }
+  /* camera: follow upward only */
+  var screenY=player.y-camY;
+  if(screenY < 210){
+    var dy=210-screenY;
+    camY -= dy;
+    maxY += dy;
+    score=scoreForHeight(maxY);
+    /* recycle platforms below screen, spawn above */
+    var topY=camY;
+    platforms=platforms.filter(function(p){ return p.y < camY+H+30; });
+    var minY=Math.min.apply(null, platforms.map(function(p){ return p.y; }));
+    while(minY > topY - 60){
+      minY -= 52 + Math.random()*38;
+      platforms.push(makePlatform(minY, Math.random));
+    }
+  }
+  if(player.y - camY > H+26){
+    playing=false;
+    el('msg').textContent='💥 You fell! Final height: '+Math.floor(maxY/10)+'m — score '+score+'.';
+    beep(140,0.22,'sawtooth',0.07);
+    hud(); draw();
+    return;
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🦘 Bounce! Steer with ◀ ▶.';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ makePlatform:makePlatform, bounceVelocity:bounceVelocity, scoreForHeight:scoreForHeight, BOUNCE:BOUNCE, SPRING:SPRING };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
