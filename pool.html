@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>8 Ball Pool Game — Play Free Online vs Computer | Maken Play</title>
+<meta name="description" content="Play 8 ball pool free online against the computer. Real groups, fouls and the black ball finish. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .stat.turn { border-color:#f59e0b; color:#fbbf24; }
+  canvas#cv { background:#14532d; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; max-width:640px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🎱 8 BALL POOL</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat turn" id="turnStat">🎯 YOUR SHOT</div>
+  <div class="stat">YOU <b id="youGroup">— open table —</b> <b id="youLeft"></b></div>
+  <div class="stat">CPU <b id="cpuGroup">—</b> <b id="cpuLeft"></b></div>
+  <div class="stat">WINS <b id="wins">0</b></div>
+</div>
+
+<canvas id="cv" width="680" height="420"></canvas>
+<div id="msg">Your break! Move the mouse to aim, pull back (drag) and release to shoot.</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW GAME</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">First ball pocketed decides solids/stripes · pocket all your group, then the ⚫ 8 · scratching (cue ball in) gives your rival ball-in-hand · sinking the 8 early loses the game.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=680, H=420, TABLE={x:46,y:46,w:588,h:328}, BALL_R=11, POCKET_R=19;
+var POCKETS=[
+  {x:TABLE.x-4,y:TABLE.y-4},{x:W/2,y:TABLE.y-8},{x:TABLE.x+TABLE.w+4,y:TABLE.y-4},
+  {x:TABLE.x-4,y:TABLE.y+TABLE.h+4},{x:W/2,y:TABLE.y+TABLE.h+8},{x:TABLE.x+TABLE.w+4,y:TABLE.y+TABLE.h+4}
+];
+var BALL_COLORS={1:'#f6c90e',2:'#2563eb',3:'#dc2626',4:'#7c3aed',5:'#f97316',6:'#16a34a',7:'#7c2d12',8:'#111111',9:'#f6c90e',10:'#2563eb',11:'#dc2626',12:'#7c3aed',13:'#f97316',14:'#16a34a',15:'#7c2d12'};
+/* ---------- pure rules logic (testable) ---------- */
+function groupOf(n){ return n===8 ? 'eight' : n<8 ? 'solid' : 'stripe'; }
+function legalTargets(balls, groups, player){
+  /* returns 'open', 'solid', 'stripe' or 'eight' */
+  if(!groups[player]) return 'open';
+  var mine=balls.filter(function(b){ return b.active && groupOf(b.n)===groups[player]; });
+  return mine.length ? groups[player] : 'eight';
+}
+function judgeShot(st, shot){
+  /* st: {groups:{you,cpu}, } shot: {player, pocketed:[ballNums], scratch:bool, firstHit:numOrNull, railAfterHit:bool}
+     returns {foul, assignGroup, winner, continueTurn, reason} */
+  var res={ foul:false, assignGroup:null, winner:null, continueTurn:false, reason:'' };
+  var groups=st.groups, player=shot.player, other=player==='you'?'cpu':'you';
+  if(shot.scratch){ res.foul=true; res.reason='Scratch — cue ball pocketed.'; }
+  var target=legalTargets(st.balls, groups, player);
+  if(shot.firstHit===null && shot.pocketed.length===0 && !shot.scratch){ /* no contact at all: foul only in strict rules; casual: just lose turn */ }
+  if(shot.firstHit!==null){
+    var fhGroup=groupOf(shot.firstHit);
+    if(target!=='open' && fhGroup!==target && !(target==='eight' && shot.firstHit===8)){
+      res.foul=true; res.reason='Wrong ball first.';
+    }
+    if(target==='open' && shot.firstHit===8){ res.foul=true; res.reason='8 ball first on an open table.'; }
+  }
+  var eightPocketed=shot.pocketed.indexOf(8)>-1;
+  if(eightPocketed){
+    if(target==='eight' && !res.foul){ res.winner=player; res.reason='8 ball sunk legally — game!'; }
+    else { res.winner=other; res.reason='8 ball sunk too early — game lost.'; }
+    return res;
+  }
+  var ownPocketed=shot.pocketed.filter(function(n){
+    if(!groups[player]) return n!==8;
+    return groupOf(n)===groups[player];
+  });
+  if(!groups[player] && shot.pocketed.length && !res.foul){
+    var g=groupOf(shot.pocketed[0]);
+    if(g==='solid' || g==='stripe'){
+      res.assignGroup={ player:player, group:g };
+    }
+  }
+  if(ownPocketed.length && !res.foul) res.continueTurn=true;
+  return res;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.04; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var balls, cue, groups, turn, phase, aimPoint, pullVec, shotPocketed, shotFirstHit, shotRail, ballInHand, wins, rafId, gameOverFlag;
+wins=0;
+function rack(){
+  balls=[];
+  var apexX=TABLE.x+TABLE.w*0.68, cy=TABLE.y+TABLE.h/2;
+  var order=[1,9,2,8,10,3,11,4,12,5,13,6,14,7,15];
+  /* arrange: apex ball, then rows of 2,3,4,5 with 8 in the middle (3rd row center) */
+  var positions=[];
+  var rows=[1,2,3,4,5];
+  var k=0;
+  rows.forEach(function(count, r){
+    for(var j=0;j<count;j++){
+      positions.push({ x:apexX + r*(BALL_R*2+1)*0.88, y:cy + (j-(count-1)/2)*(BALL_R*2+1.5), slot:k++ });
+    }
+  });
+  /* force 8 into the center slot (row 3 middle = slot index 1+2+1=4) */
+  var centerSlot=4;
+  var eightPos=order.indexOf(8);
+  var tmp=order[centerSlot]; order[centerSlot]=8; order[eightPos]=tmp;
+  positions.forEach(function(p, i){
+    var n=order[i];
+    balls.push({ n:n, x:p.x, y:p.y, vx:0, vy:0, active:true });
+  });
+  cue={ x:TABLE.x+TABLE.w*0.25, y:cy, vx:0, vy:0, active:true };
+}
+function reset(){
+  rack();
+  groups={ you:null, cpu:null };
+  turn='you'; phase='aim'; aimPoint=null; pullVec=null;
+  shotPocketed=[]; shotFirstHit=null; shotRail=false; ballInHand=false; gameOverFlag=false;
+  el('wins').textContent=wins;
+  hud(); draw();
+  el('msg').textContent='Your break! Move the mouse to aim, pull back (drag) and release to shoot.';
+}
+function hud(){
+  function leftFor(player){
+    if(!groups[player]) return '';
+    var n=balls.filter(function(b){ return b.active && groupOf(b.n)===groups[player]; }).length;
+    return n===0 ? '· on the 8 ⚫' : '· '+n+' left';
+  }
+  el('youGroup').textContent=groups.you ? (groups.you==='solid'?'● solids':'◐ stripes') : '— open table —';
+  el('cpuGroup').textContent=groups.cpu ? (groups.cpu==='solid'?'● solids':'◐ stripes') : '—';
+  el('youLeft').textContent=leftFor('you');
+  el('cpuLeft').textContent=leftFor('cpu');
+  el('turnStat').textContent = gameOverFlag ? '🏁 GAME OVER' : turn==='you' ? '🎯 YOUR SHOT' : '🤖 CPU SHOT';
+}
+function draw(){
+  /* table */
+  ctx.fillStyle='#6b4423'; ctx.fillRect(20,20,W-40,H-40);
+  ctx.fillStyle='#177245'; ctx.fillRect(TABLE.x, TABLE.y, TABLE.w, TABLE.h);
+  ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(TABLE.x+TABLE.w*0.25, TABLE.y); ctx.lineTo(TABLE.x+TABLE.w*0.25, TABLE.y+TABLE.h); ctx.stroke();
+  POCKETS.forEach(function(p){
+    ctx.beginPath(); ctx.arc(p.x, p.y, POCKET_R, 0, Math.PI*2);
+    ctx.fillStyle='#0a0a0a'; ctx.fill();
+    ctx.strokeStyle='#4a2f18'; ctx.lineWidth=3; ctx.stroke();
+  });
+  /* aim line */
+  if(phase==='aim' && turn==='you' && cue.active){
+    var target=aimPoint || { x:cue.x+120, y:cue.y };
+    ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.setLineDash([6,6]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cue.x, cue.y); ctx.lineTo(target.x, target.y); ctx.stroke();
+    ctx.setLineDash([]);
+    if(pullVec){
+      var len=Math.hypot(pullVec.x, pullVec.y);
+      ctx.strokeStyle='#f59e0b'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(cue.x, cue.y); ctx.lineTo(cue.x+pullVec.x, cue.y+pullVec.y); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+      ctx.fillText('POWER '+Math.round(Math.min(1, len/140)*100)+'%', cue.x, cue.y-24);
+    }
+    ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.font='11px Arial'; ctx.textAlign='center';
+    ctx.fillText(ballInHand ? 'BALL IN HAND — click to place the cue ball, then aim' : 'aim with mouse · drag back for power · release to shoot', W/2, H-8);
+  }
+  /* balls */
+  balls.concat([cue]).forEach(function(b){
+    if(!b.active) return;
+    var isCue = b===cue;
+    ctx.beginPath(); ctx.arc(b.x, b.y, BALL_R, 0, Math.PI*2);
+    ctx.fillStyle = isCue ? '#f8fafc' : BALL_COLORS[b.n];
+    ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.lineWidth=1.5; ctx.stroke();
+    if(!isCue){
+      if(groupOf(b.n)==='stripe'){
+        ctx.beginPath(); ctx.arc(b.x, b.y, BALL_R-3.5, 0, Math.PI*2);
+        ctx.fillStyle='#f8fafc'; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, Math.PI*2);
+      ctx.fillStyle='#f8fafc'; ctx.fill();
+      ctx.fillStyle='#111'; ctx.font='bold 8px Arial'; ctx.textAlign='center';
+      ctx.fillText(b.n, b.x, b.y+2.5);
+    }
+  });
+}
+function pocketIndex(x,y){
+  for(var i=0;i<6;i++){ var dx=x-POCKETS[i].x, dy=y-POCKETS[i].y; if(dx*dx+dy*dy < POCKET_R*POCKET_R) return i; }
+  return -1;
+}
+function collide(a,b){
+  var dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy)||0.001;
+  var nx=dx/dist, ny=dy/dist;
+  var rel=(b.vx-a.vx)*nx + (b.vy-a.vy)*ny;
+  if(rel>=0) return;
+  a.vx += rel*nx; a.vy += rel*ny;
+  b.vx -= rel*nx; b.vy -= rel*ny;
+  beep(600+Math.random()*300, 0.02, 'square', 0.018);
+}
+function stepPhysics(){
+  var discs=balls.filter(function(b){ return b.active; }).concat(cue.active?[cue]:[]);
+  discs.forEach(function(d){
+    d.x+=d.vx; d.y+=d.vy;
+    d.vx*=0.992; d.vy*=0.992;
+    if(Math.hypot(d.vx,d.vy)<0.05){ d.vx=0; d.vy=0; }
+    if(d.x < TABLE.x+BALL_R){ d.x=TABLE.x+BALL_R; d.vx=Math.abs(d.vx)*0.85; shotRail=true; }
+    if(d.x > TABLE.x+TABLE.w-BALL_R){ d.x=TABLE.x+TABLE.w-BALL_R; d.vx=-Math.abs(d.vx)*0.85; shotRail=true; }
+    if(d.y < TABLE.y+BALL_R){ d.y=TABLE.y+BALL_R; d.vy=Math.abs(d.vy)*0.85; shotRail=true; }
+    if(d.y > TABLE.y+TABLE.h-BALL_R){ d.y=TABLE.y+TABLE.h-BALL_R; d.vy=-Math.abs(d.vy)*0.85; shotRail=true; }
+  });
+  for(var i=0;i<discs.length;i++){
+    for(var j=i+1;j<discs.length;j++){
+      var a=discs[i], b=discs[j];
+      var dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy);
+      if(dist>0 && dist<BALL_R*2){
+        if(shotFirstHit===null){
+          if(a===cue && b!==cue) shotFirstHit=b.n;
+          if(b===cue && a!==cue) shotFirstHit=a.n;
+        }
+        var nx=dx/dist, ny=dy/dist, ov=(BALL_R*2-dist)/2;
+        a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov;
+        collide(a,b);
+      }
+    }
+  }
+  balls.forEach(function(b){
+    if(b.active && pocketIndex(b.x,b.y)>-1){
+      b.active=false; b.vx=0; b.vy=0;
+      shotPocketed.push(b.n);
+      beep(340,0.08,'sine',0.05);
+    }
+  });
+  if(cue.active && pocketIndex(cue.x,cue.y)>-1){ cue.active=false; cue.vx=0; cue.vy=0; }
+}
+function allStopped(){
+  return balls.concat([cue]).every(function(d){ return !d.active || Math.hypot(d.vx,d.vy)<0.06; });
+}
+function endOfShot(){
+  var shooter=turn;
+  var scratched=!cue.active;
+  var verdict=judgeShot({ balls:balls, groups:groups }, { player:shooter, pocketed:shotPocketed, scratch:scratched, firstHit:shotFirstHit, railAfterHit:shotRail });
+  if(verdict.assignGroup){
+    groups[verdict.assignGroup.player]=verdict.assignGroup.group;
+    groups[shooter==='you'?'cpu':'you']=verdict.assignGroup.group==='solid' ? 'stripe' : 'solid';
+    el('msg').textContent='🎱 Groups set — '+(shooter==='you'?'you are':'CPU is')+' '+verdict.assignGroup.group+'s!';
+  }
+  if(verdict.winner){
+    gameOverFlag=true;
+    if(verdict.winner==='you'){ wins++; el('wins').textContent=wins; }
+    el('msg').textContent=(verdict.winner==='you' ? '🏆 YOU WIN! ' : '🤖 CPU WINS. ')+verdict.reason+' Press NEW GAME to play again.';
+    beep(880,0.14,'sine',0.06);
+    phase='over'; hud(); draw();
+    return;
+  }
+  if(scratched){
+    cue.active=true;
+    cue.x=TABLE.x+TABLE.w*0.25; cue.y=TABLE.y+TABLE.h/2; cue.vx=0; cue.vy=0;
+    ballInHand=true;
+  }
+  if(verdict.foul){
+    el('msg').textContent='🚫 Foul — '+verdict.reason+' '+(shooter==='you' ? 'CPU gets ball-in-hand.' : 'You get ball-in-hand!');
+    ballInHand=true;
+    if(!cue.active){ cue.active=true; cue.x=TABLE.x+TABLE.w*0.25; cue.y=TABLE.y+TABLE.h/2; }
+  } else if(shotPocketed.length){
+    el('msg').textContent='🎯 '+(shooter==='you'?'You':'CPU')+' pocketed '+shotPocketed.join(', ')+' — '+(verdict.continueTurn ? 'shoot again!' : '');
+  }
+  if(!verdict.continueTurn || verdict.foul){
+    turn = shooter==='you' ? 'cpu' : 'you';
+  }
+  shotPocketed=[]; shotFirstHit=null; shotRail=false;
+  phase='aim';
+  hud(); draw();
+  if(turn==='cpu' && !gameOverFlag) setTimeout(cpuShoot, 800);
+}
+function loop(){
+  if(phase!=='moving') return;
+  stepPhysics(); draw();
+  if(allStopped()){ endOfShot(); return; }
+  rafId=requestAnimationFrame(loop);
+}
+function shoot(vx, vy){
+  cue.vx=vx; cue.vy=vy;
+  phase='moving'; shotPocketed=[]; shotFirstHit=null; shotRail=false;
+  ballInHand=false;
+  beep(200,0.05,'square',0.05);
+  cancelAnimationFrame(rafId); rafId=requestAnimationFrame(loop);
+}
+/* ---------- CPU AI ---------- */
+function cpuShoot(){
+  if(gameOverFlag || turn!=='cpu') return;
+  if(ballInHand){
+    cue.active=true;
+    cue.x=TABLE.x+TABLE.w*0.3; cue.y=TABLE.y+TABLE.h/2;
+    ballInHand=false;
+  }
+  var target=legalTargets(balls, groups, 'cpu');
+  var candidates=balls.filter(function(b){
+    return b.active && (target==='open' ? b.n!==8 : target==='eight' ? b.n===8 : groupOf(b.n)===target);
+  });
+  if(!candidates.length){ phase='aim'; endOfShotPass(); return; }
+  /* choose ball+pocket with the clearest line */
+  var bestOpt=null;
+  candidates.forEach(function(b){
+    POCKETS.forEach(function(p){
+      var dBP=Math.hypot(p.x-b.x, p.y-b.y);
+      var ghostX=b.x - (p.x-b.x)/dBP * BALL_R*2;
+      var ghostY=b.y - (p.y-b.y)/dBP * BALL_R*2;
+      var dCG=Math.hypot(ghostX-cue.x, ghostY-cue.y);
+      var score=dBP + dCG + Math.random()*40;
+      if(!bestOpt || score<bestOpt.score) bestOpt={ ball:b, pocket:p, ghostX:ghostX, ghostY:ghostY, score:score };
+    });
+  });
+  var err=(Math.random()*0.05 - 0.025);
+  var ang=Math.atan2(bestOpt.ghostY-cue.y, bestOpt.ghostX-cue.x) + err;
+  var power=Math.min(15, 6 + bestOpt.score/60);
+  el('msg').textContent='🤖 CPU lines up a shot…';
+  setTimeout(function(){ shoot(Math.cos(ang)*power, Math.sin(ang)*power); }, 500);
+}
+function endOfShotPass(){ turn='you'; phase='aim'; hud(); draw(); }
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+cvs.addEventListener('mousemove', function(e){
+  if(phase!=='aim' || turn!=='you') return;
+  aimPoint=posOf(e);
+  if(pullVec!==null && dragStart) pullVec={ x:dragStart.x-aimPoint.x, y:dragStart.y-aimPoint.y };
+  draw();
+});
+var dragStart=null;
+cvs.addEventListener('mousedown', function(e){
+  if(phase!=='aim' || turn!=='you' || gameOverFlag) return;
+  var p=posOf(e);
+  if(ballInHand){
+    cue.x=Math.max(TABLE.x+BALL_R, Math.min(TABLE.x+TABLE.w-BALL_R, p.x));
+    cue.y=Math.max(TABLE.y+BALL_R, Math.min(TABLE.y+TABLE.h-BALL_R, p.y));
+    ballInHand=false; hud(); draw();
+    return;
+  }
+  dragStart=p; pullVec={x:0,y:0};
+});
+document.addEventListener('mouseup', function(){
+  if(dragStart && pullVec && phase==='aim' && turn==='you'){
+    var len=Math.hypot(pullVec.x, pullVec.y);
+    if(len>16){
+      var power=Math.min(16, len/9);
+      shoot(pullVec.x/len*power, pullVec.y/len*power);
+    }
+  }
+  dragStart=null; pullVec=null;
+  if(phase==='aim') draw();
+});
+cvs.addEventListener('touchstart', function(e){
+  if(phase!=='aim' || turn!=='you' || gameOverFlag) return;
+  var p=posOf(e);
+  if(ballInHand){
+    cue.x=Math.max(TABLE.x+BALL_R, Math.min(TABLE.x+TABLE.w-BALL_R, p.x));
+    cue.y=Math.max(TABLE.y+BALL_R, Math.min(TABLE.y+TABLE.h-BALL_R, p.y));
+    ballInHand=false; hud(); draw(); e.preventDefault(); return;
+  }
+  dragStart=p; pullVec={x:0,y:0}; aimPoint=p;
+  e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchmove', function(e){
+  if(!dragStart) return;
+  var p=posOf(e);
+  aimPoint=p; pullVec={ x:dragStart.x-p.x, y:dragStart.y-p.y };
+  draw(); e.preventDefault();
+}, {passive:false});
+cvs.addEventListener('touchend', function(){
+  if(dragStart && pullVec && phase==='aim' && turn==='you'){
+    var len=Math.hypot(pullVec.x, pullVec.y);
+    if(len>16){
+      var power=Math.min(16, len/9);
+      shoot(pullVec.x/len*power, pullVec.y/len*power);
+    }
+  }
+  dragStart=null; pullVec=null;
+  if(phase==='aim') draw();
+});
+el('newBtn').addEventListener('click', function(){ cancelAnimationFrame(rafId); reset(); });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ groupOf:groupOf, legalTargets:legalTargets, judgeShot:judgeShot, BALL_COLORS:BALL_COLORS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
