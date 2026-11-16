@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tic Tac Toe Game — Play Free Online vs Computer | Maken Play</title>
+<meta name="description" content="Play tic tac toe free online against a smart computer or a friend. Three difficulty levels including an unbeatable AI. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .ad-slot { width:100%; max-width:728px; min-height:50px; margin:6px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:11px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #board { display:grid; grid-template-columns:repeat(3, 1fr); gap:7px; width:min(92vw, 330px); margin:6px 0; }
+  .cell { aspect-ratio:1; background:#101a3d; border:2px solid #26335f; border-radius:14px; font-size:52px; font-weight:900;
+          display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; transition:background .12s; }
+  .cell:hover { background:#16224d; }
+  .cell.x { color:#22d3ee; } .cell.o { color:#f472b6; }
+  .cell.win { background:#14532d; border-color:#4ade80; }
+  #msg { min-height:22px; font-size:15.5px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:3px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 15px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .lbl { font-size:11px; letter-spacing:2px; color:#5b6b96; text-align:center; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>❌ TIC TAC TOE ⭕</h1>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="stat">YOU (X) <b id="winsX">0</b></div>
+  <div class="stat">DRAWS <b id="draws">0</b></div>
+  <div class="stat">COMPUTER (O) <b id="winsO">0</b></div>
+</div>
+
+<div id="board"></div>
+<div id="msg">Your turn — tap a square.</div>
+
+<div class="lbl">MODE</div>
+<div class="row">
+  <button class="btn on" id="modeAi">🤖 Vs Computer</button>
+  <button class="btn" id="mode2p">👥 2 Players</button>
+</div>
+<div class="lbl">DIFFICULTY (VS COMPUTER)</div>
+<div class="row">
+  <button class="btn diff" data-d="easy">😊 Easy</button>
+  <button class="btn diff on" data-d="medium">😐 Medium</button>
+  <button class="btn diff" data-d="hard">😈 Unbeatable</button>
+</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW ROUND</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<script>
+(function(){
+"use strict";
+var LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+/* ---------- pure logic (testable) ---------- */
+function winner(b){
+  for(var i=0;i<LINES.length;i++){
+    var L=LINES[i];
+    if(b[L[0]] && b[L[0]]===b[L[1]] && b[L[1]]===b[L[2]]) return { who:b[L[0]], line:L };
+  }
+  if(b.every(function(c){ return c; })) return { who:'draw', line:null };
+  return null;
+}
+function minimax(b, isMax, depth){
+  var w=winner(b);
+  if(w){ if(w.who==='O') return 10-depth; if(w.who==='X') return depth-10; return 0; }
+  var best=isMax ? -Infinity : Infinity;
+  for(var i=0;i<9;i++){
+    if(b[i]) continue;
+    b[i]= isMax ? 'O' : 'X';
+    var s=minimax(b, !isMax, depth+1);
+    b[i]='';
+    best= isMax ? Math.max(best,s) : Math.min(best,s);
+  }
+  return best;
+}
+function bestMove(b){
+  var bestScore=-Infinity, move=-1;
+  for(var i=0;i<9;i++){
+    if(b[i]) continue;
+    b[i]='O';
+    var s=minimax(b, false, 0);
+    b[i]='';
+    if(s>bestScore){ bestScore=s; move=i; }
+  }
+  return move;
+}
+function randomMove(b){
+  var free=[]; for(var i=0;i<9;i++) if(!b[i]) free.push(i);
+  return free[(Math.random()*free.length)|0];
+}
+function mediumMove(b){
+  /* win if possible */
+  var i, copy;
+  for(i=0;i<9;i++){ if(!b[i]){ copy=b.slice(); copy[i]='O'; if(winner(copy) && winner(copy).who==='O') return i; } }
+  /* block X */
+  for(i=0;i<9;i++){ if(!b[i]){ copy=b.slice(); copy[i]='X'; if(winner(copy) && winner(copy).who==='X') return i; } }
+  if(!b[4]) return 4;
+  return randomMove(b);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.06; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var boardEl=el('board');
+var b, turn, over, vsAi=true, diff='medium';
+var winsX=0, winsO=0, draws=0;
+function render(winLine){
+  boardEl.innerHTML='';
+  for(var i=0;i<9;i++){
+    var d=document.createElement('div');
+    d.className='cell'+(b[i] ? ' '+b[i].toLowerCase() : '')+((winLine && winLine.indexOf(i)>-1) ? ' win':'');
+    d.textContent= b[i]==='X' ? '✕' : (b[i]==='O' ? '◯' : '');
+    d.setAttribute('data-i', i);
+    boardEl.appendChild(d);
+  }
+}
+function hud(){ el('winsX').textContent=winsX; el('winsO').textContent=winsO; el('draws').textContent=draws; }
+function finish(w){
+  over=true;
+  if(w.who==='draw'){ draws++; el('msg').textContent='🤝 Draw! Press NEW ROUND.'; beep(300,0.15,'sine',0.06); }
+  else if(w.who==='X'){ winsX++; el('msg').textContent= vsAi ? '🎉 You win! Press NEW ROUND.' : '🎉 X wins! Press NEW ROUND.'; beep(740,0.2,'sine',0.08); }
+  else { winsO++; el('msg').textContent= vsAi ? '🤖 Computer wins! Press NEW ROUND.' : '🎉 O wins! Press NEW ROUND.'; beep(180,0.25,'sawtooth',0.06); }
+  hud(); render(w.line);
+}
+function aiTurn(){
+  if(over) return;
+  var mv = diff==='hard' ? bestMove(b) : (diff==='medium' ? mediumMove(b) : (Math.random()<0.6 ? randomMove(b) : mediumMove(b)));
+  if(mv>-1){ b[mv]='O'; beep(340,0.06,'sine',0.05); }
+  var w=winner(b);
+  if(w){ finish(w); return; }
+  turn='X'; render(null);
+  el('msg').textContent='Your turn — tap a square.';
+}
+boardEl.addEventListener('click', function(e){
+  var t=e.target; if(!t.getAttribute || t.getAttribute('data-i')===null || over) return;
+  if(vsAi && turn!=='X') return;
+  var i=+t.getAttribute('data-i');
+  if(b[i]) return;
+  b[i]=turn; beep(turn==='X'?520:340,0.06,'sine',0.05);
+  var w=winner(b);
+  if(w){ finish(w); return; }
+  if(vsAi){ turn='O'; render(null); el('msg').textContent='🤖 Computer is thinking…'; setTimeout(aiTurn, 350); }
+  else { turn = turn==='X' ? 'O' : 'X'; render(null); el('msg').textContent=turn+"'s turn."; }
+});
+function newRound(){
+  b=['','','','','','','','','']; turn='X'; over=false;
+  render(null); hud();
+  el('msg').textContent= vsAi ? 'Your turn — tap a square.' : "X's turn.";
+}
+el('newBtn').addEventListener('click', newRound);
+el('modeAi').addEventListener('click', function(){ vsAi=true; this.classList.add('on'); el('mode2p').classList.remove('on'); newRound(); });
+el('mode2p').addEventListener('click', function(){ vsAi=false; this.classList.add('on'); el('modeAi').classList.remove('on'); newRound(); });
+Array.prototype.forEach.call(document.querySelectorAll('.diff'), function(btn){
+  btn.addEventListener('click', function(){
+    diff=btn.getAttribute('data-d');
+    Array.prototype.forEach.call(document.querySelectorAll('.diff'), function(x){ x.classList.remove('on'); });
+    btn.classList.add('on'); newRound();
+  });
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+newRound();
+if(typeof module!=='undefined') module.exports={ winner:winner, bestMove:bestMove, mediumMove:mediumMove, minimax:minimax };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

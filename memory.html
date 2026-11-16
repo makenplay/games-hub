@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Memory Cards Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play the classic memory cards game free online. Flip the cards, find all the matching pairs in the fewest moves and fastest time. Three board sizes. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .ad-slot { width:100%; max-width:728px; min-height:50px; margin:6px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:11px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #board { display:grid; gap:7px; width:min(94vw, 430px); margin:4px 0; }
+  .card { aspect-ratio:1; perspective:500px; cursor:pointer; user-select:none; }
+  .inner { position:relative; width:100%; height:100%; transition:transform .35s; transform-style:preserve-3d; }
+  .card.flip .inner { transform:rotateY(180deg); }
+  .face { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:11px; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  .front { background:linear-gradient(145deg,#1d2c5f,#101a3d); border:2px solid #26335f; font-size:20px; color:#33406b; }
+  .back { background:#131c3f; border:2px solid #2b3a6e; transform:rotateY(180deg); font-size:clamp(22px,7vw,36px); }
+  .card.done { cursor:default; }
+  .card.done .back { border-color:#4ade80; background:#0f2c1e; }
+  #msg { min-height:22px; font-size:15px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:3px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 15px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .lbl { font-size:11px; letter-spacing:2px; color:#5b6b96; text-align:center; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🃏 MEMORY CARDS</h1>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="stat">MOVES <b id="moves">0</b></div>
+  <div class="stat">PAIRS <b id="pairs">0/8</b></div>
+  <div class="stat">TIME <b id="time">0:00</b></div>
+  <div class="stat">BEST <b id="best">—</b></div>
+</div>
+
+<div id="board"></div>
+<div id="msg">Pick a board size and press START.</div>
+
+<div class="lbl">BOARD SIZE</div>
+<div class="row">
+  <button class="btn size" data-cols="4" data-pairs="8">😊 Easy · 4×4</button>
+  <button class="btn size on" data-cols="5" data-pairs="10">😐 Medium · 5×4</button>
+  <button class="btn size" data-cols="6" data-pairs="15">😈 Hard · 6×5</button>
+</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<script>
+(function(){
+"use strict";
+var EMOJIS=['🍎','🚗','🐶','⚽','🎸','🍕','🚀','🐱','🌟','🍩','🎈','🦁','🍇','🏀','🐠','🎁','🍦','🦋','🚲','🍓'];
+/* ---------- pure logic (testable) ---------- */
+function makeDeck(pairs, rng){
+  rng = rng || Math.random;
+  var deck=[];
+  for(var i=0;i<pairs;i++){ deck.push(i); deck.push(i); }
+  for(var j=deck.length-1;j>0;j--){
+    var k=Math.floor(rng()*(j+1));
+    var t=deck[j]; deck[j]=deck[k]; deck[k]=t;
+  }
+  return deck;
+}
+function isMatch(a, b){ return a===b; }
+function allMatched(matched){ return matched.every(function(m){ return m; }); }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.06; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var boardEl=el('board');
+var cols=5, pairs=10, deck=[], matched=[], openIdx=[], lock=false;
+var moves=0, found=0, seconds=0, timer=null, started=false;
+function bestKey(){ return 'makenMemoryBest_'+pairs; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent = b ? b+' moves' : '—';
+}
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function hud(){
+  el('moves').textContent=moves;
+  el('pairs').textContent=found+'/'+pairs;
+  el('time').textContent=fmt(seconds);
+}
+function render(){
+  boardEl.style.gridTemplateColumns='repeat('+cols+', 1fr)';
+  boardEl.innerHTML='';
+  deck.forEach(function(v, i){
+    var card=document.createElement('div');
+    card.className='card'+((openIdx.indexOf(i)>-1 || matched[i]) ? ' flip':'')+(matched[i] ? ' done':'');
+    card.setAttribute('data-i', i);
+    card.innerHTML='<div class="inner"><div class="face front">?</div><div class="face back">'+EMOJIS[v]+'</div></div>';
+    boardEl.appendChild(card);
+  });
+}
+function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+function start(){
+  deck=makeDeck(pairs);
+  matched=deck.map(function(){ return false; });
+  openIdx=[]; moves=0; found=0; seconds=0; lock=false; started=true;
+  stopTimer();
+  timer=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+  el('startBtn').textContent='↻ RESTART';
+  el('msg').textContent='Find all '+pairs+' pairs!';
+  showBest(); render(); hud();
+  beep(660,0.08,'sine',0.06);
+}
+boardEl.addEventListener('click', function(e){
+  if(!started || lock) return;
+  var card=e.target.closest ? e.target.closest('.card') : null;
+  if(!card) return;
+  var i=+card.getAttribute('data-i');
+  if(matched[i] || openIdx.indexOf(i)>-1) return;
+  openIdx.push(i); render(); beep(500,0.04,'sine',0.04);
+  if(openIdx.length===2){
+    moves++; hud();
+    var a=openIdx[0], b=openIdx[1];
+    if(isMatch(deck[a], deck[b])){
+      matched[a]=matched[b]=true; found++;
+      openIdx=[]; render(); hud();
+      beep(760,0.1,'sine',0.07);
+      if(allMatched(matched)){
+        stopTimer();
+        var prev=localStorage.getItem(bestKey());
+        if(!prev || moves<+prev) localStorage.setItem(bestKey(), moves);
+        showBest();
+        el('msg').textContent='🎉 You found all pairs in '+moves+' moves and '+fmt(seconds)+'!';
+        beep(880,0.25,'sine',0.08);
+      } else el('msg').textContent='✅ Match! '+found+' of '+pairs+' pairs.';
+    } else {
+      lock=true;
+      setTimeout(function(){ openIdx=[]; lock=false; render(); }, 750);
+    }
+  }
+});
+Array.prototype.forEach.call(document.querySelectorAll('.size'), function(btn){
+  btn.addEventListener('click', function(){
+    cols=+btn.getAttribute('data-cols'); pairs=+btn.getAttribute('data-pairs');
+    Array.prototype.forEach.call(document.querySelectorAll('.size'), function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+    showBest();
+    if(started) start();
+  });
+});
+el('startBtn').addEventListener('click', start);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+showBest();
+deck=makeDeck(pairs); matched=deck.map(function(){ return false; }); render(); hud();
+if(typeof module!=='undefined') module.exports={ makeDeck:makeDeck, isMatch:isMatch, allMatched:allMatched };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
