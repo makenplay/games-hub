@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Truck Simulator Driving Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play truck simulator free online. Haul cargo across the highway, complete deliveries every 500m and watch your fuel. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .stat b.low { color:#f87171; }
+  canvas#cv { background:linear-gradient(180deg,#3a2c14 0%,#6b4e1e 55%,#0a0f22 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 5px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .pad { display:none; gap:8px; justify-content:center; padding:2px 0 6px; }
+  .pad button { width:58px; height:50px; font-size:20px; border-radius:12px; border:1px solid #26335f; background:#101a3d; color:#fff; cursor:pointer; }
+  @media (pointer:coarse) { .pad { display:flex; } }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🚛 TRUCK SIMULATOR</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">SPEED <b id="speed">0</b> km/h</div>
+  <div class="stat">FUEL <b id="fuel">100%</b></div>
+  <div class="stat">DELIVERIES <b id="deliv">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">LIVES <b id="lives">❤️❤️❤️</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="420" height="540"></canvas>
+<div id="msg">Press START — deliver cargo every 500m and grab ⛽ fuel before the tank runs dry!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START HAUL</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="pad">
+  <button id="pLeft">◀</button><button id="pGas">⏫</button><button id="pBrake">⏬</button><button id="pRight">▶</button>
+</div>
+<div class="keys">← → steer · ↑ gas · ↓ brake · run over ⛽ to refuel</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=540, HORIZON=110, GROUND_Y=458;
+var LANES_X=[100, 210, 320], VP_X=210;
+var TRAFFIC=['🚗','🚙','🛻','🚕'];
+/* ---------- pure logic (testable) ---------- */
+function project(z){
+  var t=1-z;
+  return { scale: 0.12 + 0.88*t*t, y: HORIZON + (GROUND_Y-HORIZON)*t*t };
+}
+function laneScreenX(lane, scale){ return VP_X + (LANES_X[lane]-VP_X)*scale; }
+function crashTest(truckX, carX, carZ){
+  if(carZ > 0.05 || carZ < -0.04) return false;
+  return Math.abs(truckX - carX) < 58; /* truck is wide */
+}
+function deliveriesFor(dist){ return Math.floor(dist/500); }
+function scoreFor(dist, deliveries){ return Math.floor(dist) + deliveries*200; }
+function fuelAfter(fuel, distDelta, pickedUp){
+  var f = fuel - distDelta*0.055 + (pickedUp ? 45 : 0);
+  return Math.max(0, Math.min(100, f));
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var truckX, traffic, fuels, dist, fuel, lives, speedKmh, running, spawnT, fuelT, lastTs, invincibleUntil, steer, lastDeliveries;
+var best=+(localStorage.getItem('makenTruckBest')||0);
+el('best').textContent=best;
+function reset(){
+  truckX=LANES_X[1]; traffic=[]; fuels=[]; dist=0; fuel=100; lives=3;
+  speedKmh=0; spawnT=700; fuelT=6000; invincibleUntil=0; steer=0; lastDeliveries=0;
+}
+function hud(){
+  el('speed').textContent=Math.round(speedKmh);
+  var fEl=el('fuel');
+  fEl.textContent=Math.ceil(fuel)+'%';
+  fEl.className = fuel<=25 ? 'low' : '';
+  el('deliv').textContent=deliveriesFor(dist);
+  el('lives').textContent='❤️'.repeat(Math.max(0,lives));
+  var sc=scoreFor(dist, deliveriesFor(dist));
+  el('score').textContent=sc;
+  if(sc>best){ best=sc; localStorage.setItem('makenTruckBest',best); }
+  el('best').textContent=best;
+}
+function draw(now){
+  /* desert highway */
+  ctx.fillStyle='#8a6a2f'; ctx.fillRect(0,0,W,HORIZON);
+  ctx.fillStyle='#a37f36';
+  for(var i=0;i<6;i++){ var bx=i*74+10, bh=14+((i*41)%20); ctx.beginPath(); ctx.arc(bx, HORIZON+4, bh, Math.PI, 0); ctx.fill(); }
+  ctx.fillStyle='#33333b';
+  ctx.beginPath();
+  ctx.moveTo(VP_X-20, HORIZON); ctx.lineTo(VP_X+20, HORIZON); ctx.lineTo(W-8, H); ctx.lineTo(8, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(VP_X-20, HORIZON); ctx.lineTo(8, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(VP_X+20, HORIZON); ctx.lineTo(W-8, H); ctx.stroke();
+  ctx.strokeStyle='rgba(250,204,21,0.6)'; ctx.setLineDash([16,22]); ctx.lineDashOffset=-(dist*8 % 38);
+  [LANES_X[0]+55, LANES_X[1]+55].forEach(function(bottomX){
+    ctx.beginPath(); ctx.moveTo(VP_X + (bottomX-VP_X)*0.12, HORIZON); ctx.lineTo(bottomX, H); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  /* fuel cans */
+  fuels.forEach(function(fu){
+    var p=project(fu.z), x=laneScreenX(fu.lane, p.scale);
+    ctx.font=Math.round(40*p.scale)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText('⛽', x, p.y+4);
+  });
+  /* traffic */
+  traffic.forEach(function(car){
+    var p=project(car.z), x=laneScreenX(car.lane, p.scale);
+    ctx.font=Math.round(54*p.scale)+'px Arial'; ctx.textAlign='center';
+    ctx.fillText(car.icon, x, p.y+6);
+  });
+  /* player truck */
+  var blink = running && now < invincibleUntil && Math.floor(now/120)%2===0;
+  if(!blink){
+    ctx.font='76px Arial'; ctx.textAlign='center';
+    ctx.fillText('🚛', truckX, GROUND_Y+60);
+  }
+  /* next delivery marker */
+  var remain = 500 - (dist % 500);
+  ctx.fillStyle='#fbbf24'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+  ctx.fillText('📦 Next delivery in '+Math.ceil(remain)+'m', W/2, 24);
+  if(fuel<=25){
+    ctx.fillStyle='#f87171'; ctx.font='bold 15px Arial';
+    ctx.fillText('⛽ LOW FUEL — grab a fuel can!', W/2, 44);
+  }
+}
+function endGame(reason, now){
+  running=false;
+  el('msg').textContent=reason+' Final score '+scoreFor(dist, deliveriesFor(dist))+' — press START to haul again.';
+  el('startBtn').textContent='▶ HAUL AGAIN';
+  draw(now);
+}
+function crash(now){
+  lives--; hud(); beep(120,0.4,'sawtooth',0.09);
+  if(lives<=0){ endGame('💥 Truck wrecked!', now); return; }
+  el('msg').textContent='💥 Crash! '+lives+' lives left — the cargo must get through!';
+  invincibleUntil=now+2200;
+  traffic = traffic.filter(function(c){ return c.z < 0.4; });
+  speedKmh=Math.min(speedKmh, 35);
+}
+function loop(ts){
+  if(!running) return;
+  var dt=Math.min(40, ts-(lastTs||ts)); lastTs=ts;
+  var step=dt/16.7, now=performance.now();
+  var distDelta = speedKmh*0.026*step;
+  dist += distDelta;
+  fuel = fuelAfter(fuel, distDelta, false);
+  if(fuel<=0){ endGame('⛽ Out of fuel! The truck rolled to a stop.', now); hud(); return; }
+  var dNow = deliveriesFor(dist);
+  if(dNow > lastDeliveries){
+    lastDeliveries = dNow;
+    el('msg').textContent='📦 Delivery #'+dNow+' complete! +200';
+    beep(880,0.1,'sine',0.06);
+  }
+  truckX += steer*4.0*step;
+  truckX = Math.max(46, Math.min(W-46, truckX));
+  spawnT -= dt; fuelT -= dt;
+  if(spawnT<=0 && speedKmh>15){
+    traffic.push({ lane:(Math.random()*3)|0, z:1.15, icon:TRAFFIC[(Math.random()*TRAFFIC.length)|0] });
+    spawnT = 1000 + Math.random()*420;
+  }
+  if(fuelT<=0){
+    fuels.push({ lane:(Math.random()*3)|0, z:1.25 });
+    fuelT = 6500 + Math.random()*3000;
+  }
+  var dz=(speedKmh/7000)*step;
+  for(var i=traffic.length-1;i>=0;i--){
+    var car=traffic[i]; car.z -= dz;
+    var p=project(Math.max(0,car.z)), cx=laneScreenX(car.lane, p.scale);
+    if(car.z < 0.06 && car.z > -0.12 && crashTest(truckX, cx, car.z) && now>=invincibleUntil){
+      crash(now); if(!running) return;
+    }
+    if(car.z < -0.15) traffic.splice(i,1);
+  }
+  for(var j=fuels.length-1;j>=0;j--){
+    var fu=fuels[j]; fu.z -= dz;
+    var pf=project(Math.max(0,fu.z)), fx=laneScreenX(fu.lane, pf.scale);
+    if(fu.z < 0.06 && fu.z > -0.10 && Math.abs(truckX-fx) < 52){
+      fuel = fuelAfter(fuel, 0, true);
+      el('msg').textContent='⛽ Refuelled! +45%';
+      beep(620,0.08,'sine',0.06);
+      fuels.splice(j,1); hud(); continue;
+    }
+    if(fu.z < -0.15) fuels.splice(j,1);
+  }
+  hud(); draw(now);
+  requestAnimationFrame(loop);
+}
+var keys={};
+document.addEventListener('keydown', function(e){
+  keys[e.key]=true;
+  if(e.key==='ArrowLeft'){ steer=-1; e.preventDefault(); }
+  if(e.key==='ArrowRight'){ steer=1; e.preventDefault(); }
+  if(e.key==='ArrowUp'){ speedKmh=Math.min(105, speedKmh+4); e.preventDefault(); }
+  if(e.key==='ArrowDown'){ speedKmh=Math.max(0, speedKmh-6); e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e){
+  keys[e.key]=false;
+  if(e.key==='ArrowLeft' && steer<0) steer = keys['ArrowRight'] ? 1 : 0;
+  if(e.key==='ArrowRight' && steer>0) steer = keys['ArrowLeft'] ? -1 : 0;
+});
+function holdBtn(id, down, up){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); down(); }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); if(up) up(); }, {passive:false});
+  b.addEventListener('mousedown', down); b.addEventListener('mouseup', function(){ if(up) up(); });
+}
+holdBtn('pLeft', function(){ steer=-1; }, function(){ if(steer<0) steer=0; });
+holdBtn('pRight', function(){ steer=1; }, function(){ if(steer>0) steer=0; });
+holdBtn('pGas', function(){ speedKmh=Math.min(105, speedKmh+5); });
+holdBtn('pBrake', function(){ speedKmh=Math.max(0, speedKmh-8); });
+cvs.addEventListener('touchmove', function(e){
+  var rect=cvs.getBoundingClientRect();
+  truckX = Math.max(46, Math.min(W-46, (e.touches[0].clientX-rect.left)*(W/rect.width)));
+  e.preventDefault();
+}, {passive:false});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  reset(); running=true; lastTs=0; speedKmh=45;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='🚛 Hauling! First delivery in 500m.';
+  hud(); beep(660,0.08,'square',0.06);
+  requestAnimationFrame(loop);
+});
+reset(); draw(0);
+if(typeof module!=='undefined') module.exports={ project:project, laneScreenX:laneScreenX, crashTest:crashTest, deliveriesFor:deliveriesFor, scoreFor:scoreFor, fuelAfter:fuelAfter };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
