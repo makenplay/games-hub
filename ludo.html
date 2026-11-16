@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ludo Game — Play Free Online vs Computer | Maken Play</title>
+<meta name="description" content="Play Ludo free online against 3 computer players. Roll the dice, race your four tokens around the board, capture rivals and get them all home first. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .turnbar { display:flex; gap:10px; align-items:center; justify-content:center; margin:4px 0; flex-wrap:wrap; }
+  .turndot { font-size:13px; font-weight:700; padding:5px 12px; border-radius:20px; background:#0e1530; border:2px solid #26335f; color:#9aa7c7; }
+  .turndot.on { color:#fff; }
+  #dice { font-size:40px; width:64px; height:64px; line-height:64px; text-align:center; background:#fff; color:#111; border-radius:14px; border:3px solid #26335f; font-weight:900; }
+  canvas#cv { background:#fdfdf8; border:2px solid #26335f; border-radius:12px; display:block; touch-action:manipulation; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 18px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#ef4444,#f59e0b); color:#fff; font-size:16px; }
+  .btn:disabled { opacity:0.45; cursor:default; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; max-width:640px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🎲 LUDO</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="turnbar">
+  <span class="turndot" id="turnDot">🔴 YOUR TURN</span>
+  <div id="dice">🎲</div>
+  <button class="btn primary" id="rollBtn">🎲 ROLL DICE</button>
+</div>
+
+<canvas id="cv" width="600" height="600"></canvas>
+<div id="msg">You are 🔴 RED. Roll the dice — you need a 6 to bring a token out!</div>
+<div class="row">
+  <button class="btn" id="newBtn">↻ NEW GAME</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Rules: roll 6 to leave base · landing on a rival sends it back to base · ⭐ cells are safe · capture, 6 or finishing a token earns another roll · first to bring all 4 tokens home wins.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var CELL=40, SIZE=600;
+/* track: 52 cells as [col,row] */
+var PATH=[[1,6],[2,6],[3,6],[4,6],[5,6],[6,5],[6,4],[6,3],[6,2],[6,1],[6,0],[7,0],[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[14,7],[14,8],[13,8],[12,8],[11,8],[10,8],[9,8],[8,9],[8,10],[8,11],[8,12],[8,13],[8,14],[7,14],[6,14],[6,13],[6,12],[6,11],[6,10],[6,9],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8],[0,7],[0,6]];
+var STARTS=[0,13,26,39];
+var SAFE={0:1,8:1,13:1,21:1,26:1,34:1,39:1,47:1};
+var HOMECOLS=[
+  [[1,7],[2,7],[3,7],[4,7],[5,7]],
+  [[7,1],[7,2],[7,3],[7,4],[7,5]],
+  [[13,7],[12,7],[11,7],[10,7],[9,7]],
+  [[7,13],[7,12],[7,11],[7,10],[7,9]]
+];
+var BASES=[
+  [[1.5,1.5],[3.5,1.5],[1.5,3.5],[3.5,3.5]],
+  [[10.5,1.5],[12.5,1.5],[10.5,3.5],[12.5,3.5]],
+  [[10.5,10.5],[12.5,10.5],[10.5,12.5],[12.5,12.5]],
+  [[1.5,10.5],[3.5,10.5],[1.5,12.5],[3.5,12.5]]
+];
+var COLORS=['#ef4444','#22c55e','#eab308','#3b82f6'];
+var NAMES=['🔴 YOU','🟢 Green','🟡 Yellow','🔵 Blue'];
+var CORNERS=[[0,0],[9,0],[9,9],[0,9]]; /* yard top-left cell per player */
+
+/* ---------- pure logic (testable) ---------- */
+function pathIdxFor(player, progress){
+  if(progress < 0 || progress > 50) return -1;
+  return (STARTS[player] + progress) % 52;
+}
+function zoneFor(progress){
+  if(progress === -1) return 'base';
+  if(progress <= 50) return 'track';
+  if(progress <= 55) return 'home';
+  return 'done';
+}
+function canMove(progress, roll){
+  if(progress === -1) return roll === 6;
+  if(progress >= 56) return false;
+  return progress + roll <= 56;
+}
+function movableTokens(tokens, roll){
+  var out=[];
+  for(var i=0;i<tokens.length;i++) if(canMove(tokens[i], roll)) out.push(i);
+  return out;
+}
+function isSafeIdx(pathIdx){ return !!SAFE[pathIdx]; }
+function aiChooseMove(state, player, roll){
+  var tokens=state[player], options=movableTokens(tokens, roll);
+  if(!options.length) return -1;
+  var bestOpt=-1, bestScore=-1e9;
+  options.forEach(function(ti){
+    var from=tokens[ti];
+    var to = from === -1 ? 0 : from + roll;
+    var sc = to * 0.12 + Math.random()*2;
+    if(to === 56) sc += 60;
+    if(from === -1) sc += 40;
+    if(to >= 51 && to <= 55) sc += 20;
+    if(to <= 50){
+      var idx=pathIdxFor(player, to);
+      if(isSafeIdx(idx)) sc += 25;
+      /* capture? */
+      for(var p=0;p<4;p++){
+        if(p===player) continue;
+        for(var k=0;k<4;k++){
+          var op=state[p][k];
+          if(op>=0 && op<=50 && pathIdxFor(p, op)===idx && !isSafeIdx(idx)) sc += 50;
+        }
+      }
+      /* danger at destination: enemy 1..6 behind */
+      for(var p2=0;p2<4;p2++){
+        if(p2===player) continue;
+        for(var k2=0;k2<4;k2++){
+          var op2=state[p2][k2];
+          if(op2>=0 && op2<=50){
+            var behind=(idx - pathIdxFor(p2, op2) + 52) % 52;
+            if(behind>=1 && behind<=6 && !isSafeIdx(idx)) sc -= 12;
+          }
+        }
+      }
+      /* escaping danger */
+      if(from>=0 && from<=50){
+        var fromIdx=pathIdxFor(player, from);
+        for(var p3=0;p3<4;p3++){
+          if(p3===player) continue;
+          for(var k3=0;k3<4;k3++){
+            var op3=state[p3][k3];
+            if(op3>=0 && op3<=50){
+              var b2=(fromIdx - pathIdxFor(p3, op3) + 52) % 52;
+              if(b2>=1 && b2<=6 && !isSafeIdx(fromIdx)) sc += 15;
+            }
+          }
+        }
+      }
+    }
+    if(sc > bestScore){ bestScore=sc; bestOpt=ti; }
+  });
+  return bestOpt;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var state, current, phase, diceVal, sixChain, gameOver, highlight;
+function reset(){
+  state=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
+  current=0; phase='roll'; diceVal=0; sixChain=0; gameOver=false; highlight=[];
+  el('dice').textContent='🎲';
+  updateTurnUI();
+  el('msg').textContent='You are 🔴 RED. Roll the dice — you need a 6 to bring a token out!';
+  draw();
+}
+function updateTurnUI(){
+  var dot=el('turnDot');
+  dot.textContent = NAMES[current] + (current===0 ? ' — YOUR TURN' : ' is playing…');
+  dot.style.borderColor = COLORS[current];
+  dot.className='turndot on';
+  el('rollBtn').disabled = !(current===0 && phase==='roll' && !gameOver);
+}
+function tokenXY(player, ti){
+  var prog=state[player][ti];
+  if(prog===-1){
+    var b=BASES[player][ti];
+    return { x:b[0]*CELL, y:b[1]*CELL };
+  }
+  if(prog<=50){
+    var c=PATH[pathIdxFor(player, prog)];
+    return { x:(c[0]+0.5)*CELL, y:(c[1]+0.5)*CELL };
+  }
+  if(prog<=55){
+    var hc=HOMECOLS[player][prog-51];
+    return { x:(hc[0]+0.5)*CELL, y:(hc[1]+0.5)*CELL };
+  }
+  /* finished: center area per player */
+  var centerSpots=[[6.9,7.5],[7.5,6.9],[8.1,7.5],[7.5,8.1]];
+  var cs=centerSpots[player];
+  return { x:cs[0]*CELL, y:cs[1]*CELL };
+}
+function draw(){
+  ctx.clearRect(0,0,SIZE,SIZE);
+  ctx.fillStyle='#fdfdf8'; ctx.fillRect(0,0,SIZE,SIZE);
+  /* yards */
+  for(var p=0;p<4;p++){
+    var cx=CORNERS[p][0]*CELL, cy=CORNERS[p][1]*CELL;
+    ctx.fillStyle=COLORS[p]; ctx.globalAlpha=0.85;
+    ctx.fillRect(cx, cy, CELL*6, CELL*6);
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#fff';
+    ctx.fillRect(cx+CELL*0.9, cy+CELL*0.9, CELL*4.2, CELL*4.2);
+    BASES[p].forEach(function(b){
+      ctx.beginPath(); ctx.arc(b[0]*CELL, b[1]*CELL, 17, 0, Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.strokeStyle=COLORS[p]; ctx.lineWidth=3; ctx.stroke();
+    });
+    ctx.fillStyle='#334155'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+    ctx.fillText(NAMES[p], cx+CELL*3, cy+CELL*5.75);
+  }
+  /* track cells */
+  PATH.forEach(function(c, idx){
+    ctx.fillStyle = SAFE[idx] ? '#fef3c7' : '#ffffff';
+    ctx.fillRect(c[0]*CELL+1, c[1]*CELL+1, CELL-2, CELL-2);
+    ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=1; ctx.strokeRect(c[0]*CELL+1, c[1]*CELL+1, CELL-2, CELL-2);
+    if(SAFE[idx]){ ctx.font='15px Arial'; ctx.textAlign='center'; ctx.fillText('⭐', (c[0]+0.5)*CELL, (c[1]+0.5)*CELL+5); }
+  });
+  /* start cells colored */
+  for(var s=0;s<4;s++){
+    var sc2=PATH[STARTS[s]];
+    ctx.fillStyle=COLORS[s]; ctx.globalAlpha=0.75;
+    ctx.fillRect(sc2[0]*CELL+1, sc2[1]*CELL+1, CELL-2, CELL-2);
+    ctx.globalAlpha=1;
+  }
+  /* home columns */
+  HOMECOLS.forEach(function(col, p2){
+    col.forEach(function(c){
+      ctx.fillStyle=COLORS[p2]; ctx.globalAlpha=0.55;
+      ctx.fillRect(c[0]*CELL+1, c[1]*CELL+1, CELL-2, CELL-2);
+      ctx.globalAlpha=1;
+    });
+  });
+  /* center */
+  var ctr=[[6,6],[9,6],[9,9],[6,9]];
+  for(var t=0;t<4;t++){
+    ctx.fillStyle=COLORS[t];
+    ctx.beginPath();
+    ctx.moveTo(7.5*CELL, 7.5*CELL);
+    ctx.lineTo(ctr[t][0]*CELL, ctr[t][1]*CELL);
+    ctx.lineTo(ctr[(t+1)%4][0]*CELL, ctr[(t+1)%4][1]*CELL);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+  ctx.fillText('HOME', 7.5*CELL, 7.5*CELL+4);
+  /* tokens (count cellmates for stacking offsets) */
+  var occupancy={};
+  for(var pl=0; pl<4; pl++){
+    for(var ti2=0; ti2<4; ti2++){
+      var pos=tokenXY(pl, ti2);
+      var key=Math.round(pos.x)+','+Math.round(pos.y);
+      occupancy[key]=occupancy[key]||[];
+      occupancy[key].push([pl,ti2]);
+    }
+  }
+  for(var pl2=0; pl2<4; pl2++){
+    for(var ti3=0; ti3<4; ti3++){
+      var pos2=tokenXY(pl2, ti3);
+      var key2=Math.round(pos2.x)+','+Math.round(pos2.y);
+      var mates=occupancy[key2];
+      var mi=mates.findIndex(function(m){ return m[0]===pl2 && m[1]===ti3; });
+      var offs=[[0,0],[-9,-9],[9,-9],[-9,9],[9,9]];
+      var off = mates.length>1 ? offs[mi+1] || [0,0] : [0,0];
+      var x=pos2.x+off[0], y=pos2.y+off[1];
+      var isHL = current===0 && phase==='move' && highlight.indexOf(ti3)>-1 && pl2===0;
+      if(isHL){
+        ctx.beginPath(); ctx.arc(x, y, 19 + Math.sin(Date.now()/150)*2, 0, Math.PI*2);
+        ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(x, y, mates.length>1 ? 11 : 14, 0, Math.PI*2);
+      ctx.fillStyle=COLORS[pl2]; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+    }
+  }
+}
+function rollDice(){
+  return 1 + Math.floor(Math.random()*6);
+}
+function doRoll(){
+  if(phase!=='roll' || gameOver) return;
+  diceVal=rollDice();
+  el('dice').textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][diceVal-1];
+  beep(300+Math.random()*200, 0.05, 'square', 0.04);
+  if(diceVal===6){ sixChain++; } else sixChain=0;
+  if(sixChain===3){
+    el('msg').textContent=NAMES[current]+' rolled three 6s in a row — turn forfeited!';
+    sixChain=0;
+    setTimeout(nextTurn, 900);
+    return;
+  }
+  var options=movableTokens(state[current], diceVal);
+  if(!options.length){
+    el('msg').textContent=NAMES[current]+' rolled '+diceVal+' — no token can move.';
+    setTimeout(nextTurn, 850);
+    return;
+  }
+  phase='move'; highlight=options;
+  updateTurnUI(); draw();
+  if(current!==0){
+    var pick=aiChooseMove(state, current, diceVal);
+    setTimeout(function(){ applyMove(pick); }, 550);
+  } else {
+    el('msg').textContent='You rolled '+diceVal+' — tap a glowing token to move it.';
+    if(options.length===1) el('msg').textContent='You rolled '+diceVal+' — only one token can move, tap it!';
+  }
+}
+function applyMove(ti){
+  if(ti<0){ nextTurn(); return; }
+  var tokens=state[current];
+  var from=tokens[ti];
+  var to = from===-1 ? 0 : from + diceVal;
+  tokens[ti]=to;
+  var extra=false, note='';
+  if(diceVal===6) extra=true;
+  if(to===56){ extra=true; note=NAMES[current]+' brought a token HOME! 🏠'; beep(880,0.1,'sine',0.06); }
+  /* capture */
+  if(to>=0 && to<=50){
+    var idx=pathIdxFor(current, to);
+    if(!isSafeIdx(idx)){
+      for(var p=0;p<4;p++){
+        if(p===current) continue;
+        for(var k=0;k<4;k++){
+          var op=state[p][k];
+          if(op>=0 && op<=50 && pathIdxFor(p, op)===idx){
+            state[p][k]=-1; extra=true;
+            note=NAMES[current]+' captured '+NAMES[p]+'! ⚔️';
+            beep(200,0.15,'sawtooth',0.06);
+          }
+        }
+      }
+    }
+  }
+  if(note) el('msg').textContent=note;
+  /* win? */
+  if(state[current].every(function(v){ return v===56; })){
+    gameOver=true;
+    el('msg').textContent='🏆 '+NAMES[current]+' WINS THE GAME!'+(current===0 ? ' Congratulations, champion!' : ' Press NEW GAME to try again.');
+    beep(784,0.12,'sine',0.07); setTimeout(function(){ beep(1046,0.2,'sine',0.07); }, 140);
+    phase='over'; updateTurnUI(); draw();
+    return;
+  }
+  phase='roll'; highlight=[];
+  if(extra){
+    el('msg').textContent=(note? note+' ' : '')+NAMES[current]+' rolls again!';
+    updateTurnUI(); draw();
+    if(current!==0) setTimeout(doRoll, 650);
+  } else {
+    nextTurn();
+  }
+}
+function nextTurn(){
+  if(gameOver) return;
+  current=(current+1)%4;
+  phase='roll'; highlight=[];
+  updateTurnUI(); draw();
+  if(current===0) el('msg').textContent='Your turn — roll the dice!';
+  else setTimeout(doRoll, 700);
+}
+el('rollBtn').addEventListener('click', function(){ if(current===0) doRoll(); });
+el('newBtn').addEventListener('click', reset);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+cvs.addEventListener('click', function(e){
+  if(current!==0 || phase!=='move' || gameOver) return;
+  var rect=cvs.getBoundingClientRect();
+  var x=(e.clientX-rect.left)*(SIZE/rect.width), y=(e.clientY-rect.top)*(SIZE/rect.height);
+  for(var i=0;i<highlight.length;i++){
+    var ti=highlight[i], pos=tokenXY(0, ti);
+    if(Math.hypot(x-pos.x, y-pos.y) < 26){ applyMove(ti); return; }
+  }
+});
+/* gentle pulse redraw for highlight animation */
+setInterval(function(){ if(phase==='move' && current===0 && !gameOver) draw(); }, 220);
+reset();
+if(typeof module!=='undefined') module.exports={ PATH:PATH, pathIdxFor:pathIdxFor, zoneFor:zoneFor, canMove:canMove, movableTokens:movableTokens, isSafeIdx:isSafeIdx, aiChooseMove:aiChooseMove };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
