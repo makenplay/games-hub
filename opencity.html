@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Open City Driving Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play an open-city driving game free online. Cruise the streets, hit checkpoints, grab cash, outrun the heat. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#14532d; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🏙️ OPEN CITY DRIVING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">💵 <b id="cash">0</b></div>
+  <div class="stat">🎯 MISSION <b id="mission">1</b></div>
+  <div class="stat">⏱️ <b id="mtime">–</b></div>
+  <div class="stat">WANTED <b id="wanted">☆☆☆</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Drive with WASD / arrows. Follow the gold beacon to the checkpoint — grab cash bags on the way!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn gas" id="gasBtn">⬆ GAS</button>
+  <button class="btn" id="brakeBtn">⬇</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Running over cones and near-missing peds raises your wanted stars · police ram = bust meter fills · lose them to cool down</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Open City Driving</h2>
+  <p>A pocket-sized open world: a full city grid of avenues and blocks that is yours to cruise. Checkpoint missions pay cash with time bonuses, loose cash bags litter the streets — and every cone you flatten or pedestrian you scare brings the police closer.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Drive with WASD or the arrow keys. Follow the gold beacon to each mission checkpoint before its timer ends; faster arrivals pay more. Wanted stars rise with chaos and bring chasing police cars — if a cop stays glued to your bumper the bust meter fills and you lose your cash. Break line of sight and lay low to cool the heat.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A 2400-unit open city with solid buildings and lit streets</li>
+    <li>Endless checkpoint missions, cash pickups and a wanted system</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, CITY=2400, BLOCK=300, ROAD=84;
+/* city grid: blocks of BLOCK size separated by roads; buildings inside blocks */
+/* ---------- pure logic (testable) ---------- */
+function buildingsList(){
+  var list=[];
+  var cols=Math.floor(CITY/(BLOCK+ROAD));
+  for(var i=0;i<cols;i++){
+    for(var j=0;j<cols;j++){
+      var bx=ROAD + i*(BLOCK+ROAD) + 18;
+      var by=ROAD + j*(BLOCK+ROAD) + 18;
+      list.push({ x:bx, y:by, w:BLOCK-36, h:BLOCK-36, shade:(i*7+j*13)%5 });
+    }
+  }
+  return list;
+}
+function hitsBuilding(buildings, x, y, r){
+  for(var i=0;i<buildings.length;i++){
+    var b=buildings[i];
+    if(x+r > b.x && x-r < b.x+b.w && y+r > b.y && y-r < b.y+b.h) return b;
+  }
+  return null;
+}
+function missionTimeFor(dist){
+  return Math.max(14, dist/16.5);
+}
+function missionReward(timeLeft){
+  return 100 + Math.floor(timeLeft*6);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var BUILDINGS=buildingsList();
+var playing, car, camX, camY, cash, mission, target, mTime, wanted, wantedT, police, bags, cones, bust, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenCityBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('cash').textContent=cash;
+  el('mission').textContent=mission;
+  el('mtime').textContent= target ? Math.max(0, mTime).toFixed(0)+'s' : '–';
+  var s='';
+  for(var i=0;i<3;i++) s+= i<wanted ? '★' : '☆';
+  el('wanted').textContent=s;
+  el('wanted').style.color= wanted>0 ? '#f87171' : '#9aa7c7';
+  if(cash>best){ best=cash; localStorage.setItem('makenCityBest',best); }
+  el('best').textContent=best;
+}
+function roadPoint(rnd){
+  /* a point on a road: pick a vertical or horizontal avenue */
+  var avenues=[];
+  var cols=Math.floor(CITY/(BLOCK+ROAD));
+  for(var i=0;i<=cols;i++) avenues.push(i*(BLOCK+ROAD) + ROAD/2 - (i===0 ? -ROAD/2 : 0));
+  avenues=[42];
+  for(var k=1;k<=cols;k++) avenues.push(ROAD + (k-1)*(BLOCK+ROAD) + BLOCK + ROAD/2);
+  avenues.push(CITY-42);
+  var a=avenues[Math.floor(rnd()*avenues.length)];
+  if(rnd()<0.5) return { x:a, y:60+rnd()*(CITY-120) };
+  return { x:60+rnd()*(CITY-120), y:a };
+}
+function newMission(){
+  var p=roadPoint(Math.random);
+  var dist=Math.hypot(p.x-car.x, p.y-car.y);
+  if(dist<420){ p=roadPoint(Math.random); dist=Math.hypot(p.x-car.x, p.y-car.y); }
+  target=p;
+  mTime=missionTimeFor(dist);
+}
+function reset(){
+  playing=false;
+  car={ x:42, y:1200, ang:0, speed:0 };
+  camX=car.x; camY=car.y;
+  cash=0; mission=1; wanted=0; wantedT=0; bust=0;
+  police=[];
+  bags=[];
+  for(var i=0;i<14;i++){ var bp=roadPoint(Math.random); bags.push({ x:bp.x, y:bp.y, taken:false }); }
+  cones=[];
+  for(var j=0;j<16;j++){ var cp=roadPoint(Math.random); cones.push({ x:cp.x, y:cp.y, hit:false }); }
+  keys={};
+  newMission();
+  hud(); draw();
+}
+function drawCarShape(x, y, ang, body, isCop){
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(ang);
+  ctx.fillStyle=body;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(-16, -8.6, 32, 17.2, 5); else ctx.rect(-16, -8.6, 32, 17.2);
+  ctx.fill();
+  ctx.fillStyle='rgba(191,219,254,0.95)';
+  ctx.fillRect(1, -6.4, 7, 12.8);
+  ctx.fillRect(-8.6, -6, 5.4, 12);
+  ctx.fillStyle='#111827';
+  ctx.fillRect(-13, -10.4, 7.4, 3.4); ctx.fillRect(6, -10.4, 7.4, 3.4);
+  ctx.fillRect(-13, 7, 7.4, 3.4); ctx.fillRect(6, 7, 7.4, 3.4);
+  if(isCop){
+    ctx.fillStyle= (Math.floor(performance.now()/220)%2===0) ? '#ef4444' : '#3b82f6';
+    ctx.fillRect(-3.4, -3, 6.8, 6);
+  }
+  ctx.restore();
+}
+function draw(){
+  /* grass base */
+  ctx.fillStyle='#14532d'; ctx.fillRect(0,0,W,H);
+  /* roads */
+  ctx.fillStyle='#3f3f46';
+  var cols=Math.floor(CITY/(BLOCK+ROAD));
+  var i, wx, sx;
+  for(i=0;i<=cols;i++){
+    wx= i===0 ? 0 : ROAD + (i-1)*(BLOCK+ROAD) + BLOCK;
+    sx=wx-camX+W/2;
+    if(sx>-ROAD && sx<W) ctx.fillRect(sx, 0, ROAD, H);
+    wx= i===0 ? 0 : ROAD + (i-1)*(BLOCK+ROAD) + BLOCK;
+    sx=wx-camY+H/2;
+    if(sx>-ROAD && sx<H) ctx.fillRect(0, sx, W, ROAD);
+  }
+  /* edge roads */
+  ctx.fillRect(0, 0, Math.max(0, CITY-ROAD-camX+W/2) > 0 ? 0 : 0, 0);
+  /* lane dashes */
+  ctx.fillStyle='rgba(250,204,21,0.5)';
+  for(i=0;i<=cols;i++){
+    var cx0= (i===0 ? ROAD/2 : ROAD + (i-1)*(BLOCK+ROAD) + BLOCK + ROAD/2) - camX + W/2;
+    if(cx0>-6 && cx0<W+6) for(var dy=0; dy<H; dy+=34) ctx.fillRect(cx0-1.4, dy, 2.8, 17);
+    var cy0= (i===0 ? ROAD/2 : ROAD + (i-1)*(BLOCK+ROAD) + BLOCK + ROAD/2) - camY + H/2;
+    if(cy0>-6 && cy0<H+6) for(var dx=0; dx<W; dx+=34) ctx.fillRect(dx, cy0-1.4, 17, 2.8);
+  }
+  /* buildings */
+  var shades=['#78716c','#a8a29e','#8d6e63','#94a3b8','#b08968'];
+  BUILDINGS.forEach(function(b){
+    var bx=b.x-camX+W/2, by=b.y-camY+H/2;
+    if(bx<-b.w || bx>W || by<-b.h || by>H) return;
+    ctx.fillStyle=shades[b.shade];
+    ctx.fillRect(bx, by, b.w, b.h);
+    ctx.fillStyle='rgba(255,255,255,0.14)';
+    ctx.fillRect(bx, by, b.w, 9);
+    ctx.fillStyle='rgba(250,204,21,0.35)';
+    for(var wy=by+18; wy<by+b.h-12; wy+=24) for(var wx2=bx+14; wx2<bx+b.w-12; wx2+=26){
+      if((wx2*7+wy*13)%3!==0) ctx.fillRect(wx2, wy, 9, 11);
+    }
+  });
+  /* city border */
+  ctx.strokeStyle='rgba(239,68,68,0.8)'; ctx.lineWidth=4;
+  ctx.strokeRect(-camX+W/2, -camY+H/2, CITY, CITY);
+  /* cash bags */
+  bags.forEach(function(b){
+    if(b.taken) return;
+    var bx=b.x-camX+W/2, by=b.y-camY+H/2;
+    if(bx<-16 || bx>W+16 || by<-16 || by>H+16) return;
+    ctx.font='19px Arial'; ctx.textAlign='center';
+    ctx.fillText('💰', bx, by+7);
+  });
+  /* cones */
+  cones.forEach(function(c){
+    if(c.hit) return;
+    var cx2=c.x-camX+W/2, cy2=c.y-camY+H/2;
+    if(cx2<-12 || cx2>W+12 || cy2<-12 || cy2>H+12) return;
+    ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('🚧', cx2, cy2+5);
+  });
+  /* checkpoint beacon + ring */
+  if(target){
+    var tx=target.x-camX+W/2, ty=target.y-camY+H/2;
+    ctx.strokeStyle='rgba(250,204,21,'+(0.55+0.35*Math.sin(performance.now()/200))+')';
+    ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.arc(tx, ty, 26, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(250,204,21,0.16)';
+    ctx.beginPath(); ctx.moveTo(tx, ty-320); ctx.lineTo(tx-13, ty); ctx.lineTo(tx+13, ty); ctx.closePath(); ctx.fill();
+    ctx.font='21px Arial'; ctx.textAlign='center';
+    ctx.fillText('🎯', tx, ty+7);
+    /* direction arrow when offscreen */
+    if(tx<-20 || tx>W+20 || ty<-20 || ty>H+20){
+      var ang=Math.atan2(target.y-car.y, target.x-car.x);
+      var ax=W/2 + Math.cos(ang)*(W/2-34), ay=H/2 + Math.sin(ang)*(H/2-34);
+      ctx.fillStyle='#facc15';
+      ctx.save();
+      ctx.translate(ax, ay); ctx.rotate(ang);
+      ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-9, -8); ctx.lineTo(-9, 8); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.font='bold 11px Arial';
+      ctx.fillText(Math.round(Math.hypot(target.x-car.x, target.y-car.y)/10)+'m', ax, ay-13);
+    }
+  }
+  /* police */
+  police.forEach(function(p){ drawCarShape(p.x-camX+W/2, p.y-camY+H/2, p.ang, '#e5e7eb', true); });
+  /* player */
+  drawCarShape(W/2, H/2, car.ang, '#dc2626', false);
+  /* bust meter */
+  if(bust>0){
+    ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(W/2-80, 16, 160, 15);
+    ctx.fillStyle='#ef4444'; ctx.fillRect(W/2-80, 16, 160*Math.min(1, bust/2.5), 15);
+    ctx.fillStyle='#fff'; ctx.font='bold 10.5px Arial'; ctx.textAlign='center';
+    ctx.fillText('BUSTED IN…', W/2, 27.4);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText('🏙️ OPEN CITY DRIVING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText('Press START — missions, cash and a little heat', W/2, H/2+18);
+  }
+}
+function addWanted(n){
+  wanted=Math.min(3, wanted+n);
+  wantedT=16;
+  while(police.length < wanted){
+    var ang=Math.random()*Math.PI*2;
+    police.push({ x:car.x+Math.cos(ang)*430, y:car.y+Math.sin(ang)*430, ang:0, speed:0 });
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var gas=keys.KeyW || keys.ArrowUp || keys.__gas;
+  var brake=keys.KeyS || keys.ArrowDown || keys.__brake;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  if(gas) car.speed += 300*dt;
+  if(brake) car.speed -= (car.speed>0 ? 340 : 130)*dt;
+  car.speed *= Math.pow(0.5, dt);
+  car.speed=Math.max(-95, Math.min(295, car.speed));
+  if(left) car.ang -= (1.15 + Math.abs(car.speed)/130)*dt * (car.speed<0 ? -1 : 1);
+  if(right) car.ang += (1.15 + Math.abs(car.speed)/130)*dt * (car.speed<0 ? -1 : 1);
+  var nx=car.x + Math.cos(car.ang)*car.speed*dt;
+  var ny=car.y + Math.sin(car.ang)*car.speed*dt;
+  nx=Math.max(18, Math.min(CITY-18, nx));
+  ny=Math.max(18, Math.min(CITY-18, ny));
+  if(!hitsBuilding(BUILDINGS, nx, ny, 13)){
+    car.x=nx; car.y=ny;
+  } else {
+    if(!hitsBuilding(BUILDINGS, nx, car.y, 13)) car.x=nx;
+    else if(!hitsBuilding(BUILDINGS, car.x, ny, 13)) car.y=ny;
+    else {
+      car.speed *= -0.3;
+      beep(120,0.08,'sawtooth',0.05);
+    }
+  }
+  /* bags + cones */
+  bags.forEach(function(b){
+    if(!b.taken && Math.hypot(b.x-car.x, b.y-car.y) < 26){
+      b.taken=true;
+      cash+=25;
+      el('msg').textContent='💰 Cash bag! +$25.';
+      beep(1180,0.06,'sine',0.05);
+      var bp=roadPoint(Math.random);
+      bags.push({ x:bp.x, y:bp.y, taken:false });
+    }
+  });
+  cones.forEach(function(c){
+    if(!c.hit && Math.hypot(c.x-car.x, c.y-car.y) < 19){
+      c.hit=true;
+      el('msg').textContent='🚧 Cone flattened! The heat noticed…';
+      beep(240,0.07,'square',0.05);
+      addWanted(1);
+    }
+  });
+  /* mission */
+  if(target){
+    mTime-=dt;
+    if(Math.hypot(target.x-car.x, target.y-car.y) < 34){
+      var reward=missionReward(Math.max(0, mTime));
+      cash+=reward;
+      mission++;
+      el('msg').textContent='🎯 Checkpoint! +$'+reward+'. Mission '+mission+' — follow the beacon!';
+      beep(940,0.13,'sine',0.06);
+      newMission();
+    } else if(mTime<=0){
+      el('msg').textContent='⏱️ Too slow — new checkpoint assigned.';
+      mission++;
+      newMission();
+    }
+  }
+  /* wanted decay */
+  if(wanted>0){
+    wantedT-=dt;
+    if(wantedT<=0){
+      wanted--;
+      wantedT=16;
+      if(police.length>wanted) police.length=wanted;
+      if(wanted===0) el('msg').textContent='😎 Heat cooled off. Clean driving!';
+    }
+  }
+  /* police chase */
+  var touching=false;
+  police.forEach(function(p){
+    var d=Math.hypot(car.x-p.x, car.y-p.y);
+    var wantAng=Math.atan2(car.y-p.y, car.x-p.x);
+    var da=((wantAng - p.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    p.ang += Math.max(-2.4*dt, Math.min(2.4*dt, da));
+    var topSpeed=252 + wanted*9;
+    p.speed += ((d>44 ? topSpeed : topSpeed*0.4) - p.speed)*Math.min(1, dt*1.6);
+    var px=p.x + Math.cos(p.ang)*p.speed*dt;
+    var py=p.y + Math.sin(p.ang)*p.speed*dt;
+    if(!hitsBuilding(BUILDINGS, px, py, 13)){ p.x=px; p.y=py; }
+    else p.speed*=0.4;
+    if(d<30) touching=true;
+  });
+  if(touching && wanted>0){
+    bust += dt;
+    if(bust>=2.5){
+      var lost=cash;
+      cash=0; wanted=0; police=[]; bust=0; wantedT=0;
+      car.speed=0;
+      el('msg').textContent='🚔 BUSTED! You lost $'+lost+'. The city forgives… this time.';
+      beep(160,0.3,'sawtooth',0.08);
+    }
+  } else {
+    bust=Math.max(0, bust - dt*1.4);
+  }
+  camX += (car.x-camX)*Math.min(1, dt*6);
+  camY += (car.y-camY)*Math.min(1, dt*6);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('gasBtn','__gas'); holdBtn('brakeBtn','__brake');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🏙️ Mission 1 — follow the gold beacon!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ buildingsList:buildingsList, hitsBuilding:hitsBuilding, missionTimeFor:missionTimeFor, missionReward:missionReward, CITY:CITY };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

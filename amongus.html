@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Crewmate Tasks Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a crewmate-tasks mini game free online. Run the ship, fix wires, swipe the card, blast asteroids — finish every task before the impostor timer ends. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .taskwrap { width:min(640px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .taskwrap i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#84cc16); transition:width .2s; }
+  canvas#cv { background:#1e293b; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .pad { display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px; gap:5px; justify-content:center; padding:2px 0 8px; }
+  .btn { padding:11px 0; font-size:16px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.94); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-size:12px; }
+  .btn.use { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🚀 CREWMATE TASKS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱️ IMPOSTOR IN <b id="time">150s</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+<div class="taskwrap"><i id="taskBar" style="width:0%"></i></div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Walk to a glowing station and press USE (E). Finish all 5 tasks before the impostor arrives!</div>
+<div class="pad">
+  <span></span><button class="btn" id="upBtn">⬆</button><span></span>
+  <button class="btn" id="leftBtn">◀</button><button class="btn primary" id="startBtn">▶ START</button><button class="btn" id="rightBtn">▶</button>
+  <span></span><button class="btn" id="downBtn">⬇</button><span></span>
+</div>
+<div class="row" style="display:flex;gap:8px;justify-content:center;padding-bottom:8px;">
+  <button class="btn use" id="useBtn" style="padding:11px 26px;">✋ USE TASK</button>
+  <button class="btn" id="soundBtn" style="padding:11px 16px;">🔊</button>
+</div>
+<div class="keys">Wires: tap the colors in order · Card: tap in the green zone · Asteroids: tap 6 rocks · Fuel: tap fast to fill · Scan: stand still</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Crewmate Tasks</h2>
+  <p>The spaceship chore-run, distilled: you are the lone crewmate on duty and five stations need fixing — wiring, card swipe, asteroid watch, fuel and a medbay scan. An impostor is on the way; finish the green task bar before the countdown dies and the ship is saved.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Walk with the arrow keys, WASD or the pad. Stand at a glowing station and press E or USE to open its mini-task: each one is different — sequence memory, timing, rapid tapping, target clicking or pure patience. Complete all five before the 150-second impostor timer runs out.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Five genuinely different mini-tasks in one ship run</li>
+    <li>Score bonuses for fast, mistake-free task completions</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, TIME_LIMIT=150;
+var STATIONS=[
+  { id:'wires',     name:'Fix Wiring',    icon:'🔌', x:86,  y:80 },
+  { id:'card',      name:'Swipe Card',    icon:'💳', x:540, y:80 },
+  { id:'asteroids', name:'Clear Asteroids', icon:'☄️', x:540, y:360 },
+  { id:'fuel',      name:'Fuel Engines',  icon:'⛽', x:86,  y:360 },
+  { id:'scan',      name:'Medbay Scan',   icon:'🩻', x:313, y:222 }
+];
+var WIRE_COLORS=['#ef4444','#3b82f6','#facc15','#22c55e'];
+/* ---------- pure logic (testable) ---------- */
+function wireOrder(rnd){
+  var order=[0,1,2,3];
+  for(var i=order.length-1;i>0;i--){
+    var j=Math.floor(rnd()*(i+1));
+    var t=order[i]; order[i]=order[j]; order[j]=t;
+  }
+  return order;
+}
+function cardInZone(pos){
+  return pos>=0.42 && pos<=0.62;
+}
+function taskScore(timeUsed){
+  return Math.max(40, 120 - Math.floor(timeUsed*4));
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, player, done, timeLeft, score, active, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenCrewBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('time').textContent=Math.max(0, Math.ceil(timeLeft))+'s';
+  el('score').textContent=score;
+  el('taskBar').style.width=(done.size/STATIONS.length*100)+'%';
+  if(score>best){ best=score; localStorage.setItem('makenCrewBest',best); }
+  el('best').textContent=best;
+}
+function reset(){
+  playing=false;
+  player={ x:313, y:300, face:1 };
+  done=new Set();
+  timeLeft=TIME_LIMIT;
+  score=0;
+  active=null;
+  keys={};
+  hud(); draw();
+}
+function nearStation(){
+  for(var i=0;i<STATIONS.length;i++){
+    var s=STATIONS[i];
+    if(done.has(s.id)) continue;
+    if(Math.hypot(player.x-s.x, player.y-s.y) < 52) return s;
+  }
+  return null;
+}
+function drawCrewmate(x, y, color){
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.ellipse(x, y+2, 13, 15, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillRect(x-13, y+8, 26, 9);
+  ctx.fillStyle='#a5f3fc';
+  ctx.beginPath(); ctx.ellipse(x+4.4, y-4, 8.6, 5.6, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(14,116,144,0.6)';
+  ctx.beginPath(); ctx.ellipse(x+5.4, y-4.6, 5.4, 3.2, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle=color;
+  ctx.fillRect(x-19, y-2, 6, 13);
+}
+function draw(){
+  /* ship floor */
+  ctx.fillStyle='#334155'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#3f4f68';
+  for(var gx=0; gx<W; gx+=64) for(var gy=0; gy<H; gy+=64) ctx.fillRect(gx+1, gy+1, 62, 62);
+  ctx.strokeStyle='#64748b'; ctx.lineWidth=5; ctx.strokeRect(4, 4, W-8, H-8);
+  /* centre table */
+  ctx.fillStyle='#7c2d12';
+  ctx.beginPath(); ctx.ellipse(313, 128, 64, 22, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fbbf24'; ctx.font='11px Arial'; ctx.textAlign='center';
+  ctx.fillText('CAFETERIA', 313, 132);
+  /* stations */
+  STATIONS.forEach(function(s){
+    var isDone=done.has(s.id);
+    var near=nearStation()===s;
+    ctx.fillStyle= isDone ? '#14532d' : near ? '#065f46' : '#1e3a5f';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(s.x-32, s.y-26, 64, 52, 9); else ctx.rect(s.x-32, s.y-26, 64, 52);
+    ctx.fill();
+    ctx.strokeStyle= isDone ? '#22c55e' : near ? '#34d399' : '#38bdf8';
+    ctx.lineWidth= near ? 3.4 : 2;
+    ctx.stroke();
+    ctx.font='21px Arial'; ctx.textAlign='center';
+    ctx.fillText(s.icon, s.x, s.y+2);
+    ctx.fillStyle='#e2e8f0'; ctx.font='bold 9.5px Arial';
+    ctx.fillText(isDone ? '✓ DONE' : s.name.toUpperCase(), s.x, s.y+19);
+    if(!isDone){
+      ctx.fillStyle='rgba(52,211,153,'+(0.5+0.4*Math.sin(performance.now()/240))+')';
+      ctx.beginPath(); ctx.arc(s.x+24, s.y-18, 4.4, 0, Math.PI*2); ctx.fill();
+    }
+  });
+  drawCrewmate(player.x, player.y, '#ef4444');
+  /* mini-task panel */
+  if(active) drawPanel();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 25px Arial'; ctx.textAlign='center';
+    ctx.fillText(done.size>=STATIONS.length ? '🏆 SHIP SAVED — ALL TASKS DONE!' : timeLeft<=0 ? '👹 THE IMPOSTOR GOT YOU!' : '🚀 CREWMATE TASKS', W/2, H/2-8);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(done.size>=STATIONS.length ? 'Score '+score+' with '+Math.ceil(timeLeft)+'s to spare!' : timeLeft<=0 ? 'Tasks finished: '+done.size+'/5 — press START to retry' : 'Press START — 5 tasks, 150 seconds', W/2, H/2+20);
+  }
+}
+function panelBox(){
+  return { x:W/2-168, y:H/2-104, w:336, h:208 };
+}
+function drawPanel(){
+  var b=panelBox();
+  ctx.fillStyle='rgba(2,6,23,0.88)'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#0f172a';
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(b.x, b.y, b.w, b.h, 12); else ctx.rect(b.x, b.y, b.w, b.h);
+  ctx.fill();
+  ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.textAlign='center';
+  ctx.fillText(active.station.icon+' '+active.station.name, W/2, b.y+28);
+  ctx.font='12px Arial'; ctx.fillStyle='#94a3b8';
+  if(active.type==='wires'){
+    ctx.fillText('Tap the wire ends in this order:', W/2, b.y+52);
+    ctx.font='bold 15px Arial';
+    active.order.forEach(function(ci, i){
+      ctx.fillStyle= i<active.progress ? '#475569' : WIRE_COLORS[ci];
+      ctx.fillText('●', b.x+96+i*48, b.y+56);
+    });
+    active.nodes.forEach(function(n, i){
+      ctx.fillStyle=WIRE_COLORS[i];
+      ctx.beginPath(); ctx.arc(n.x, n.y, 21, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='bold 13px Arial';
+      ctx.fillText(active.progress>i && active.order[active.progress-1]===i ? '✓' : '', n.x, n.y+4.4);
+    });
+  } else if(active.type==='card'){
+    ctx.fillText('Tap SWIPE when the marker is in the green zone!', W/2, b.y+52);
+    ctx.fillStyle='#1e293b'; ctx.fillRect(b.x+28, b.y+84, b.w-56, 20);
+    ctx.fillStyle='#22c55e'; ctx.fillRect(b.x+28+(b.w-56)*0.42, b.y+84, (b.w-56)*0.2, 20);
+    var mx=b.x+28+(b.w-56)*active.pos;
+    ctx.fillStyle='#facc15'; ctx.fillRect(mx-3, b.y+78, 6, 32);
+    ctx.fillStyle='#3b82f6';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(b.x+108, b.y+128, 120, 40, 8); else ctx.rect(b.x+108, b.y+128, 120, 40);
+    ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 15px Arial';
+    ctx.fillText('💳 SWIPE', W/2, b.y+154);
+  } else if(active.type==='asteroids'){
+    ctx.fillText('Tap all 6 asteroids! Hit: '+active.hits+'/6', W/2, b.y+52);
+    active.rocks.forEach(function(r){
+      if(r.dead) return;
+      ctx.fillStyle='#78716c';
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#57534e';
+      ctx.beginPath(); ctx.arc(r.x-4, r.y-3, r.r*0.4, 0, Math.PI*2); ctx.fill();
+    });
+  } else if(active.type==='fuel'){
+    ctx.fillText('Tap FILL fast to pump the fuel!', W/2, b.y+52);
+    ctx.fillStyle='#1e293b'; ctx.fillRect(b.x+88, b.y+66, 160, 22);
+    ctx.fillStyle='#f97316'; ctx.fillRect(b.x+88, b.y+66, 160*active.fill, 22);
+    ctx.fillStyle='#ef4444';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(b.x+108, b.y+116, 120, 42, 8); else ctx.rect(b.x+108, b.y+116, 120, 42);
+    ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 15px Arial';
+    ctx.fillText('⛽ FILL', W/2, b.y+143);
+  } else if(active.type==='scan'){
+    ctx.fillText('Stand still… scanning: '+Math.floor(active.progress/3*100)+'%', W/2, b.y+58);
+    ctx.strokeStyle='#22c55e'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(W/2, b.y+118, 34, -Math.PI/2, -Math.PI/2 + Math.PI*2*(active.progress/3)); ctx.stroke();
+    ctx.font='25px Arial'; ctx.fillText('🧍', W/2, b.y+128);
+  }
+  ctx.fillStyle='#64748b'; ctx.font='11px Arial';
+  ctx.fillText('Press ESC / walk away to cancel', W/2, b.y+b.h-12);
+}
+function openTask(station){
+  var b=panelBox();
+  active={ station:station, type:station.id, t:0 };
+  if(station.id==='wires'){
+    active.order=wireOrder(Math.random);
+    active.progress=0;
+    active.nodes=[0,1,2,3].map(function(i){
+      return { x:b.x+62+i*72, y:b.y+128 };
+    });
+  } else if(station.id==='card'){
+    active.pos=0; active.dir=1;
+  } else if(station.id==='asteroids'){
+    active.hits=0;
+    active.rocks=[];
+    for(var i=0;i<6;i++){
+      active.rocks.push({ x:b.x+40+Math.random()*(b.w-80), y:b.y+70+Math.random()*(b.h-110), r:15+Math.random()*8, vx:(Math.random()*2-1)*38, vy:(Math.random()*2-1)*30, dead:false });
+    }
+  } else if(station.id==='fuel'){
+    active.fill=0;
+  } else if(station.id==='scan'){
+    active.progress=0;
+  }
+  el('msg').textContent=station.icon+' '+station.name+' — complete the task!';
+  beep(700,0.06,'sine',0.05);
+}
+function completeTask(){
+  var gained=taskScore(active.t);
+  score+=gained;
+  done.add(active.station.id);
+  el('msg').textContent='✅ '+active.station.name+' done! +'+gained+'. ('+done.size+'/5)';
+  beep(980,0.11,'sine',0.06);
+  active=null;
+  if(done.size>=STATIONS.length){
+    playing=false;
+    score+=Math.ceil(timeLeft)*2;
+    el('msg').textContent='🏆 All tasks done — ship saved! Final score: '+score+'.';
+    beep(1180,0.2,'sine',0.07);
+  }
+  hud(); draw();
+}
+function panelClick(x, y){
+  if(!active) return;
+  var b=panelBox();
+  if(active.type==='wires'){
+    active.nodes.forEach(function(n, i){
+      if(Math.hypot(x-n.x, y-n.y) < 25){
+        if(active.order[active.progress]===i){
+          active.progress++;
+          beep(600+active.progress*90, 0.06, 'sine', 0.055);
+          if(active.progress>=4) completeTask();
+        } else {
+          el('msg').textContent='🔌 Wrong wire! Start the sequence again.';
+          beep(180,0.12,'sawtooth',0.06);
+          active.progress=0;
+        }
+      }
+    });
+  } else if(active.type==='card'){
+    if(x>b.x+108 && x<b.x+228 && y>b.y+128 && y<b.y+168){
+      if(cardInZone(active.pos)){
+        completeTask();
+      } else {
+        el('msg').textContent='💳 Bad swipe — wait for the green zone!';
+        beep(180,0.12,'sawtooth',0.06);
+      }
+    }
+  } else if(active.type==='asteroids'){
+    active.rocks.forEach(function(r){
+      if(!r.dead && Math.hypot(x-r.x, y-r.y) < r.r+5){
+        r.dead=true;
+        active.hits++;
+        beep(340,0.06,'square',0.055);
+        if(active.hits>=6) completeTask();
+      }
+    });
+  } else if(active.type==='fuel'){
+    if(x>b.x+108 && x<b.x+228 && y>b.y+116 && y<b.y+158){
+      active.fill += 0.09;
+      beep(300+active.fill*300, 0.04, 'square', 0.04);
+      if(active.fill>=1) completeTask();
+    }
+  }
+}
+function canvasPos(e){
+  var r=cvs.getBoundingClientRect();
+  return { x:((e.touches ? e.touches[0].clientX : e.clientX) - r.left) * (W/r.width),
+           y:((e.touches ? e.touches[0].clientY : e.clientY) - r.top) * (H/r.height) };
+}
+cvs.addEventListener('mousedown', function(e){ var p=canvasPos(e); panelClick(p.x, p.y); });
+cvs.addEventListener('touchstart', function(e){ e.preventDefault(); var p=canvasPos(e); panelClick(p.x, p.y); }, {passive:false});
+function tryUse(){
+  if(!playing || active) return;
+  var s=nearStation();
+  if(s) openTask(s);
+  else el('msg').textContent='🚶 Walk to a glowing station first.';
+}
+el('useBtn').addEventListener('click', tryUse);
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){
+    timeLeft=0;
+    playing=false;
+    el('msg').textContent='👹 Time up — the impostor found you! Tasks done: '+done.size+'/5. Score: '+score+'.';
+    beep(130,0.3,'sawtooth',0.08);
+    hud(); draw();
+    return;
+  }
+  if(active){
+    active.t+=dt;
+    if(active.type==='card'){
+      active.pos += active.dir*dt*0.85;
+      if(active.pos>1){ active.pos=1; active.dir=-1; }
+      if(active.pos<0){ active.pos=0; active.dir=1; }
+    } else if(active.type==='asteroids'){
+      var b=panelBox();
+      active.rocks.forEach(function(r){
+        if(r.dead) return;
+        r.x+=r.vx*dt; r.y+=r.vy*dt;
+        if(r.x<b.x+24 || r.x>b.x+b.w-24) r.vx*=-1;
+        if(r.y<b.y+62 || r.y>b.y+b.h-24) r.vy*=-1;
+      });
+    } else if(active.type==='fuel'){
+      active.fill=Math.max(0, active.fill - dt*0.14);
+    } else if(active.type==='scan'){
+      active.progress+=dt;
+      if(active.progress>=3) completeTask();
+    }
+  } else {
+    var dx=0, dy=0;
+    if(keys.KeyA || keys.ArrowLeft || keys.__left) dx-=1;
+    if(keys.KeyD || keys.ArrowRight || keys.__right) dx+=1;
+    if(keys.KeyW || keys.ArrowUp || keys.__up) dy-=1;
+    if(keys.KeyS || keys.ArrowDown || keys.__down) dy+=1;
+    if(dx) player.face=dx;
+    var len=Math.hypot(dx, dy) || 1;
+    player.x=Math.max(26, Math.min(W-26, player.x + dx/len*196*dt));
+    player.y=Math.max(30, Math.min(H-24, player.y + dy/len*196*dt));
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+  if(e.code==='KeyE') tryUse();
+  if(e.code==='Escape') active=null;
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('upBtn','__up'); holdBtn('downBtn','__down');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🚀 Go! Finish all 5 tasks!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ STATIONS:STATIONS, wireOrder:wireOrder, cardInZone:cardInZone, taskScore:taskScore, TIME_LIMIT:TIME_LIMIT };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
