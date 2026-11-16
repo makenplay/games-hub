@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dino Runner Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play the famous Dino Runner game online for free. Jump over cactus, duck under birds, beat your best score. Mobile and desktop.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1020; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+  header { text-align:center; margin:8px 0 4px; }
+  header h1 { font-size:26px; letter-spacing:1px; color:#a3e635; text-shadow:0 0 14px rgba(163,230,53,.4); }
+  header p { font-size:13px; color:#9aa7c7; margin-top:2px; }
+  .ad-slot { width:100%; max-width:728px; min-height:60px; margin:8px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:12px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:8px 0; }
+  .hud .box { background:#131c3a; border:1px solid #26335f; border-radius:10px; padding:6px 14px; text-align:center; min-width:86px; }
+  .hud .box b { display:block; font-size:19px; color:#fff; }
+  .hud .box span { font-size:11px; color:#9aa7c7; letter-spacing:1px; }
+  #wrap { position:relative; width:min(94vw, 720px); }
+  canvas { width:100%; height:auto; display:block; border:2px solid #26335f; border-radius:12px; touch-action:none; cursor:pointer; background:#f7f7f7; }
+  .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
+  .controls button { background:#131c3a; color:#e8ecf8; border:1px solid #26335f; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; }
+  footer { margin:10px 0 4px; font-size:12px; color:#5b6b96; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🦖 DINO RUNNER</h1>
+  <p>SPACE / tap to jump — DOWN arrow to duck. How far can you run?</p>
+</header>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="box"><b id="score">0</b><span>SCORE</span></div>
+  <div class="box"><b id="best">0</b><span>BEST</span></div>
+  <div class="box"><b id="speed">1×</b><span>SPEED</span></div>
+</div>
+
+<div id="wrap">
+  <canvas id="game" width="720" height="240"></canvas>
+</div>
+
+<div class="controls">
+  <button id="jumpBtn">⬆ JUMP</button>
+  <button id="duckBtn">⬇ DUCK</button>
+  <button id="restartBtn">↻ Restart</button>
+  <button id="soundBtn">🔊 Sound: On</button>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<footer>Maken Play — free online games. More games coming soon.</footer>
+
+<script>
+(function(){
+  "use strict";
+  var W = 720, H = 240, GY = 200;
+  var canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  var scoreEl = document.getElementById('score'), bestEl = document.getElementById('best'), speedEl = document.getElementById('speed');
+  var best = parseInt(localStorage.getItem('dino_best') || '0', 10) || 0;
+  bestEl.textContent = best;
+  var soundOn = true, AC = null;
+  function beep(freq, dur, type){
+    if(!soundOn) return;
+    try{
+      if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'square'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.04, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+    }catch(e){}
+  }
+
+  var dino, obs, clouds, score, speed, state, frame, nextSpawn, ducking;
+  function reset(){
+    dino = { x: 60, y: GY, vy: 0, w: 40, h: 44, duckH: 26 };
+    obs = []; clouds = [{x:150,y:40},{x:420,y:64},{x:640,y:30}];
+    score = 0; speed = 6; frame = 0; nextSpawn = 70; ducking = false; state = 'ready';
+    scoreEl.textContent = '0'; speedEl.textContent = '1×';
+  }
+  function curH(){ return ducking && dino.y >= GY ? dino.duckH : dino.h; }
+  function jump(){
+    if(state === 'ready'){ state = 'play'; }
+    if(state === 'dead'){ reset(); state = 'play'; return; }
+    if(dino.y >= GY){ dino.vy = -12.6; ducking = false; beep(500, 0.07); }
+  }
+  function spawn(){
+    var r = Math.random();
+    if(r < 0.62){
+      var n = 1 + Math.floor(Math.random()*3);
+      obs.push({ type:'cactus', x: W + 20, w: 16*n + 6, h: 30 + Math.random()*16, n: n });
+    } else {
+      var heights = [GY - 58, GY - 34, GY - 84];
+      obs.push({ type:'bird', x: W + 20, w: 38, h: 16, y: heights[Math.floor(Math.random()*heights.length)] });
+    }
+    nextSpawn = frame + Math.floor((52 + Math.random()*55) * (6/speed)) + 26;
+  }
+  function drawDino(){
+    var h = curH(), y = GY - h;
+    ctx.fillStyle = '#4b5563';
+    // body
+    ctx.fillRect(dino.x, y + (h - 30 < 0 ? 0 : h - 30) * 0 + (ducking && dino.y>=GY ? 8 : 6), 34, h - 14);
+    // head
+    if(ducking && dino.y >= GY){ ctx.fillRect(dino.x + 26, y + 4, 24, 12); }
+    else { ctx.fillRect(dino.x + 22, y - 8, 20, 16); }
+    // tail
+    ctx.fillRect(dino.x - 10, y + 12, 12, 7);
+    // legs (run animation when on ground)
+    ctx.fillStyle = '#374151';
+    if(dino.y < GY){ ctx.fillRect(dino.x + 6, GY - 10, 7, 10); ctx.fillRect(dino.x + 22, GY - 12, 7, 12); }
+    else if(state === 'play'){
+      var ph = Math.floor(frame / 6) % 2;
+      if(ph === 0){ ctx.fillRect(dino.x + 6, GY - 11, 7, 11); ctx.fillRect(dino.x + 22, GY - 6, 7, 6); }
+      else { ctx.fillRect(dino.x + 6, GY - 6, 7, 6); ctx.fillRect(dino.x + 22, GY - 11, 7, 11); }
+    } else { ctx.fillRect(dino.x + 6, GY - 11, 7, 11); ctx.fillRect(dino.x + 22, GY - 11, 7, 11); }
+    // eye
+    ctx.fillStyle = '#fff';
+    if(ducking && dino.y >= GY) ctx.fillRect(dino.x + 42, y + 7, 4, 4); else ctx.fillRect(dino.x + 34, y - 4, 4, 4);
+  }
+  function draw(){
+    ctx.fillStyle = '#f7f7f7'; ctx.fillRect(0,0,W,H);
+    // clouds
+    ctx.fillStyle = '#d1d5db';
+    clouds.forEach(function(c){
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 10, 0, Math.PI*2); ctx.arc(c.x+12, c.y+3, 8, 0, Math.PI*2); ctx.arc(c.x-12, c.y+3, 7, 0, Math.PI*2);
+      ctx.fill();
+    });
+    // ground
+    ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, GY + 2); ctx.lineTo(W, GY + 2); ctx.stroke();
+    ctx.fillStyle = '#9ca3af';
+    for(var gx = -(Math.floor(frame * (state==='play'? speed:0)) % 40); gx < W; gx += 40){ ctx.fillRect(gx + 8, GY + 10, 14, 3); }
+    // obstacles
+    obs.forEach(function(o){
+      if(o.type === 'cactus'){
+        ctx.fillStyle = '#16a34a';
+        var each = o.w / o.n;
+        for(var i=0;i<o.n;i++){
+          var cx = o.x + i*each + 2;
+          ctx.fillRect(cx, GY - o.h, each - 5, o.h);
+          ctx.fillRect(cx - 3, GY - o.h + 10, 4, 10);
+          ctx.fillRect(cx + each - 6, GY - o.h + 14, 4, 10);
+        }
+      } else {
+        ctx.fillStyle = '#7c3aed';
+        ctx.fillRect(o.x, o.y, o.w, o.h);
+        var flapPh = Math.floor(frame/8) % 2;
+        ctx.fillRect(o.x + 12, flapPh === 0 ? o.y - 8 : o.y + o.h, 14, 7);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(o.x + o.w, o.y + 5, 7, 5);
+      }
+    });
+    drawDino();
+    ctx.textAlign = 'center';
+    if(state === 'ready'){
+      ctx.fillStyle = '#374151'; ctx.font = 'bold 22px Arial';
+      ctx.fillText('DINO RUNNER', W/2, 84);
+      ctx.font = '14px Arial'; ctx.fillText('Press SPACE or tap to start running', W/2, 110);
+    }
+    if(state === 'dead'){
+      ctx.fillStyle = 'rgba(17,24,39,.78)'; ctx.fillRect(W/2 - 150, 56, 300, 104);
+      ctx.fillStyle = '#f87171'; ctx.font = 'bold 24px Arial'; ctx.fillText('GAME OVER', W/2, 92);
+      ctx.fillStyle = '#fff'; ctx.font = '15px Arial';
+      ctx.fillText('Score: ' + Math.floor(score) + '   Best: ' + best, W/2, 120);
+      ctx.font = '13px Arial'; ctx.fillText('Press SPACE or tap to run again', W/2, 144);
+    }
+  }
+  function update(){
+    frame++;
+    if(state === 'play'){
+      score += speed * 0.045;
+      if(Math.floor(score) % 100 === 0 && Math.floor(score) > 0 && speed < 13){ /* milestone handled below */ }
+      var prevMilestone = Math.floor((score - speed*0.045) / 100);
+      if(Math.floor(score/100) > prevMilestone){ beep(880, 0.09, 'triangle'); }
+      speed = 6 + Math.min(7, score / 220);
+      speedEl.textContent = (speed/6).toFixed(1).replace('.0','') + '×';
+      scoreEl.textContent = Math.floor(score);
+      // dino physics
+      dino.vy += 0.62; dino.y += dino.vy;
+      if(dino.y >= GY){ dino.y = GY; dino.vy = 0; }
+      // clouds
+      clouds.forEach(function(c){ c.x -= speed * 0.25; if(c.x < -30){ c.x = W + 30; c.y = 26 + Math.random()*50; } });
+      // spawn + move obstacles
+      if(frame >= nextSpawn) spawn();
+      for(var i = obs.length-1; i >= 0; i--){
+        var o = obs[i]; o.x -= speed;
+        if(o.x + o.w < -10){ obs.splice(i,1); continue; }
+        var dh = curH(), dTop = GY - dh, dBottom = GY;
+        var oTop = o.type === 'cactus' ? GY - o.h : o.y;
+        var oBottom = o.type === 'cactus' ? GY : o.y + o.h;
+        var hitX = dino.x + 34 > o.x + 3 && dino.x + 2 < o.x + o.w - 3;
+        var hitY = dTop + 2 < oBottom && dBottom > oTop + 2;
+        if(hitX && hitY){ die(); }
+      }
+    }
+    draw();
+    requestAnimationFrame(update);
+  }
+  function die(){
+    if(state === 'dead') return;
+    state = 'dead'; beep(140, 0.3, 'sawtooth');
+    var s = Math.floor(score);
+    if(s > best){ best = s; localStorage.setItem('dino_best', String(best)); bestEl.textContent = best; }
+  }
+  function pressDuck(on){ if(state === 'play'){ ducking = on; if(on && dino.y < GY) dino.vy += 6; } }
+  document.addEventListener('keydown', function(e){
+    if(e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W'){ jump(); e.preventDefault(); }
+    else if(e.key === 'ArrowDown' || e.key === 's' || e.key === 'S'){ pressDuck(true); e.preventDefault(); }
+  });
+  document.addEventListener('keyup', function(e){
+    if(e.key === 'ArrowDown' || e.key === 's' || e.key === 'S'){ pressDuck(false); }
+  });
+  canvas.addEventListener('mousedown', jump);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); jump(); }, {passive:false});
+  document.getElementById('jumpBtn').addEventListener('click', jump);
+  var duckBtn = document.getElementById('duckBtn');
+  duckBtn.addEventListener('mousedown', function(){ pressDuck(true); });
+  duckBtn.addEventListener('mouseup', function(){ pressDuck(false); });
+  duckBtn.addEventListener('touchstart', function(e){ e.preventDefault(); pressDuck(true); }, {passive:false});
+  duckBtn.addEventListener('touchend', function(){ pressDuck(false); });
+  document.getElementById('restartBtn').addEventListener('click', function(){ reset(); state = 'play'; });
+  document.getElementById('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off'; });
+  reset();
+  requestAnimationFrame(update);
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>

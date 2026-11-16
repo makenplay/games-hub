@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flappy Wings Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play the famous Flappy game online for free. Tap to fly, dodge the pipes, beat your best score. Mobile and desktop.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1020; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+  header { text-align:center; margin:8px 0 4px; }
+  header h1 { font-size:26px; letter-spacing:1px; color:#fbbf24; text-shadow:0 0 14px rgba(251,191,36,.45); }
+  header p { font-size:13px; color:#9aa7c7; margin-top:2px; }
+  .ad-slot { width:100%; max-width:728px; min-height:60px; margin:8px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:12px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:8px 0; }
+  .hud .box { background:#131c3a; border:1px solid #26335f; border-radius:10px; padding:6px 14px; text-align:center; min-width:86px; }
+  .hud .box b { display:block; font-size:19px; color:#fff; }
+  .hud .box span { font-size:11px; color:#9aa7c7; letter-spacing:1px; }
+  #wrap { position:relative; width:min(92vw, 400px); }
+  canvas { width:100%; height:auto; display:block; border:2px solid #26335f; border-radius:12px; touch-action:none; cursor:pointer; }
+  .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
+  .controls button { background:#131c3a; color:#e8ecf8; border:1px solid #26335f; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; }
+  footer { margin:10px 0 4px; font-size:12px; color:#5b6b96; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐤 FLAPPY WINGS</h1>
+  <p>Tap, click or press SPACE to fly. Dodge the pipes!</p>
+</header>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="box"><b id="score">0</b><span>SCORE</span></div>
+  <div class="box"><b id="best">0</b><span>BEST</span></div>
+  <div class="box"><b id="medal">—</b><span>MEDAL</span></div>
+</div>
+
+<div id="wrap">
+  <canvas id="game" width="400" height="520"></canvas>
+</div>
+
+<div class="controls">
+  <button id="flapBtn">🪽 FLAP</button>
+  <button id="restartBtn">↻ Restart</button>
+  <button id="soundBtn">🔊 Sound: On</button>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<footer>Maken Play — free online games. More games coming soon.</footer>
+
+<script>
+(function(){
+  "use strict";
+  var W = 400, H = 520, GROUND = 60;
+  var canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  var scoreEl = document.getElementById('score'), bestEl = document.getElementById('best'), medalEl = document.getElementById('medal');
+  var best = parseInt(localStorage.getItem('flappy_best') || '0', 10) || 0;
+  bestEl.textContent = best; medalEl.textContent = medalFor(best);
+  var soundOn = true, AC = null;
+  function beep(freq, dur, type){
+    if(!soundOn) return;
+    try{
+      if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.05, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+    }catch(e){}
+  }
+  function medalFor(s){ return s>=40 ? '🏆' : s>=30 ? '🥇' : s>=20 ? '🥈' : s>=10 ? '🥉' : '—'; }
+
+  var bird, pipes, score, state, frame, speed;
+  function reset(){
+    bird = { x: 80, y: H/2 - 40, vy: 0, r: 15 };
+    pipes = []; score = 0; frame = 0; speed = 2.2; state = 'ready';
+    scoreEl.textContent = '0';
+  }
+  function flap(){
+    if(state === 'ready'){ state = 'play'; }
+    if(state === 'play'){ bird.vy = -7.6; beep(520, 0.06, 'triangle'); }
+    else if(state === 'dead'){ reset(); }
+  }
+  function spawnPipe(){
+    var gap = Math.max(118, 148 - score * 1.2);
+    var top = 40 + Math.random() * (H - GROUND - gap - 100);
+    pipes.push({ x: W + 10, top: top, gap: gap, passed: false });
+  }
+  function draw(){
+    var sky = ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#38bdf8'); sky.addColorStop(1,'#bae6fd');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    // clouds
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    [[60,70,26],[210,45,20],[320,95,24],[140,130,16]].forEach(function(c, i){
+      var x = (c[0] - (frame*0.3 + i*40) % (W+120) + W+120) % (W+120) - 60;
+      ctx.beginPath(); ctx.arc(x, c[1], c[2], 0, Math.PI*2); ctx.arc(x+c[2], c[1]+4, c[2]*0.7, 0, Math.PI*2); ctx.fill();
+    });
+    // pipes
+    pipes.forEach(function(p){
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(p.x, 0, 62, p.top);
+      ctx.fillRect(p.x, p.top + p.gap, 62, H - GROUND - (p.top + p.gap));
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(p.x - 3, p.top - 18, 68, 18);
+      ctx.fillRect(p.x - 3, p.top + p.gap, 68, 18);
+      ctx.fillStyle = 'rgba(255,255,255,.18)';
+      ctx.fillRect(p.x + 8, 0, 10, p.top);
+      ctx.fillRect(p.x + 8, p.top + p.gap, 10, H - GROUND - (p.top + p.gap));
+    });
+    // ground
+    ctx.fillStyle = '#84cc16'; ctx.fillRect(0, H-GROUND, W, GROUND);
+    ctx.fillStyle = '#65a30d'; ctx.fillRect(0, H-GROUND, W, 8);
+    ctx.fillStyle = '#a16207';
+    for(var gx = -(frame* (state==='play'? speed:0) % 24); gx < W; gx += 24){ ctx.fillRect(gx, H-GROUND+22, 12, 5); }
+    // bird
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    var tilt = Math.max(-0.45, Math.min(1.1, bird.vy * 0.09));
+    ctx.rotate(state === 'ready' ? 0 : tilt);
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath(); ctx.arc(0, 0, bird.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f59e0b';
+    var wing = Math.sin(frame * 0.5) * 4;
+    ctx.beginPath(); ctx.ellipse(-4, 2 + wing*0.4, 9, 5.5, -0.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(6, -5, 5.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111827';
+    ctx.beginPath(); ctx.arc(7.5, -5, 2.6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.moveTo(13, -2); ctx.lineTo(23, 1); ctx.lineTo(13, 5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // texts
+    ctx.textAlign = 'center';
+    if(state === 'ready'){
+      ctx.fillStyle = 'rgba(2,32,54,.55)'; ctx.fillRect(40, 180, W-80, 120);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.fillText('FLAPPY WINGS', W/2, 225);
+      ctx.font = '15px Arial'; ctx.fillText('Tap / Click / SPACE to fly', W/2, 255);
+      ctx.fillText('Dodge the green pipes!', W/2, 278);
+    }
+    if(state === 'play' || state === 'dead'){
+      ctx.font = 'bold 44px Arial'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.35)';
+      ctx.strokeText(score, W/2, 84); ctx.fillStyle = '#fff'; ctx.fillText(score, W/2, 84);
+    }
+    if(state === 'dead'){
+      ctx.fillStyle = 'rgba(2,32,54,.72)'; ctx.fillRect(40, 165, W-80, 165);
+      ctx.fillStyle = '#f87171'; ctx.font = 'bold 28px Arial'; ctx.fillText('GAME OVER', W/2, 210);
+      ctx.fillStyle = '#fff'; ctx.font = '17px Arial';
+      ctx.fillText('Score: ' + score, W/2, 248);
+      ctx.fillText('Best: ' + best + '   Medal: ' + medalFor(score), W/2, 276);
+      ctx.font = '14px Arial'; ctx.fillText('Tap or press SPACE to play again', W/2, 308);
+    }
+  }
+  function update(){
+    frame++;
+    if(state === 'ready'){ bird.y = H/2 - 40 + Math.sin(frame*0.06)*8; }
+    if(state === 'play'){
+      bird.vy += 0.42; bird.y += bird.vy;
+      if(frame % 95 === 0) spawnPipe();
+      speed = 2.2 + Math.min(1.3, score * 0.03);
+      for(var i = pipes.length-1; i >= 0; i--){
+        var p = pipes[i]; p.x -= speed;
+        if(!p.passed && p.x + 62 < bird.x - bird.r){ p.passed = true; score++; scoreEl.textContent = score; beep(760, 0.07, 'triangle'); }
+        if(p.x < -80) pipes.splice(i,1);
+        var inX = bird.x + bird.r - 3 > p.x && bird.x - bird.r + 3 < p.x + 62;
+        var inPipe = bird.y - bird.r + 3 < p.top || bird.y + bird.r - 3 > p.top + p.gap;
+        if(inX && inPipe) die();
+      }
+      if(bird.y + bird.r >= H - GROUND || bird.y - bird.r <= 0) die();
+    }
+    draw();
+    requestAnimationFrame(update);
+  }
+  function die(){
+    if(state === 'dead') return;
+    state = 'dead'; beep(150, 0.3, 'sawtooth');
+    if(score > best){ best = score; localStorage.setItem('flappy_best', String(best)); bestEl.textContent = best; }
+    medalEl.textContent = medalFor(best);
+  }
+  canvas.addEventListener('mousedown', flap);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); flap(); }, {passive:false});
+  document.addEventListener('keydown', function(e){
+    if(e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W'){ flap(); e.preventDefault(); }
+  });
+  document.getElementById('flapBtn').addEventListener('click', flap);
+  document.getElementById('restartBtn').addEventListener('click', function(){ reset(); });
+  document.getElementById('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off'; });
+  reset();
+  requestAnimationFrame(update);
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>
