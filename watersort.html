@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Water Sort Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Water Sort free online. Pour the coloured water between tubes until every tube holds a single colour. Solver-verified levels with hints. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #tubes { display:flex; flex-wrap:wrap; gap:14px 12px; justify-content:center; width:min(94vw, 560px); margin:10px 0 4px; padding:18px 10px 12px; background:#0d1330; border:2px solid #26335f; border-radius:12px; }
+  .tube { width:52px; height:168px; border:3px solid rgba(186,230,253,0.75); border-top:none; border-radius:6px 6px 22px 22px; display:flex; flex-direction:column-reverse; padding:3px; gap:2px; cursor:pointer; background:rgba(125,211,252,0.07); transition:transform .12s; position:relative; }
+  .tube.sel { transform:translateY(-12px); border-color:#facc15; box-shadow:0 0 0 2px #facc15; }
+  .tube.hintflash { border-color:#22c55e; box-shadow:0 0 0 3px #22c55e; }
+  .tube.done { border-color:rgba(34,197,94,0.8); }
+  .seg { height:36px; border-radius:4px 4px 12px 12px; box-shadow:inset 0 -5px 0 rgba(0,0,0,0.22), inset 0 3px 0 rgba(255,255,255,0.25); }
+  .seg:first-child { border-radius:4px 4px 16px 16px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🧪 WATER SORT</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🧪 LEVEL <b id="level">1</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">💧 POURS <b id="moves">0</b></div>
+  <div class="stat">🎯 PAR <b id="par">—</b></div>
+  <div class="stat">🏆 BEST <b id="best">—</b></div>
+</div>
+
+<div id="tubes"></div>
+<div id="msg">Press START — tap a tube to lift it, tap another to pour.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn lvl on" data-l="0">LEVEL 1</button>
+  <button class="btn lvl" data-l="1">LEVEL 2</button>
+  <button class="btn lvl" data-l="2">LEVEL 3</button>
+</div>
+<div class="row">
+  <button class="btn" id="hintBtn">💡 HINT</button>
+  <button class="btn" id="resetBtn">↺ RESET</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">You can only pour onto the same colour (or into an empty tube), and only as much as fits · a tube of one pure colour is done</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Water Sort Puzzle</h2>
+  <p>The satisfying colour-sorting puzzle. Each tube holds four layers of coloured water, shuffled between tubes. Pour the top layer of one tube into another — but only onto the same colour, and only when there's room. Sort every colour into its own tube to clear the level.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap a tube to lift it, then tap the tube you want to pour into. The whole matching top layer pours at once, up to the space available. The two empty tubes are your workspace — plan around them. Really stuck? HINT runs the built-in solver and flashes a pour that lies on a true solution path. Every level here is solver-verified before it ships, so a solution always exists — and PAR shows the shortest one we found.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three solver-verified levels — 4, 6 and 8 colours</li>
+    <li>A real solver powers the hints and the par scores</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var CAP=4;
+/* tubes: array of arrays, bottom -> top, entries are colour indices */
+var COLORS=['#ef4444','#3b82f6','#22c55e','#eab308','#a855f7','#ec4899','#f97316','#14b8a6','#f8fafc'];
+var COLOR_NAMES=['red','blue','green','yellow','purple','pink','orange','teal','white'];
+var LEVELS=[
+  { par:12, tubes: [ [0,1,2,0], [1,2,3,3], [2,3,0,1], [3,0,1,2], [], [] ] },
+  { par:21, tubes: [ [0,2,4,1], [1,3,5,0], [2,4,0,3], [3,5,1,2], [4,0,2,5], [5,1,3,4], [], [] ] },
+  { par:25, tubes: [ [0,3,6,1], [1,4,7,2], [2,5,0,3], [3,6,1,4], [4,7,2,5], [5,0,3,6], [6,1,4,7], [7,2,5,0], [], [] ] }
+];
+/* ---------- pure logic (testable) ---------- */
+function topRun(tube){
+  if(!tube.length) return 0;
+  var top=tube[tube.length-1], n=0;
+  for(var i=tube.length-1;i>=0 && tube[i]===top;i--) n++;
+  return n;
+}
+function canPour(state, from, to){
+  if(from===to) return false;
+  var src=state[from], dst=state[to];
+  if(!src.length) return false;
+  if(dst.length>=CAP) return false;
+  if(dst.length && dst[dst.length-1]!==src[src.length-1]) return false;
+  return true;
+}
+function pour(state, from, to){
+  if(!canPour(state, from, to)) return null;
+  var next=state.map(function(t){ return t.slice(); });
+  var src=next[from], dst=next[to];
+  var amount=Math.min(topRun(src), CAP-dst.length);
+  for(var i=0;i<amount;i++) dst.push(src.pop());
+  return next;
+}
+function isTubeDone(tube){
+  if(!tube.length) return true;
+  if(tube.length!==CAP) return false;
+  return tube.every(function(c){ return c===tube[0]; });
+}
+function isWin(state){ return state.every(isTubeDone); }
+function stateKey(state){
+  return state.map(function(t){ return t.join(','); }).sort().join('|');
+}
+/* DFS solver with canonical visited set; returns an array of [from, to] pours or null */
+function solvePuzzle(startState, cap){
+  var limit= cap || 400000;
+  var visited=new Set();
+  var path=[];
+  var nodes=0;
+  function dfs(state){
+    if(isWin(state)) return true;
+    if(++nodes>limit) return false;
+    var key=stateKey(state);
+    if(visited.has(key)) return false;
+    visited.add(key);
+    var moves=[];
+    for(var f=0;f<state.length;f++){
+      for(var t=0;t<state.length;t++){
+        if(!canPour(state, f, t)) continue;
+        /* skip pointless pours: a pure full tube into an empty tube just relocates it */
+        if(state[t].length===0 && isTubeDone(state[f]) && state[f].length===CAP) continue;
+        /* prefer pours that land on the same colour */
+        var score= state[t].length ? 0 : 1;
+        moves.push({ f:f, t:t, score:score });
+      }
+    }
+    moves.sort(function(a, b){ return a.score-b.score; });
+    for(var i=0;i<moves.length;i++){
+      var next=pour(state, moves[i].f, moves[i].t);
+      path.push([moves[i].f, moves[i].t]);
+      if(dfs(next)) return true;
+      path.pop();
+      if(nodes>limit) return false;
+    }
+    return false;
+  }
+  return dfs(startState) ? path.slice() : null;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var el=function(id){ return document.getElementById(id); };
+var level=0, state=null, selected=-1, moves=0, seconds=0, timerId=null, playing=false, tubeEls=[];
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenWaterBest'+level; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? b+' pours' : '—';
+}
+function hud(){
+  el('level').textContent=level+1;
+  el('moves').textContent=moves;
+  el('time').textContent=fmt(seconds);
+  el('par').textContent=LEVELS[level].par ? LEVELS[level].par+' pours' : '—';
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function loadLevel(lv){
+  stopTimer();
+  level=lv;
+  state=LEVELS[level].tubes.map(function(t){ return t.slice(); });
+  selected=-1; moves=0; seconds=0; playing=true;
+  var box=el('tubes');
+  box.innerHTML='';
+  tubeEls=[];
+  state.forEach(function(_, i){
+    var d=document.createElement('div');
+    d.className='tube';
+    (function(idx){
+      d.addEventListener('click', function(){ onTubeTap(idx); });
+    })(i);
+    box.appendChild(d);
+    tubeEls.push(d);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+    b.classList.toggle('on', +b.getAttribute('data-l')===level);
+  });
+  el('msg').textContent='🧪 Level '+(level+1)+' — sort every colour into its own tube. Par '+LEVELS[level].par+' pours.';
+  showBest(); render();
+}
+function render(){
+  state.forEach(function(tube, i){
+    var d=tubeEls[i];
+    d.innerHTML='';
+    tube.forEach(function(c){
+      var seg=document.createElement('div');
+      seg.className='seg';
+      seg.style.background='linear-gradient(180deg, '+COLORS[c]+', '+COLORS[c]+')';
+      d.appendChild(seg);
+    });
+    d.classList.toggle('sel', selected===i);
+    d.classList.toggle('done', isTubeDone(tube) && tube.length===CAP);
+  });
+  hud();
+}
+function onTubeTap(i){
+  if(!playing) return;
+  if(selected===-1){
+    if(!state[i].length) return;
+    selected=i;
+    beep(620,0.03,'square',0.028);
+    render();
+    return;
+  }
+  if(selected===i){ selected=-1; render(); return; }
+  var next=pour(state, selected, i);
+  if(!next){
+    beep(150,0.05,'square',0.03);
+    el('msg').textContent='🚫 Can\u2019t pour there — the top colours must match and the tube needs room.';
+    selected=i;
+    render();
+    return;
+  }
+  state=next;
+  selected=-1;
+  moves++;
+  startTimer();
+  beep(540,0.045,'sine',0.04);
+  render();
+  if(isWin(state)) win();
+}
+function win(){
+  stopTimer();
+  playing=false;
+  var prev=localStorage.getItem(bestKey());
+  var isBest= !prev || moves<+prev;
+  if(isBest) localStorage.setItem(bestKey(), moves);
+  var rating= moves<=LEVELS[level].par ? '🏆 PERFECT — par matched!' : moves<=Math.ceil(LEVELS[level].par*1.5) ? '⭐ Neat pouring!' : '🎉 Sorted!';
+  el('msg').textContent='🎉 Level '+(level+1)+' sorted in '+fmt(seconds)+' with '+moves+' pours (par '+LEVELS[level].par+')! '+rating+(isBest ? ' New best!' : '')+(level<2 ? ' Try LEVEL '+(level+2)+' next.' : ' You cleared every level!');
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); hud();
+}
+el('startBtn').addEventListener('click', function(){ loadLevel(level); });
+el('resetBtn').addEventListener('click', function(){ loadLevel(level); });
+Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+  b.addEventListener('click', function(){ loadLevel(+b.getAttribute('data-l')); });
+});
+el('hintBtn').addEventListener('click', function(){
+  if(!playing || !state) return;
+  el('msg').textContent='💡 Thinking…';
+  setTimeout(function(){
+    var solution=solvePuzzle(state, 400000);
+    if(!solution || !solution.length){
+      el('msg').textContent='💡 No way out from here — RESET and try a different line.';
+      beep(200,0.08,'sawtooth',0.04);
+      return;
+    }
+    var f=solution[0][0], t=solution[0][1];
+    tubeEls[f].classList.add('hintflash');
+    tubeEls[t].classList.add('hintflash');
+    el('msg').textContent='💡 Pour the '+COLOR_NAMES[state[f][state[f].length-1]]+' from tube '+(f+1)+' into tube '+(t+1)+'.';
+    beep(880,0.07,'sine',0.045);
+    setTimeout(function(){
+      if(tubeEls[f]) tubeEls[f].classList.remove('hintflash');
+      if(tubeEls[t]) tubeEls[t].classList.remove('hintflash');
+    }, 1400);
+  }, 30);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+showBest(); hud();
+if(typeof module!=='undefined') module.exports={ CAP:CAP, LEVELS:LEVELS, topRun:topRun, canPour:canPour, pour:pour, isTubeDone:isTubeDone, isWin:isWin, solvePuzzle:solvePuzzle };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
