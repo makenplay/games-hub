@@ -71,14 +71,14 @@
   <button class="btn swing" id="swingBtn">🏏 SWING!</button>
   <button class="btn" id="soundBtn">🔊 Sound</button>
 </div>
-<div class="keys">Perfect timing = SIX · good = FOUR · mistime it and you are bowled · swing balls curve late — watch them all the way in</div>
+<div class="keys">Perfect timing = SIX · good = FOUR · too early is just a whiff · leave the ball and you are bowled · swing balls curve late — watch them all the way in</div>
 
 <!-- MAKEN PLAY PRO INFO -->
 <div class="proinfo">
   <h2>About Cricket Batting</h2>
   <p>Ten balls, three wickets, one target to chase. The bowler mixes express pace, late swing and turning spin — your only job is to watch the ball onto the bat and swing at exactly the right moment.</p>
   <h3>🎯 How to Play</h3>
-  <p>Click, tap, or press SPACE to swing as the ball reaches the crease. Dead-centre timing sends it for six; slightly early or late gives fours, twos or singles — and a wild miss means the stumps are shattered and a wicket falls. Beat the target before the balls or wickets run out.</p>
+  <p>Click, tap, or press SPACE to swing as the ball reaches the crease. Dead-centre timing sends it for six; slightly early or late gives fours, twos or singles. Swinging far too early is only a whiff — the ball keeps coming — but leave a ball alone and it shatters the stumps for a wicket. Beat the target before the balls or wickets run out.</p>
   <h3>⭐ Features</h3>
   <ul>
     <li>Three ball types — pace, late swing and spin — each with its own timing</li>
@@ -110,21 +110,22 @@
 var W=640, H=400, BAT_Y=322, BALL_START_Y=64, CONTACT_Y=306;
 /* ---------- pure logic (testable) ---------- */
 var BALL_TYPES={
-  pace:{ speed:340, curve:0, label:'⚡ PACE' },
-  swing:{ speed:285, curve:52, label:'🌀 SWING' },
-  spin:{ speed:225, curve:-38, label:'🎯 SPIN' }
+  pace:{ speed:305, curve:0, label:'⚡ PACE' },
+  swing:{ speed:258, curve:52, label:'🌀 SWING' },
+  spin:{ speed:208, curve:-38, label:'🎯 SPIN' }
 };
 function pickBallType(r){
   return r<0.4 ? 'pace' : r<0.72 ? 'swing' : 'spin';
 }
 function shotResult(ballY){
-  /* returns runs: 6,4,2,1,0(dot),-1(bowled) by distance from contact point */
+  /* returns runs: 6,4,2,1,0(dot) by distance from contact point.
+     A swing never costs a wicket — you are only bowled by leaving the ball. */
   var d=Math.abs(ballY - CONTACT_Y);
-  if(d <= 9) return 6;
-  if(d <= 20) return 4;
-  if(d <= 33) return 2;
-  if(d <= 46) return 1;
-  return -1;
+  if(d <= 10) return 6;
+  if(d <= 22) return 4;
+  if(d <= 36) return 2;
+  if(d <= 52) return 1;
+  return 0;
 }
 function ballXAt(ball, y){
   /* lateral position as the ball travels: curve grows near the batsman */
@@ -234,15 +235,15 @@ function endInnings(won){
 }
 function swing(){
   if(!playing || phase!=='ball' || !ball) return;
+  if(ball.y < CONTACT_Y-52){
+    /* swung far too early — a whiff; the ball keeps coming, no penalty */
+    el('msg').textContent='⏰ Too early! Wait for the ball to reach the bat…';
+    beep(240,0.05,'square',0.04);
+    return;
+  }
   var runs=shotResult(ball.y);
   ballsBowled++;
-  if(runs===-1){
-    wkts--;
-    overLog.push('W');
-    hitAnim={ x:ballXAt(ball, ball.y), y:ball.y, text:'BOWLED! 😱', t:1 };
-    el('msg').textContent='😱 BOWLED! You swung and missed completely. '+(wkts>0 ? wkts+' wickets left.' : '');
-    beep(140,0.3,'sawtooth',0.08);
-  } else if(runs===0){
+  if(runs===0){
     overLog.push('•');
     hitAnim=null;
     el('msg').textContent='Dot ball — beaten by the delivery!';
