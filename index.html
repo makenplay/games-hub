@@ -60,12 +60,37 @@
   #noresults { display:none; text-align:center; color:#9aa7c7; padding:22px; font-size:14px; }
   footer { text-align:center; color:#5b6b96; font-size:12.5px; padding:18px 12px 26px; }
   footer b { color:#9aa7c7; }
+  .themebtn { cursor:pointer; border:1px solid #26335f; background:#0e1530; color:#facc15; border-radius:999px; padding:6px 14px; font-size:13.5px; font-weight:700; }
+  .themebtn:hover { border-color:#22d3ee; }
+  html.light, html.light body { background:#eef2f7; color:#0f172a; }
+  html.light .topbar .badge { background:#ffffff; border-color:#cbd5e1; color:#475569; }
+  html.light .themebtn { background:#ffffff; border-color:#cbd5e1; color:#b45309; }
+  html.light .hero p { color:#475569; }
+  html.light .hero .stat { background:#ffffff; border-color:#cbd5e1; }
+  html.light .hero .stat b { color:#0f172a; }
+  html.light .ad-slot { background:#ffffff; border-color:#cbd5e1; color:#64748b; }
+  html.light #search { background:#ffffff; border-color:#cbd5e1; color:#0f172a; }
+  html.light .chip { background:#ffffff; border-color:#cbd5e1; color:#334155; }
+  html.light .chip.on { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; border-color:transparent; }
+  html.light .card { background:#ffffff; border-color:#cbd5e1; }
+  html.light .card h3 { color:#0f172a; }
+  html.light .card .cat { color:#0284c7; }
+  html.light .card p { color:#475569; }
+  html.light .featured .sub { color:#475569; }
+  html.light .featcard { background:linear-gradient(160deg,#fef3c7,#ffffff 65%); }
+  html.light .featcard h3 { color:#0f172a; }
+  html.light .featcard p { color:#475569; }
+  html.light #noresults { color:#475569; }
+  html.light footer { color:#64748b; }
+  html.light footer b { color:#334155; }
+
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="logo">🎮 <span class="maken">MAKEN</span> <span class="play">PLAY</span></div>
   <div class="badge">100% FREE · NO DOWNLOAD</div>
+  <button class="themebtn" id="themeBtn" type="button">&#9728;&#65039; Light</button>
 </div>
 
 <div class="hero">
@@ -680,5 +705,25 @@
 </script>
 <!-- ADSTERRA SOCIAL BAR (makenplay.github.io) -->
 <script data-cfasync="false" src="https://bicea.org/14/7d0f545d27ee5a54d1afd8e365f74d21"></script>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  function apply(m){
+    if(m === 'light'){ root.classList.add('light'); } else { root.classList.remove('light'); }
+    var b = document.getElementById('themeBtn');
+    if(b){ b.textContent = (m === 'light') ? '\uD83C\uDF19 Dark' : '\u2600\uFE0F Light'; }
+  }
+  var saved = 'dark';
+  try { saved = localStorage.getItem('mp-theme') || 'dark'; } catch(e) {}
+  apply(saved);
+  var b = document.getElementById('themeBtn');
+  if(b){ b.addEventListener('click', function(){
+    var now = root.classList.contains('light') ? 'dark' : 'light';
+    try { localStorage.setItem('mp-theme', now); } catch(e) {}
+    apply(now);
+  }); }
+})();
+</script>
 </body>
 </html>
