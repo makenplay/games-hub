@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Boxing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play boxing free online. Jab, cross, block and dodge through 3 rounds against a thinking opponent — win by KO or on points. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .bars { width:min(640px,94vw); margin:4px 0 2px; }
+  .bar-row { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:12px; color:#9aa7c7; }
+  .bar-row .nm { width:88px; text-align:right; font-weight:700; color:#dbe6ff; }
+  .bar { flex:1; height:14px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; }
+  .bar i { display:block; height:100%; transition:width .18s; }
+  .hp i { background:linear-gradient(90deg,#22c55e,#4ade80); }
+  .hpo i { background:linear-gradient(90deg,#dc2626,#f87171); }
+  .st i { background:linear-gradient(90deg,#d97706,#fbbf24); }
+  canvas#cv { background:linear-gradient(180deg,#1f2937 0%,#374151 55%,#7f1d1d 55.2%,#991b1b 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 15px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.punch { background:linear-gradient(180deg,#dc2626,#991b1b); color:#fff; font-size:15px; }
+  .btn.block { background:linear-gradient(180deg,#0ea5e9,#1d4ed8); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🥊 BOXING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="bars">
+  <div class="bar-row"><span class="nm">YOU ❤️</span><div class="bar hp"><i id="youHp" style="width:100%"></i></div></div>
+  <div class="bar-row"><span class="nm">STAMINA ⚡</span><div class="bar st"><i id="youSt" style="width:100%"></i></div></div>
+  <div class="bar-row"><span class="nm">BRUNO ❤️</span><div class="bar hpo"><i id="oppHp" style="width:100%"></i></div></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Jab (J / left button) is quick, Cross (K / right) is heavy. Hold BLOCK (L / S) when he swings!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ FIGHT!</button>
+  <button class="btn punch" id="jabBtn">👊 JAB (J)</button>
+  <button class="btn punch" id="crossBtn">💥 CROSS (K)</button>
+  <button class="btn block" id="blockBtn">🛡️ BLOCK (hold)</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Round <b id="roundLbl">–</b> · <span id="clockLbl">press FIGHT to begin</span> · wild swinging drains stamina — tired punches barely scratch him</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Boxing</h2>
+  <p>Three rounds against Bruno, a bruiser who watches your guard. Work the jab to score, save the cross for when he is open, and get your block up when his shoulder dips — because his counter-hook is coming.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Jab with J or the JAB button (fast, light), throw the Cross with K (slow, heavy), and hold BLOCK with L/S or the block button to cut incoming damage. Punches cost stamina; exhausted punches do almost nothing, so let the bar recover. Knock Bruno out, or outscore him on health when the final bell rings.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>A thinking opponent who telegraphs, blocks and counter-punches</li>
+    <li>Stamina management across 3 full rounds, KO or points decision</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* ---------- pure logic (testable) ---------- */
+var PUNCHES={
+  jab:{ dmg:4.5, cost:7, cool:0.24, label:'Jab' },
+  cross:{ dmg:10, cost:15, cool:0.52, label:'Cross' }
+};
+function damageFor(type, targetBlocking, attackerStamina){
+  var p=PUNCHES[type];
+  var dmg=p.dmg;
+  if(attackerStamina < 22) dmg *= 0.35;
+  if(targetBlocking) dmg *= 0.22;
+  return Math.round(dmg*10)/10;
+}
+function oppDecide(state, rand){
+  /* state: {oppHp, youHp, youBlocking, youJustPunched, dist} -> action */
+  if(state.youJustPunched && rand < 0.5) return 'counter';
+  if(state.youBlocking && rand < 0.42) return 'wait';
+  if(rand < 0.36) return 'jab';
+  if(rand < 0.55) return 'hook';
+  if(rand < 0.7) return 'block';
+  return 'advance';
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, round, clock, you, opp, blocking, punchAnim, oppAnim, decideT, rafId, lastTick, over;
+var belts=+(localStorage.getItem('makenBoxingBelts')||0);
+function newFighter(hp){ return { hp:hp, st:100, cool:0 }; }
+function reset(){
+  playing=false; round=1; clock=60; over=false;
+  you=newFighter(100); opp=newFighter(100);
+  blocking=false; punchAnim=null; oppAnim=null; decideT=0.6;
+  bars(); draw();
+  el('roundLbl').textContent='–';
+  el('clockLbl').textContent='press FIGHT to begin';
+}
+function bars(){
+  el('youHp').style.width=Math.max(0, you.hp)+'%';
+  el('youSt').style.width=Math.max(0, you.st)+'%';
+  el('oppHp').style.width=Math.max(0, opp.hp)+'%';
+}
+function draw(){
+  /* crowd + ring */
+  ctx.fillStyle='rgba(255,255,255,0.28)';
+  for(var i=0;i<70;i++){ ctx.fillRect((i*83)%W, 8+(i*17)%60, 3, 3); }
+  ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=3;
+  [226, 258].forEach(function(y){
+    ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W-30, y); ctx.stroke();
+  });
+  ctx.fillStyle='#991b1b'; ctx.fillRect(30, 218, 8, 120); ctx.fillRect(W-38, 218, 8, 120);
+  /* opponent */
+  var ox=W/2 + Math.sin(performance.now()/600)*7, oy=196;
+  var scale=1 + (3-round)*0.02;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+  if(oppAnim && oppAnim.type==='hit') ctx.translate((Math.random()*6-3), 0);
+  ctx.font='118px Arial'; ctx.textAlign='center';
+  ctx.fillText('🥊', 0, 40);
+  ctx.font='92px Arial';
+  ctx.fillText('🧍', 0, 118);
+  if(oppAnim && oppAnim.type==='block'){
+    ctx.font='54px Arial';
+    ctx.fillText('🛡️', -34, 30); ctx.fillText('🛡️', 34, 30);
+  }
+  if(oppAnim && oppAnim.type==='punch'){
+    ctx.font='64px Arial';
+    ctx.fillText('👊', oppAnim.side==='L' ? -58 : 58, 44);
+  }
+  ctx.restore();
+  /* telegraph */
+  if(oppAnim && oppAnim.type==='windup'){
+    ctx.fillStyle='#f87171'; ctx.font='bold 19px Arial'; ctx.textAlign='center';
+    ctx.fillText('⚠️ HE\'S SWINGING — BLOCK!', W/2, 96);
+  }
+  /* player gloves */
+  var gy=352;
+  var lunge= punchAnim ? punchAnim.t*46 : 0;
+  ctx.font='58px Arial'; ctx.textAlign='center';
+  if(blocking){
+    ctx.fillText('🥊', W/2-52, gy-16);
+    ctx.fillText('🥊', W/2+52, gy-16);
+    ctx.fillStyle='rgba(125,211,252,0.25)';
+    ctx.beginPath(); ctx.arc(W/2, gy-58, 74, 0, Math.PI*2); ctx.fill();
+  } else if(punchAnim){
+    ctx.fillText('🥊', W/2 + (punchAnim.type==='jab' ? -56 : 56), gy - lunge);
+    ctx.fillText('🥊', W/2 + (punchAnim.type==='jab' ? 56 : -56), gy);
+  } else {
+    ctx.fillText('🥊', W/2-56, gy);
+    ctx.fillText('🥊', W/2+56, gy);
+  }
+  if(opp.hp<=30 && opp.hp>0){
+    ctx.fillStyle='#fca5a5'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+    ctx.fillText('BRUNO IS HURT — FINISH HIM!', W/2, 122);
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? (opp.hp<=0 ? '🏆 KNOCKOUT — YOU WIN!' : you.hp<=0 ? '💥 YOU ARE KNOCKED OUT' : you.hp>opp.hp ? '🏆 YOU WIN ON POINTS!' : you.hp<opp.hp ? '😖 BRUNO WINS ON POINTS' : '🤝 A DRAW!') : '🥊 BOXING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'Belts won: '+belts+' — press FIGHT for a rematch' : 'Press FIGHT! — 3 rounds × 60 seconds', W/2, H/2+18);
+  }
+}
+function endFight(ko){
+  playing=false; over=true;
+  if(opp.hp<=0 || (you.hp>opp.hp && !ko)){
+    if(opp.hp<=0 || you.hp>opp.hp){ belts++; localStorage.setItem('makenBoxingBelts', belts); }
+  }
+  el('msg').textContent= opp.hp<=0 ? '🏆 KNOCKOUT! Bruno is down for the count! Belt #'+belts+' is yours.' :
+    you.hp<=0 ? '💥 Knocked out. Train the block and come back.' :
+    you.hp>opp.hp ? '🏆 Points win, '+Math.round(you.hp)+'–'+Math.round(opp.hp)+'! Belt #'+belts+'.' :
+    you.hp<opp.hp ? '😖 Bruno takes it on points, '+Math.round(opp.hp)+'–'+Math.round(you.hp)+'.' : '🤝 A draw — rematch!';
+  beep(opp.hp<=0 || you.hp>opp.hp ? 980 : 200, 0.22, 'sine', 0.06);
+  bars(); draw();
+}
+function punch(type){
+  if(!playing || you.cool>0 || blocking) return;
+  var p=PUNCHES[type];
+  you.cool=p.cool;
+  var stamBefore=you.st;
+  you.st=Math.max(0, you.st - p.cost);
+  punchAnim={ type:type, t:0 };
+  var blocked = oppAnim && oppAnim.type==='block';
+  var dmg=damageFor(type, blocked, stamBefore);
+  opp.hp=Math.max(0, opp.hp - dmg);
+  el('msg').textContent= blocked ? '🛡️ Bruno blocked your '+p.label.toLowerCase()+' — only '+dmg+' through.' :
+    stamBefore<22 ? '😮‍💨 Exhausted '+p.label.toLowerCase()+' — barely '+dmg+' damage. Recover!' :
+    (type==='cross' ? '💥 CROSS lands! ' : '👊 Jab connects! ')+dmg+' damage.';
+  beep(type==='cross'?160:220, 0.07, 'square', 0.06);
+  if(oppAnim && oppAnim.type!=='windup') oppAnim={ type:'hit', t:0.22 };
+  bars();
+  if(opp.hp<=0) endFight(true);
+}
+function oppStrike(kind){
+  var base= kind==='counter' ? 8.5 : kind==='hook' ? 9 : 4.5;
+  var dmg= Math.round(base * (blocking ? 0.22 : 1) * 10)/10;
+  you.hp=Math.max(0, you.hp - dmg);
+  el('msg').textContent= blocking ? '🛡️ Blocked! Only '+dmg+' damage gets through.' :
+    kind==='counter' ? '💥 COUNTER-HOOK! '+dmg+' damage — he read your punch!' :
+    kind==='hook' ? '💥 His hook lands for '+dmg+'!' : '👊 His jab stings for '+dmg+'.';
+  beep(140,0.1,'sawtooth',0.06);
+  bars();
+  if(you.hp<=0) endFight(true);
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  clock-=dt;
+  el('roundLbl').textContent=round+' / 3';
+  el('clockLbl').textContent=Math.max(0, Math.ceil(clock))+'s left in round '+round+' · belts: '+belts;
+  if(clock<=0){
+    if(round>=3){ endFight(false); return; }
+    round++;
+    clock=60;
+    you.hp=Math.min(100, you.hp+12);
+    opp.hp=Math.min(100, opp.hp+10);
+    you.st=100; opp.st=100;
+    el('msg').textContent='🔔 Round '+round+'! Corners gave you both a breather (+health).';
+    beep(880,0.15,'sine',0.06);
+  }
+  if(you.cool>0) you.cool-=dt;
+  if(!punchAnim || true){
+    you.st=Math.min(100, you.st + (blocking ? 15 : 10)*dt);
+  }
+  if(punchAnim){
+    punchAnim.t += dt*5.2;
+    if(punchAnim.t>=1) punchAnim=null;
+  }
+  if(oppAnim){
+    oppAnim.t -= dt;
+    if(oppAnim.t<=0){
+      if(oppAnim.type==='windup'){
+        oppStrike(oppAnim.kind);
+        oppAnim={ type:'punch', side:Math.random()<0.5?'L':'R', t:0.22, kind:oppAnim.kind };
+      } else oppAnim=null;
+    }
+  }
+  decideT-=dt;
+  if(decideT<=0 && !oppAnim){
+    decideT=0.55+Math.random()*0.75;
+    var act=oppDecide({ oppHp:opp.hp, youHp:you.hp, youBlocking:blocking, youJustPunched:!!punchAnim }, Math.random());
+    if(act==='block') oppAnim={ type:'block', t:0.6 };
+    else if(act==='jab' || act==='hook' || act==='counter') oppAnim={ type:'windup', t: act==='jab'?0.34:0.46, kind:act };
+    else if(act==='wait'){ /* hold position */ }
+  }
+  bars(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  if(e.code==='KeyJ') punch('jab');
+  if(e.code==='KeyK') punch('cross');
+  if(e.code==='KeyL' || e.code==='KeyS') blocking=true;
+});
+document.addEventListener('keyup', function(e){
+  if(e.code==='KeyL' || e.code==='KeyS') blocking=false;
+});
+el('jabBtn').addEventListener('click', function(){ punch('jab'); });
+el('crossBtn').addEventListener('click', function(){ punch('cross'); });
+var bb=el('blockBtn');
+bb.addEventListener('mousedown', function(){ blocking=true; });
+bb.addEventListener('mouseup', function(){ blocking=false; });
+bb.addEventListener('touchstart', function(e){ blocking=true; e.preventDefault(); }, {passive:false});
+bb.addEventListener('touchend', function(){ blocking=false; });
+cvs.addEventListener('mousedown', function(e){
+  var rect=cvs.getBoundingClientRect();
+  var px=(e.clientX-rect.left);
+  punch(px < rect.width/2 ? 'jab' : 'cross');
+});
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('roundLbl').textContent='1 / 3';
+  el('msg').textContent='🔔 Round 1 — touch gloves and come out fighting!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ PUNCHES:PUNCHES, damageFor:damageFor, oppDecide:oppDecide };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

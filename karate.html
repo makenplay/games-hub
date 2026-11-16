@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Karate Fighting Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play karate fighting free online. Side-view dojo combat — punches, kicks, blocks and best-of-3 rounds against a skilled CPU. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .bars { width:min(640px,94vw); margin:4px 0 2px; }
+  .bar-row { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:12px; color:#9aa7c7; }
+  .bar-row .nm { width:104px; text-align:right; font-weight:700; color:#dbe6ff; }
+  .bar { flex:1; height:14px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; }
+  .bar i { display:block; height:100%; transition:width .15s; }
+  .hp i { background:linear-gradient(90deg,#0284c7,#38bdf8); }
+  .hpo i { background:linear-gradient(90deg,#b45309,#f59e0b); }
+  canvas#cv { background:linear-gradient(180deg,#f5e6c8 0%,#e8d5a8 62%,#c9a86a 62.2%,#b8934f 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:10px 14px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🥋 KARATE FIGHTING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="bars">
+  <div class="bar-row"><span class="nm">YOU 🥋 <span id="youRounds">○○</span></span><div class="bar hp"><i id="youHp" style="width:100%"></i></div></div>
+  <div class="bar-row"><span class="nm">SENSEI RYU <span id="oppRounds">○○</span></span><div class="bar hpo"><i id="oppHp" style="width:100%"></i></div></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">A/D or ◀ ▶ to move · J punch · K kick · L block. Best of 3 rounds!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ BOW & FIGHT!</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="punchBtn">👊</button>
+  <button class="btn" id="kickBtn">🦵</button>
+  <button class="btn" id="blockBtn">🛡️</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Kicks reach further and hit harder but recover slower · blocking cuts damage to a chip · round timer 45s — ahead on health when it ends takes the round</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Karate Fighting</h2>
+  <p>A dojo duel in the classic side-view style. Sensei Ryu is patient, precise and punishes button-mashing — measure your distance, strike with purpose, and take two rounds to earn the black belt.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Move with A/D or the arrow buttons, punch with J (fast, short), kick with K (long reach, heavy, slower), and block with L to reduce damage to a chip. Each round lasts 45 seconds or ends in a knockout; win two rounds to take the match.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real spacing combat — range, recovery times and blocking all matter</li>
+    <li>A CPU sensei who advances, retreats, blocks and strikes in patterns</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, FLOOR=318;
+/* ---------- pure logic (testable) ---------- */
+var MOVES={
+  punch:{ dmg:5, range:52, cool:0.3, label:'Punch' },
+  kick:{ dmg:9, range:72, cool:0.55, label:'Kick' }
+};
+function strikeDamage(move, defenderBlocking){
+  var dmg=MOVES[move].dmg;
+  if(defenderBlocking) dmg=Math.max(1, Math.round(dmg*0.15));
+  return dmg;
+}
+function inRange(attackerX, defenderX, move, facing){
+  var reach=(defenderX - attackerX) * facing;
+  return reach > 6 && reach < MOVES[move].range;
+}
+function roundWinner(youHp, oppHp){
+  if(youHp<=0 && oppHp<=0) return 'draw';
+  if(oppHp<=0) return 'you';
+  if(youHp<=0) return 'opp';
+  return null;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, you, opp, keys, roundClock, youRounds, oppRounds, betweenT, rafId, lastTick, matchOver;
+var belts=+(localStorage.getItem('makenKarateBelts')||0);
+function fighter(x, facing){
+  return { x:x, facing:facing, hp:100, cool:0, action:null, actionT:0, blocking:false };
+}
+function resetMatch(){
+  playing=false; youRounds=0; oppRounds=0; matchOver=false;
+  resetRound();
+  draw();
+}
+function resetRound(){
+  you=fighter(150, 1);
+  opp=fighter(490, -1);
+  keys={};
+  roundClock=45;
+  betweenT=0;
+  bars();
+}
+function bars(){
+  el('youHp').style.width=Math.max(0, you.hp)+'%';
+  el('oppHp').style.width=Math.max(0, opp.hp)+'%';
+  el('youRounds').textContent=(youRounds>=1?'●':'○')+(youRounds>=2?'●':'○');
+  el('oppRounds').textContent=(oppRounds>=1?'●':'○')+(oppRounds>=2?'●':'○');
+}
+function drawFighter(f, gi, skin){
+  ctx.save();
+  ctx.translate(f.x, FLOOR);
+  ctx.scale(f.facing, 1);
+  /* legs */
+  ctx.strokeStyle='#1f2937'; ctx.lineWidth=7;
+  ctx.beginPath(); ctx.moveTo(0,-52); ctx.lineTo(-13,0); ctx.moveTo(0,-52); ctx.lineTo(14,0); ctx.stroke();
+  /* body gi */
+  ctx.fillStyle=gi;
+  ctx.fillRect(-13,-96,26,46);
+  ctx.fillStyle='#111827'; ctx.fillRect(-13,-62,26,6);
+  /* head */
+  ctx.fillStyle=skin;
+  ctx.beginPath(); ctx.arc(2,-108,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827'; ctx.fillRect(-10,-122,24,6);
+  /* arms / action */
+  ctx.strokeStyle=skin; ctx.lineWidth=6.5;
+  if(f.action==='punch'){
+    ctx.beginPath(); ctx.moveTo(6,-86); ctx.lineTo(44,-88); ctx.stroke();
+    ctx.fillStyle='#dc2626'; ctx.beginPath(); ctx.arc(48,-88,6,0,Math.PI*2); ctx.fill();
+  } else if(f.action==='kick'){
+    ctx.strokeStyle='#1f2937';
+    ctx.beginPath(); ctx.moveTo(0,-52); ctx.lineTo(52,-66); ctx.stroke();
+    ctx.strokeStyle=skin;
+    ctx.beginPath(); ctx.moveTo(6,-86); ctx.lineTo(20,-72); ctx.stroke();
+  } else if(f.blocking){
+    ctx.beginPath(); ctx.moveTo(8,-88); ctx.lineTo(22,-76); ctx.moveTo(8,-78); ctx.lineTo(22,-90); ctx.stroke();
+    ctx.strokeStyle='rgba(14,165,233,0.8)';
+    ctx.beginPath(); ctx.arc(24,-82,17,0,Math.PI*2); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(6,-86); ctx.lineTo(20,-70); ctx.moveTo(4,-84); ctx.lineTo(-8,-68); ctx.stroke();
+  }
+  ctx.restore();
+  if(f.action==='hit'){
+    ctx.fillStyle='#ef4444'; ctx.font='bold 20px Arial'; ctx.textAlign='center';
+    ctx.fillText('💥', f.x + f.facing*-24, FLOOR-118);
+  }
+}
+function draw(){
+  /* dojo: shoji panels + floor */
+  ctx.fillStyle='rgba(120,80,30,0.25)';
+  for(var i=0;i<6;i++) ctx.fillRect(30+i*102, 26, 84, 130);
+  ctx.strokeStyle='rgba(90,60,20,0.5)';
+  for(var j=0;j<6;j++) ctx.strokeRect(30+j*102, 26, 84, 130);
+  ctx.fillStyle='#8b1a1a'; ctx.font='bold 30px Arial'; ctx.textAlign='center';
+  ctx.fillText('空 手 道', W/2, 66);
+  ctx.strokeStyle='rgba(90,60,20,0.55)'; ctx.lineWidth=2;
+  for(var x=0;x<=W;x+=46){ ctx.beginPath(); ctx.moveTo(x, 252); ctx.lineTo(x, H); ctx.stroke(); }
+  ctx.fillStyle='rgba(0,0,0,0.14)';
+  ctx.beginPath(); ctx.ellipse(you.x, FLOOR+6, 34, 7, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(opp.x, FLOOR+6, 34, 7, 0, 0, Math.PI*2); ctx.fill();
+  drawFighter(you, '#f8fafc', '#d9a066');
+  drawFighter(opp, '#1e293b', '#b07a45');
+  ctx.fillStyle='#7c2d12'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+  ctx.fillText(playing ? '⏱️ '+Math.max(0, Math.ceil(roundClock))+'s · belts won: '+belts : '', W/2, 178);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(matchOver ? (youRounds>oppRounds ? '🏆 BLACK BELT — YOU WIN THE MATCH!' : '😖 SENSEI RYU TAKES THE MATCH') : '🥋 KARATE FIGHTING', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(matchOver ? 'Belts earned: '+belts+' — press BOW & FIGHT for a rematch' : 'Press BOW & FIGHT! — best of 3 rounds', W/2, H/2+18);
+  }
+}
+function doStrike(attacker, defender, move){
+  if(attacker.cool>0 || attacker.blocking) return;
+  attacker.cool=MOVES[move].cool;
+  attacker.action=move; attacker.actionT=0.16;
+  if(inRange(attacker.x, defender.x, move, attacker.facing)){
+    var dmg=strikeDamage(move, defender.blocking);
+    defender.hp=Math.max(0, defender.hp - dmg);
+    defender.action='hit'; defender.actionT=0.18;
+    defender.x += attacker.facing * (defender.blocking ? 2 : 6);
+    defender.x=Math.max(30, Math.min(W-30, defender.x));
+    if(attacker===you){
+      el('msg').textContent= defender.blocking ? '🛡️ He blocked — only '+dmg+' chip damage.' : '💥 '+MOVES[move].label+' lands! '+dmg+' damage.';
+    } else {
+      el('msg').textContent= defender.blocking ? '🛡️ You blocked — only '+dmg+' through.' : '💥 Ryu\'s '+MOVES[move].label.toLowerCase()+' hits you for '+dmg+'!';
+    }
+    beep(attacker===you?300:170, 0.07, 'square', 0.06);
+  } else if(attacker===you){
+    el('msg').textContent='Whoosh — out of range. Close the distance first!';
+    beep(500,0.04,'sine',0.03);
+  }
+  bars();
+}
+function endRound(winner, reason){
+  if(winner==='you'){ youRounds++; }
+  else if(winner==='opp'){ oppRounds++; }
+  el('msg').textContent= reason+' '+(youRounds>=2 ? '🏆 You take the match!' : oppRounds>=2 ? '😖 Ryu takes the match.' : 'Round to '+(winner==='you'?'you':'Ryu')+' — score '+youRounds+'–'+oppRounds+'. Next round…');
+  beep(winner==='you'?880:240, 0.16, 'sine', 0.06);
+  if(youRounds>=2 || oppRounds>=2){
+    playing=false; matchOver=true;
+    if(youRounds>oppRounds){ belts++; localStorage.setItem('makenKarateBelts', belts); }
+    bars(); draw();
+    return;
+  }
+  betweenT=1.6;
+  bars(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.04, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(betweenT>0){
+    betweenT-=dt;
+    if(betweenT<=0) resetRound();
+    draw();
+    rafId=requestAnimationFrame(loop);
+    return;
+  }
+  roundClock-=dt;
+  /* player */
+  you.blocking = !!(keys.KeyL);
+  if(you.cool>0) you.cool-=dt;
+  if(you.action){ you.actionT-=dt; if(you.actionT<=0) you.action=null; }
+  var spd=172;
+  if(!you.blocking && !you.action){
+    if(keys.KeyA || keys.ArrowLeft) you.x -= spd*dt;
+    if(keys.KeyD || keys.ArrowRight) you.x += spd*dt;
+  }
+  you.x=Math.max(30, Math.min(W-30, you.x));
+  you.facing = opp.x >= you.x ? 1 : -1;
+  if(keys.KeyJ){ doStrike(you, opp, 'punch'); keys.KeyJ=false; }
+  if(keys.KeyK){ doStrike(you, opp, 'kick'); keys.KeyK=false; }
+  /* CPU sensei */
+  opp.blocking=false;
+  if(opp.cool>0) opp.cool-=dt;
+  if(opp.action){ opp.actionT-=dt; if(opp.actionT<=0) opp.action=null; }
+  opp.facing = you.x >= opp.x ? 1 : -1;
+  var dist=Math.abs(opp.x - you.x);
+  if(!opp.action){
+    if(dist > 78) opp.x += (you.x>opp.x?1:-1) * 118*dt;
+    else if(dist < 40) opp.x -= (you.x>opp.x?1:-1) * 84*dt;
+    else {
+      var r=Math.random();
+      if(r < dt*0.5) doStrike(opp, you, 'kick');
+      else if(r < dt*1.15) doStrike(opp, you, 'punch');
+      else if(r < dt*1.5) opp.blocking=true;
+    }
+    if(you.action && dist<86 && Math.random()<dt*2.4) opp.blocking=true;
+  }
+  opp.x=Math.max(30, Math.min(W-30, opp.x));
+  /* separation */
+  if(Math.abs(you.x-opp.x) < 26){
+    var push=(26-Math.abs(you.x-opp.x))/2;
+    if(you.x<opp.x){ you.x-=push; opp.x+=push; } else { you.x+=push; opp.x-=push; }
+  }
+  var w=roundWinner(you.hp, opp.hp);
+  if(w) endRound(w, w==='you' ? '🥋 KNOCKOUT!' : '💥 You are knocked out!');
+  else if(roundClock<=0){
+    if(you.hp!==opp.hp) endRound(you.hp>opp.hp ? 'you' : 'opp', '⏱️ Time! The healthier fighter takes the round.');
+    else endRound('draw', '⏱️ Time — dead even, round shared.');
+  }
+  bars(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+function holdBtn(id, code){
+  var b=el(id);
+  b.addEventListener('touchstart', function(e){ keys[code]=true; e.preventDefault(); }, {passive:false});
+  b.addEventListener('touchend', function(){ keys[code]=false; });
+  b.addEventListener('mousedown', function(){ keys[code]=true; });
+  b.addEventListener('mouseup', function(){ keys[code]=false; });
+  b.addEventListener('mouseleave', function(){ keys[code]=false; });
+}
+holdBtn('leftBtn','KeyA'); holdBtn('rightBtn','KeyD'); holdBtn('blockBtn','KeyL');
+el('punchBtn').addEventListener('click', function(){ keys.KeyJ=true; });
+el('kickBtn').addEventListener('click', function(){ keys.KeyK=true; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  resetMatch();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🥋 Hajime! Round 1 — measure your distance, strike with purpose.';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+resetMatch();
+if(typeof module!=='undefined') module.exports={ MOVES:MOVES, strikeDamage:strikeDamage, inRange:inRange, roundWinner:roundWinner };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
