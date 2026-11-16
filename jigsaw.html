@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jigsaw Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Jigsaw Puzzle free online. Rebuild the picture piece by piece on 3x3, 4x4 or 5x5 grids, with a ghost guide, peek and hints. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #boardWrap { position:relative; width:min(92vw, 460px); margin:4px 0; }
+  #board { position:relative; width:100%; aspect-ratio:1/1; background:#0d1330; border:2px solid #26335f; border-radius:12px; overflow:hidden; }
+  #ghost { position:absolute; inset:0; background-size:100% 100%; opacity:0.18; pointer-events:none; }
+  #peekImg { position:absolute; inset:0; background-size:100% 100%; opacity:0; pointer-events:none; transition:opacity .15s; z-index:5; }
+  .cell { position:absolute; border:1px dashed rgba(125,211,252,0.28); }
+  .cell.hintflash { background:rgba(250,204,21,0.45); }
+  .piece { position:absolute; inset:0; background-repeat:no-repeat; border-radius:3px; cursor:pointer; }
+  .piece .num { position:absolute; top:1px; left:3px; font-size:10.5px; font-weight:800; color:#fff; text-shadow:0 1px 2px #000, 0 0 3px #000; display:none; }
+  body.numbers .piece .num { display:block; }
+  .piece.sel { box-shadow:inset 0 0 0 3px #facc15; z-index:3; }
+  .piece.locked { box-shadow:inset 0 0 0 2px rgba(34,197,94,0.85); cursor:default; }
+  #tray { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(94vw, 520px); min-height:76px; margin:6px 0 2px; background:#0d1330; border:2px solid #26335f; border-radius:12px; padding:8px; }
+  #tray .piece { position:relative; inset:auto; width:64px; height:64px; flex:0 0 auto; border:1.5px solid #26335f; }
+  #tray .piece.sel { box-shadow:0 0 0 3px #facc15; }
+  #trayLabel { font-size:12px; color:#5b6b96; letter-spacing:2px; margin-top:4px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🧩 JIGSAW PUZZLE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">🧩 PLACED <b id="placed">0/16</b></div>
+  <div class="stat">👆 MOVES <b id="moves">0</b></div>
+  <div class="stat">🏆 BEST (4×4) <b id="best">—</b></div>
+</div>
+
+<div id="boardWrap">
+  <div id="board"><div id="ghost"></div><div id="peekImg"></div></div>
+</div>
+<div id="trayLabel">— PIECE TRAY — tap a piece, then tap a board square —</div>
+<div id="tray"></div>
+<div id="msg">Press NEW PUZZLE to shuffle the pieces.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW PUZZLE</button>
+  <button class="btn size" data-n="3">3×3</button>
+  <button class="btn size on" data-n="4">4×4</button>
+  <button class="btn size" data-n="5">5×5</button>
+</div>
+<div class="row">
+  <button class="btn" id="peekBtn">👁 HOLD TO PEEK</button>
+  <button class="btn" id="hintBtn">💡 HINT</button>
+  <button class="btn" id="numBtn">🔢 NUMBERS</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">A piece dropped on its own square locks in green · tap a placed piece to pick it back up · hold PEEK to see the full picture</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Jigsaw Puzzle</h2>
+  <p>A classic jigsaw with a Maken Play twist: the picture is painted fresh by the game itself — a sunny lakeside scene with a cottage, mountains and trees. Pieces wait in the tray below the board; a faint ghost of the finished picture guides you, and any piece dropped on its own square locks into place with a green frame.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap a piece in the tray to select it, then tap a square on the board to drop it there. Wrong square? Tap the piece again to pick it back up, or tap the tray to send it home. Stuck on a piece? HINT flashes the square it belongs to, PEEK shows you the whole picture while you hold it, and NUMBERS labels every piece with its square number. Pick 3×3 for a warm-up, 4×4 for the classic game, or 5×5 for a real challenge — your best time for each size is saved.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three grid sizes — 9, 16 or 25 pieces</li>
+    <li>Ghost guide, hold-to-peek, hint flashes and optional piece numbers</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* ---------- pure logic (testable) ---------- */
+/* state: { N, cellOf: [] } — cellOf[pieceId] = cell index, or -1 when the piece is in the tray.
+   Piece p belongs in cell p (pieces and cells are numbered row by row). */
+function newGameState(N){
+  var cellOf=[];
+  for(var i=0;i<N*N;i++) cellOf.push(-1);
+  return { N:N, cellOf:cellOf };
+}
+function placePiece(state, piece, cell){
+  var displaced=-1;
+  for(var p=0;p<state.cellOf.length;p++){
+    if(p!==piece && state.cellOf[p]===cell){ displaced=p; state.cellOf[p]=-1; }
+  }
+  state.cellOf[piece]=cell;
+  return displaced;
+}
+function removePiece(state, piece){ state.cellOf[piece]=-1; }
+function isLocked(state, piece){ return state.cellOf[piece]===piece; }
+function lockedCount(state){
+  var n=0;
+  for(var p=0;p<state.cellOf.length;p++) if(state.cellOf[p]===p) n++;
+  return n;
+}
+function isSolved(state){ return lockedCount(state)===state.cellOf.length; }
+function shuffledOrder(count){
+  var a=[];
+  for(var i=0;i<count;i++) a.push(i);
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+
+/* ---------- picture (drawn fresh on a canvas) ---------- */
+function paintScene(ctx, S){
+  var u=S/480; /* unit scale */
+  var sky=ctx.createLinearGradient(0,0,0,S*0.66);
+  sky.addColorStop(0,'#38bdf8'); sky.addColorStop(1,'#e0f2fe');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,S,S*0.66);
+  ctx.fillStyle='#fde047';
+  ctx.beginPath(); ctx.arc(392*u,78*u,36*u,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(253,224,71,0.35)';
+  ctx.beginPath(); ctx.arc(392*u,78*u,54*u,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffffff';
+  function cloud(x,y,s){
+    ctx.beginPath(); ctx.ellipse(x,y,46*s,17*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x-30*s,y+5*s,30*s,12*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+32*s,y+5*s,32*s,13*s,0,0,Math.PI*2); ctx.fill();
+  }
+  cloud(95*u,72*u,u); cloud(215*u,44*u,0.75*u); cloud(300*u,118*u,0.6*u);
+  ctx.fillStyle='#64748b';
+  ctx.beginPath(); ctx.moveTo(0,300*u); ctx.lineTo(130*u,150*u); ctx.lineTo(260*u,300*u); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#475569';
+  ctx.beginPath(); ctx.moveTo(170*u,300*u); ctx.lineTo(320*u,130*u); ctx.lineTo(480*u,300*u); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#f8fafc';
+  ctx.beginPath(); ctx.moveTo(130*u,150*u); ctx.lineTo(104*u,186*u); ctx.lineTo(156*u,186*u); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(320*u,130*u); ctx.lineTo(292*u,168*u); ctx.lineTo(348*u,168*u); ctx.closePath(); ctx.fill();
+  var gr=ctx.createLinearGradient(0,S*0.6,0,S);
+  gr.addColorStop(0,'#4ade80'); gr.addColorStop(1,'#15803d');
+  ctx.fillStyle=gr; ctx.fillRect(0,S*0.62,S,S*0.38);
+  ctx.fillStyle='#38bdf8';
+  ctx.beginPath(); ctx.ellipse(105*u,392*u,95*u,44*u,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.ellipse(80*u,382*u,38*u,9*u,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(140*u,404*u,28*u,7*u,0,0,Math.PI*2); ctx.fill();
+  /* cottage */
+  ctx.fillStyle='#fbbf24'; ctx.fillRect(300*u,318*u,108*u,74*u);
+  ctx.fillStyle='#b91c1c';
+  ctx.beginPath(); ctx.moveTo(288*u,322*u); ctx.lineTo(354*u,272*u); ctx.lineTo(420*u,322*u); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#78350f'; ctx.fillRect(340*u,348*u,26*u,44*u);
+  ctx.fillStyle='#e0f2fe'; ctx.fillRect(312*u,332*u,20*u,20*u); ctx.fillRect(378*u,332*u,20*u,20*u);
+  ctx.strokeStyle='#78350f'; ctx.lineWidth=2.4*u;
+  ctx.strokeRect(312*u,332*u,20*u,20*u); ctx.strokeRect(378*u,332*u,20*u,20*u);
+  /* tree */
+  ctx.fillStyle='#92400e'; ctx.fillRect(52*u,300*u,13*u,58*u);
+  ctx.fillStyle='#16a34a';
+  ctx.beginPath(); ctx.arc(58*u,272*u,36*u,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(34*u,296*u,25*u,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(84*u,296*u,25*u,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#dc2626';
+  ctx.beginPath(); ctx.arc(46*u,262*u,5*u,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(72*u,282*u,5*u,0,Math.PI*2); ctx.fill();
+  /* path + flowers */
+  ctx.fillStyle='#fde68a';
+  ctx.beginPath(); ctx.moveTo(344*u,392*u); ctx.lineTo(362*u,392*u); ctx.lineTo(392*u,480*u); ctx.lineTo(306*u,480*u); ctx.closePath(); ctx.fill();
+  var cols=['#f472b6','#facc15','#ffffff','#c084fc'];
+  for(var i=0;i<16;i++){
+    ctx.fillStyle=cols[i%4];
+    var fx=(20+((i*67)%440))*u, fy=(404+((i*29)%62))*u;
+    if(fx>270*u && fx<420*u && fy>380*u) continue;
+    ctx.beginPath(); ctx.arc(fx,fy,3.6*u,0,Math.PI*2); ctx.fill();
+  }
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var el=function(id){ return document.getElementById(id); };
+var N=4, state=newGameState(4), selected=-1, moves=0, seconds=0, timerId=null, playing=false, imgURL='';
+var pieceEls=[], cellEls=[];
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenJigsawBest'+N; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? fmt(+b) : '—';
+  document.querySelector('.hud .stat:last-child').firstChild.textContent='🏆 BEST ('+N+'×'+N+') ';
+}
+function hud(){
+  el('placed').textContent=lockedCount(state)+'/'+(N*N);
+  el('moves').textContent=moves;
+  el('time').textContent=fmt(seconds);
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function buildPicture(){
+  imgURL='';
+  try{
+    var cv=document.createElement('canvas');
+    cv.width=480; cv.height=480;
+    var cx=cv.getContext('2d');
+    paintScene(cx, 480);
+    imgURL=cv.toDataURL('image/png');
+  }catch(e){ imgURL=''; }
+  el('ghost').style.backgroundImage= imgURL ? 'url('+imgURL+')' : 'none';
+  el('peekImg').style.backgroundImage= imgURL ? 'url('+imgURL+')' : 'none';
+}
+function pieceBackground(p){
+  if(imgURL) return 'url('+imgURL+')';
+  var hue=(p*47)%360;
+  return 'linear-gradient(135deg, hsl('+hue+',72%,42%), hsl('+((hue+50)%360)+',72%,30%))';
+}
+function piecePos(p){
+  var r=Math.floor(p/N), c=p%N;
+  var x= N===1 ? 0 : (c/(N-1))*100;
+  var y= N===1 ? 0 : (r/(N-1))*100;
+  return x+'% '+y+'%';
+}
+function newPuzzle(){
+  stopTimer();
+  state=newGameState(N);
+  selected=-1; moves=0; seconds=0; playing=true;
+  buildPicture();
+  var board=el('board');
+  cellEls.forEach(function(ce){ if(ce.parentNode) ce.parentNode.removeChild(ce); });
+  cellEls=[]; pieceEls=[];
+  var sizePct=100/N;
+  for(var cell=0; cell<N*N; cell++){
+    var cd=document.createElement('div');
+    cd.className='cell';
+    cd.style.left=(cell%N)*sizePct+'%';
+    cd.style.top=Math.floor(cell/N)*sizePct+'%';
+    cd.style.width=sizePct+'%';
+    cd.style.height=sizePct+'%';
+    (function(idx){
+      cd.addEventListener('click', function(){ onCellTap(idx); });
+    })(cell);
+    board.appendChild(cd);
+    cellEls.push(cd);
+  }
+  var tray=el('tray');
+  tray.innerHTML='';
+  var order=shuffledOrder(N*N);
+  order.forEach(function(p){
+    var pd=document.createElement('div');
+    pd.className='piece';
+    pd.style.backgroundImage=pieceBackground(p);
+    pd.style.backgroundSize=(N*100)+'% '+(N*100)+'%';
+    pd.style.backgroundPosition=piecePos(p);
+    var num=document.createElement('span');
+    num.className='num';
+    num.textContent=(p+1);
+    pd.appendChild(num);
+    (function(pid){
+      pd.addEventListener('click', function(ev){ ev.stopPropagation(); onPieceTap(pid); });
+    })(p);
+    tray.appendChild(pd);
+    pieceEls[p]=pd;
+  });
+  el('msg').textContent='🧩 New '+N+'×'+N+' puzzle shuffled — tap a piece, then tap its square.';
+  showBest(); hud();
+}
+function syncPiece(p){
+  var pd=pieceEls[p];
+  if(!pd) return;
+  var cell=state.cellOf[p];
+  var parent= cell===-1 ? el('tray') : cellEls[cell];
+  if(pd.parentNode!==parent) parent.appendChild(pd);
+  pd.classList.toggle('locked', isLocked(state, p));
+  pd.classList.toggle('sel', selected===p);
+}
+function syncAll(){ for(var p=0;p<N*N;p++) syncPiece(p); }
+function onPieceTap(p){
+  if(!playing) return;
+  if(isLocked(state, p)) return;
+  if(selected===p){ selected=-1; }
+  else { selected=p; beep(620,0.035,'square',0.03); }
+  syncAll();
+}
+function onCellTap(cell){
+  if(!playing) return;
+  if(selected===-1){
+    /* tap an occupied cell selects its piece (unless locked) */
+    for(var p=0;p<N*N;p++){
+      if(state.cellOf[p]===cell && !isLocked(state, p)){ selected=p; syncAll(); }
+    }
+    return;
+  }
+  var wasLocked=isLocked(state, selected);
+  placePiece(state, selected, cell);
+  moves++;
+  startTimer();
+  var nowLocked=isLocked(state, selected);
+  if(nowLocked && !wasLocked){ beep(920,0.08,'sine',0.05); el('msg').textContent='✅ Locked in! '+(lockedCount(state))+' of '+(N*N)+' pieces home.'; }
+  else beep(520,0.04,'square',0.03);
+  selected=-1;
+  syncAll(); hud();
+  if(isSolved(state)) win();
+}
+el('tray').addEventListener('click', function(){
+  if(!playing || selected===-1) return;
+  if(state.cellOf[selected]!==-1){
+    removePiece(state, selected);
+    moves++;
+    selected=-1;
+    syncAll(); hud();
+  }
+});
+function win(){
+  stopTimer();
+  playing=false;
+  var prev=localStorage.getItem(bestKey());
+  var isBest= !prev || seconds<+prev;
+  if(isBest) localStorage.setItem(bestKey(), seconds);
+  el('msg').textContent='🎉 PUZZLE COMPLETE in '+fmt(seconds)+' with '+moves+' moves!'+(isBest ? ' 🏆 New best time for '+N+'×'+N+'!' : '')+' Press NEW PUZZLE to play again.';
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); hud();
+}
+el('startBtn').addEventListener('click', newPuzzle);
+Array.prototype.forEach.call(document.querySelectorAll('.size'), function(b){
+  b.addEventListener('click', function(){
+    N=+b.getAttribute('data-n');
+    Array.prototype.forEach.call(document.querySelectorAll('.size'), function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    newPuzzle();
+  });
+});
+var peek=el('peekImg');
+el('peekBtn').addEventListener('pointerdown', function(){ peek.style.opacity='1'; });
+el('peekBtn').addEventListener('pointerup', function(){ peek.style.opacity='0'; });
+el('peekBtn').addEventListener('pointerleave', function(){ peek.style.opacity='0'; });
+el('hintBtn').addEventListener('click', function(){
+  if(!playing) return;
+  var target=-1;
+  if(selected!==-1 && !isLocked(state, selected)) target=selected;
+  else {
+    var open=[];
+    for(var p=0;p<N*N;p++) if(!isLocked(state, p)) open.push(p);
+    if(!open.length) return;
+    target=open[Math.floor(Math.random()*open.length)];
+    selected=target;
+  }
+  syncAll();
+  var cellEl=cellEls[target];
+  cellEl.classList.add('hintflash');
+  el('msg').textContent='💡 Piece '+(target+1)+' belongs in the flashing square.';
+  beep(700,0.06,'sine',0.04);
+  setTimeout(function(){ cellEl.classList.remove('hintflash'); }, 950);
+});
+el('numBtn').addEventListener('click', function(){
+  document.body.classList.toggle('numbers');
+  this.classList.toggle('on', document.body.classList.contains('numbers'));
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+showBest(); hud();
+if(typeof module!=='undefined') module.exports={ newGameState:newGameState, placePiece:placePiece, removePiece:removePiece, isLocked:isLocked, lockedCount:lockedCount, isSolved:isSolved, shuffledOrder:shuffledOrder };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

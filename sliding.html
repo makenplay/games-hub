@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sliding Puzzle — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Sliding Puzzle free online. Slide the numbered tiles into order on 3x3, 4x4 or 5x5 boards. Every shuffle is guaranteed solvable. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #board { display:grid; gap:5px; justify-content:center; margin:4px 0; background:#0d1330; padding:8px; border:2px solid #26335f; border-radius:12px; }
+  .tile { display:flex; align-items:center; justify-content:center; font-weight:900; color:#fff; border-radius:9px; cursor:pointer; user-select:none; text-shadow:0 1px 3px rgba(0,0,0,0.45); box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25); transition:transform .06s; }
+  .tile:active { transform:scale(.94); }
+  .tile.home { box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25), inset 0 0 0 2px rgba(255,255,255,0.35); }
+  .tile.blank { background:rgba(255,255,255,0.04); box-shadow:none; cursor:default; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🔀 SLIDING PUZZLE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">👆 MOVES <b id="moves">0</b></div>
+  <div class="stat">✅ IN PLACE <b id="inplace">0/15</b></div>
+  <div class="stat">🏆 BEST (4×4) <b id="best">—</b></div>
+</div>
+
+<div id="board"></div>
+<div id="msg">Press NEW GAME to shuffle — every shuffle can be solved.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW GAME</button>
+  <button class="btn size" data-n="3">3×3</button>
+  <button class="btn size on" data-n="4">4×4</button>
+  <button class="btn size" data-n="5">5×5</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Tap a tile next to the empty space to slide it · arrow keys slide too · a tile with a white frame is already home</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Sliding Puzzle</h2>
+  <p>The timeless sliding puzzle — the famous 15-puzzle and its brothers. Numbered tiles are shuffled on the board with one empty space; slide tiles into the gap, one at a time, until they read 1 to 15 in order with the blank in the corner. Unlike the cheap versions, every shuffle here is made by sliding real moves from the solved board, so a solution always exists.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap any tile beside the empty space and it slides in. Arrow keys work too. Plan ahead: finish the top row first, then the left column, and shrink the puzzle down to a 2×2 corner. Tiles already in their home square wear a white frame. Race the clock on 3×3, take the classic 4×4 challenge, or go big on 5×5 — your fewest-moves best for each size is saved.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Three board sizes — 8, 15 or 24 tiles</li>
+    <li>Guaranteed-solvable shuffles, move counter and per-size best scores</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+/* ---------- pure logic (testable) ---------- */
+/* state: flat array, 0 = blank; solved = [1, 2, ..., N*N-1, 0] */
+function solvedState(N){
+  var a=[];
+  for(var i=1;i<N*N;i++) a.push(i);
+  a.push(0);
+  return a;
+}
+function isSolved(state){
+  for(var i=0;i<state.length-1;i++) if(state[i]!==i+1) return false;
+  return state[state.length-1]===0;
+}
+function blankIndex(state){ return state.indexOf(0); }
+function canSlide(state, N, idx){
+  var b=blankIndex(state);
+  var br=Math.floor(b/N), bc=b%N, ir=Math.floor(idx/N), ic=idx%N;
+  return Math.abs(br-ir)+Math.abs(bc-ic)===1;
+}
+function slide(state, N, idx){
+  if(!canSlide(state, N, idx)) return state;
+  var next=state.slice();
+  var b=blankIndex(next);
+  next[b]=next[idx];
+  next[idx]=0;
+  return next;
+}
+function inversionCount(state){
+  var inv=0;
+  for(var i=0;i<state.length;i++){
+    if(state[i]===0) continue;
+    for(var j=i+1;j<state.length;j++){
+      if(state[j]!==0 && state[j]<state[i]) inv++;
+    }
+  }
+  return inv;
+}
+function isSolvable(state, N){
+  var inv=inversionCount(state);
+  if(N%2===1) return inv%2===0;
+  var blankRowFromBottom=N-Math.floor(blankIndex(state)/N);
+  return (blankRowFromBottom%2===0) === (inv%2===1);
+}
+/* shuffle by making random legal moves from solved: always solvable, never left solved */
+function shuffledState(N){
+  var movesTotal= N===3 ? 90 : N===4 ? 170 : 260;
+  var state=solvedState(N);
+  var prevBlank=-1;
+  for(var k=0;k<movesTotal;k++){
+    var b=blankIndex(state);
+    var options=[];
+    for(var idx=0; idx<state.length; idx++){
+      if(idx!==prevBlank && canSlide(state, N, idx)) options.push(idx);
+    }
+    var pick=options[Math.floor(Math.random()*options.length)];
+    prevBlank=b;
+    state=slide(state, N, pick);
+  }
+  if(isSolved(state)) state=slide(state, N, state.length-2);
+  return state;
+}
+function inPlaceCount(state){
+  var n=0;
+  for(var i=0;i<state.length-1;i++) if(state[i]===i+1) n++;
+  return n;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var el=function(id){ return document.getElementById(id); };
+var N=4, state=solvedState(4), moves=0, seconds=0, timerId=null, playing=false;
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenSlidingBest'+N; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b ? b+' moves' : '—';
+  document.querySelector('.hud .stat:last-child').firstChild.textContent='🏆 BEST ('+N+'×'+N+') ';
+}
+function hud(){
+  el('moves').textContent=moves;
+  el('time').textContent=fmt(seconds);
+  el('inplace').textContent=inPlaceCount(state)+'/'+(N*N-1);
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function tileSize(){
+  return N===3 ? 96 : N===4 ? 76 : 60;
+}
+function render(){
+  var board=el('board');
+  board.style.gridTemplateColumns='repeat('+N+', '+tileSize()+'px)';
+  board.innerHTML='';
+  state.forEach(function(v, idx){
+    var d=document.createElement('div');
+    var sz=tileSize();
+    d.style.width=sz+'px';
+    d.style.height=sz+'px';
+    d.style.fontSize=(N===5 ? 21 : 26)+'px';
+    if(v===0){
+      d.className='tile blank';
+    } else {
+      d.className='tile'+(state[idx]===idx+1 ? ' home' : '');
+      var hue=((v-1)%(N*N-1))*360/(N*N-1);
+      d.style.background='linear-gradient(135deg, hsl('+hue+',72%,46%), hsl('+((hue+40)%360)+',72%,32%))';
+      d.textContent=v;
+      (function(i){
+        d.addEventListener('click', function(){ onTileTap(i); });
+      })(idx);
+    }
+    board.appendChild(d);
+  });
+  hud();
+}
+function newGame(){
+  stopTimer();
+  state=shuffledState(N);
+  moves=0; seconds=0; playing=true;
+  el('msg').textContent='🔀 Shuffled! Slide the tiles into order — 1 top-left, blank bottom-right.';
+  showBest(); render();
+}
+function doSlide(idx){
+  if(!playing) return;
+  if(!canSlide(state, N, idx)) return;
+  state=slide(state, N, idx);
+  moves++;
+  startTimer();
+  beep(560+Math.min(300, inPlaceCount(state)*12), 0.04,'square',0.032);
+  render();
+  if(isSolved(state)) win();
+}
+function onTileTap(idx){ doSlide(idx); }
+function win(){
+  stopTimer();
+  playing=false;
+  var prev=localStorage.getItem(bestKey());
+  var isBest= !prev || moves<+prev;
+  if(isBest) localStorage.setItem(bestKey(), moves);
+  el('msg').textContent='🎉 SOLVED in '+fmt(seconds)+' with '+moves+' moves!'+(isBest ? ' 🏆 New best for '+N+'×'+N+'!' : '')+' Press NEW GAME to shuffle again.';
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); hud();
+}
+document.addEventListener('keydown', function(e){
+  if(!playing) return;
+  var b=blankIndex(state);
+  var br=Math.floor(b/N), bc=b%N;
+  var target=-1;
+  if(e.key==='ArrowUp' && br<N-1) target=b+N;       /* tile below the blank slides up */
+  else if(e.key==='ArrowDown' && br>0) target=b-N;  /* tile above the blank slides down */
+  else if(e.key==='ArrowLeft' && bc<N-1) target=b+1;
+  else if(e.key==='ArrowRight' && bc>0) target=b-1;
+  if(target>=0){ e.preventDefault(); doSlide(target); }
+});
+el('startBtn').addEventListener('click', newGame);
+Array.prototype.forEach.call(document.querySelectorAll('.size'), function(b){
+  b.addEventListener('click', function(){
+    N=+b.getAttribute('data-n');
+    Array.prototype.forEach.call(document.querySelectorAll('.size'), function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    stopTimer();
+    state=solvedState(N);
+    moves=0; seconds=0; playing=false;
+    el('msg').textContent='Board set to '+N+'×'+N+' — press NEW GAME to shuffle.';
+    showBest(); render();
+  });
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+showBest(); render();
+if(typeof module!=='undefined') module.exports={ solvedState:solvedState, isSolved:isSolved, canSlide:canSlide, slide:slide, inversionCount:inversionCount, isSolvable:isSolvable, shuffledState:shuffledState, inPlaceCount:inPlaceCount, blankIndex:blankIndex };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
