@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Draw Bridge — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Draw Bridge free online. Draw a bridge with your finger or mouse and roll your buddy safely across the gap to the flag. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .stat b.low { color:#f87171; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#22c55e,#0ea5e9); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🌉 DRAW BRIDGE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🌉 LEVEL <b id="level">1</b></div>
+  <div class="stat">🖊 INK LEFT <b id="ink">100%</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">🏆 LEVELS CLEARED <b id="cleared">0</b></div>
+</div>
+
+<canvas id="cv" width="440" height="400"></canvas>
+<div id="msg">Draw a bridge across the gap with your mouse or finger, then press ROLL!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ ROLL!</button>
+  <button class="btn" id="clearBtn">🗑 CLEAR INK</button>
+  <button class="btn" id="retryBtn">↺ RETRY LEVEL</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">One stroke only — anchor it on both cliffs · a flat, gentle bridge rolls best · steep ramps stall the buddy</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Draw Bridge</h2>
+  <p>Your buddy needs to roll home, but the road is broken. You get one pot of ink and one stroke: draw a bridge from cliff to cliff, press ROLL, and watch physics decide whether your engineering holds. Too steep and he stalls; too saggy and he dips into the water; just right and he cruises to the flag.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and drag on the canvas to draw one continuous bridge — start it on the left cliff and end it on the right cliff so both ends are anchored. The INK meter shows how much line you have left. Press ROLL and the buddy sets off: he keeps his speed on the flat, climbs gentle slopes, and rolls back down anything too steep. Four crossings, each wider and trickier than the last — one has a rock island in the middle, one makes you land on a lower ledge. CLEAR INK wipes your stroke and refunds the pot.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Real draw-your-own physics: your exact line becomes the road</li>
+    <li>Four handcrafted crossings with an ink budget per level</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=440, H=400, WATER_Y=368, BALL_R=11, GRAV=1500;
+/* ---------- levels: terrain segments [x1,y1,x2,y2]; ground the buddy rolls on ---------- */
+var LEVELS=[
+  { ink: 330, name:'First Crossing',
+    ground: [ [0,300,150,300], [290,300,440,300] ],
+    start: [40,300], flag: [404,300] },
+  { ink: 430, name:'The Wide Gap',
+    ground: [ [0,290,110,290], [330,290,440,290] ],
+    start: [36,290], flag: [406,290] },
+  { ink: 470, name:'Rocky Island',
+    ground: [ [0,300,120,300], [196,326,252,326], [330,300,440,300] ],
+    start: [38,300], flag: [404,300] },
+  { ink: 520, name:'The Long Way Down',
+    ground: [ [0,240,100,240], [180,300,250,300], [340,336,440,336] ],
+    start: [34,240], flag: [408,336] }
+];
+/* ---------- pure physics (testable) ---------- */
+function closestPointOnSegment(px, py, x1, y1, x2, y2){
+  var dx=x2-x1, dy=y2-y1;
+  var len2=dx*dx+dy*dy;
+  var t= len2 ? ((px-x1)*dx + (py-y1)*dy)/len2 : 0;
+  t=Math.max(0, Math.min(1, t));
+  return { x:x1+t*dx, y:y1+t*dy, t:t };
+}
+/* one physics step for the rolling buddy.
+   ball: { x, y, vx, vy, grounded } — segments: array of [x1,y1,x2,y2] */
+function stepBall(ball, segments, dt){
+  ball.vy += GRAV*dt;
+  ball.x += ball.vx*dt;
+  ball.y += ball.vy*dt;
+  ball.grounded=false;
+  for(var iter=0; iter<2; iter++){
+    for(var i=0;i<segments.length;i++){
+      var s=segments[i];
+      var cp=closestPointOnSegment(ball.x, ball.y, s[0], s[1], s[2], s[3]);
+      var ddx=ball.x-cp.x, ddy=ball.y-cp.y;
+      var dist=Math.sqrt(ddx*ddx + ddy*ddy);
+      if(dist < BALL_R && dist > 0.0001){
+        var nx=ddx/dist, ny=ddy/dist;
+        /* only collide from above-ish: the surface must be under the ball */
+        if(ny < -0.25){
+          ball.x = cp.x + nx*BALL_R;
+          ball.y = cp.y + ny*BALL_R;
+          var vn = ball.vx*nx + ball.vy*ny;
+          if(vn < 0){
+            ball.vx -= vn*nx;
+            ball.vy -= vn*ny;
+          }
+          ball.grounded=true;
+        }
+      }
+    }
+  }
+  if(ball.grounded){
+    /* rolling drive: ease horizontal speed toward cruise, slopes fight it via gravity naturally */
+    var CRUISE=118;
+    ball.vx += (CRUISE - ball.vx) * Math.min(1, dt*1.6);
+    ball.vy *= 0.4;
+  }
+  return ball;
+}
+function polylineLength(points){
+  var total=0;
+  for(var i=1;i<points.length;i++){
+    var dx=points[i][0]-points[i-1][0], dy=points[i][1]-points[i-1][1];
+    total += Math.sqrt(dx*dx + dy*dy);
+  }
+  return total;
+}
+function polylineSegments(points){
+  var segs=[];
+  for(var i=1;i<points.length;i++) segs.push([points[i-1][0], points[i-1][1], points[i][0], points[i][1]]);
+  return segs;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var level=0, stroke=[], drawing=false, rolling=false, ball=null, seconds=0, timerId=null, rafId=null, lastTs=0;
+var cleared=+(localStorage.getItem('makenBridgeCleared')||0);
+el('cleared').textContent=cleared;
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function hud(){
+  el('level').textContent=level+1;
+  var used=polylineLength(stroke);
+  var pct=Math.max(0, Math.round(100*(1-used/LEVELS[level].ink)));
+  var inkEl=el('ink');
+  inkEl.textContent=pct+'%';
+  inkEl.className= pct<25 ? 'low' : '';
+  el('time').textContent=fmt(seconds);
+  el('cleared').textContent=cleared;
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function loadLevel(lv){
+  level=lv;
+  stroke=[];
+  rolling=false;
+  ball=null;
+  seconds=0;
+  stopTimer();
+  if(rafId) cancelAnimationFrame(rafId);
+  el('msg').textContent='🌉 Level '+(level+1)+' — '+LEVELS[level].name+'. Draw your bridge, then press ROLL!';
+  hud(); draw();
+}
+function draw(){
+  /* sky */
+  var sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#0ea5e9'); sky.addColorStop(0.7,'#7dd3fc'); sky.addColorStop(1,'#bae6fd');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fde047';
+  ctx.beginPath(); ctx.arc(396,44,24,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.beginPath(); ctx.ellipse(80,52,34,12,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(108,46,24,10,0,0,Math.PI*2); ctx.fill();
+  /* water */
+  ctx.fillStyle='#0369a1'; ctx.fillRect(0,WATER_Y,W,H-WATER_Y);
+  ctx.fillStyle='rgba(125,211,252,0.6)';
+  for(var wx=0; wx<W; wx+=26){
+    ctx.fillRect(wx, WATER_Y+6+((wx*7)%3)*4, 15, 2.4);
+  }
+  /* cliffs */
+  var L=LEVELS[level];
+  ctx.fillStyle='#78716c';
+  L.ground.forEach(function(s){
+    ctx.beginPath();
+    ctx.moveTo(s[0], s[1]);
+    ctx.lineTo(s[2], s[3]);
+    ctx.lineTo(s[2], WATER_Y);
+    ctx.lineTo(s[0], WATER_Y);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#22c55e';
+    ctx.fillRect(Math.min(s[0],s[2]), Math.min(s[1],s[3])-4, Math.abs(s[2]-s[0]), 6);
+    ctx.fillStyle='#78716c';
+  });
+  /* flag */
+  ctx.strokeStyle='#f8fafc'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(L.flag[0], L.flag[1]); ctx.lineTo(L.flag[0], L.flag[1]-44); ctx.stroke();
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath(); ctx.moveTo(L.flag[0], L.flag[1]-44); ctx.lineTo(L.flag[0]+20, L.flag[1]-36); ctx.lineTo(L.flag[0], L.flag[1]-28); ctx.closePath(); ctx.fill();
+  /* drawn bridge */
+  if(stroke.length>1){
+    ctx.strokeStyle='#92400e'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(stroke[0][0], stroke[0][1]);
+    for(var i=1;i<stroke.length;i++) ctx.lineTo(stroke[i][0], stroke[i][1]);
+    ctx.stroke();
+    ctx.strokeStyle='#b45309'; ctx.lineWidth=2.4;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0][0], stroke[0][1]-2);
+    for(var j=1;j<stroke.length;j++) ctx.lineTo(stroke[j][0], stroke[j][1]-2);
+    ctx.stroke();
+  }
+  /* buddy */
+  var bx= ball ? ball.x : L.start[0];
+  var by= ball ? ball.y : L.start[1]-BALL_R;
+  ctx.fillStyle='#f97316';
+  ctx.beginPath(); ctx.arc(bx,by,BALL_R,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(bx-3.6,by-2,2.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+3.6,by-2,2.6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(bx-3.6,by-2,1.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+3.6,by-2,1.3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#111827'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.arc(bx,by+1.5,4.6,0.25,Math.PI-0.25); ctx.stroke();
+  hud();
+}
+function canvasPos(e){
+  var r=cvs.getBoundingClientRect();
+  var cx= e.touches ? e.touches[0].clientX : e.clientX;
+  var cy= e.touches ? e.touches[0].clientY : e.clientY;
+  return [ (cx-r.left)*(W/r.width), (cy-r.top)*(H/r.height) ];
+}
+function pointerDown(e){
+  if(rolling) return;
+  e.preventDefault();
+  drawing=true;
+  stroke=[canvasPos(e)];
+  draw();
+}
+function pointerMove(e){
+  if(!drawing || rolling) return;
+  e.preventDefault();
+  var p=canvasPos(e);
+  var last=stroke[stroke.length-1];
+  var dx=p[0]-last[0], dy=p[1]-last[1];
+  if(dx*dx+dy*dy < 16) return;
+  var trial=stroke.concat([p]);
+  if(polylineLength(trial) > LEVELS[level].ink){
+    el('msg').textContent='🖊 Out of ink! CLEAR INK and draw a shorter bridge.';
+    drawing=false;
+    beep(180,0.07,'sawtooth',0.045);
+    return;
+  }
+  stroke.push(p);
+  draw();
+}
+function pointerUp(){ drawing=false; }
+cvs.addEventListener('mousedown', pointerDown);
+cvs.addEventListener('mousemove', pointerMove);
+document.addEventListener('mouseup', pointerUp);
+cvs.addEventListener('touchstart', pointerDown, {passive:false});
+cvs.addEventListener('touchmove', pointerMove, {passive:false});
+cvs.addEventListener('touchend', pointerUp);
+function allSegments(){
+  return LEVELS[level].ground.concat(polylineSegments(stroke));
+}
+function roll(){
+  if(rolling) return;
+  if(stroke.length<2){
+    el('msg').textContent='🖊 Draw a bridge first — one stroke from the left cliff to the right cliff.';
+    beep(200,0.07,'sawtooth',0.04);
+    return;
+  }
+  var L=LEVELS[level];
+  ball={ x:L.start[0], y:L.start[1]-BALL_R-0.5, vx:60, vy:0, grounded:false };
+  rolling=true;
+  seconds=0;
+  startTimer();
+  lastTs=0;
+  el('msg').textContent='🟠 Rolling…';
+  beep(660,0.06,'sine',0.045);
+  rafId=requestAnimationFrame(frame);
+}
+function frame(ts){
+  if(!rolling) return;
+  if(!lastTs) lastTs=ts;
+  var dt=Math.min(0.033, (ts-lastTs)/1000);
+  lastTs=ts;
+  var segs=allSegments();
+  var sub=2;
+  for(var i=0;i<sub;i++) stepBall(ball, segs, dt/sub);
+  draw();
+  var L=LEVELS[level];
+  if(ball.y > WATER_Y+6){
+    rolling=false;
+    stopTimer();
+    el('msg').textContent='💦 Splash! The buddy fell in the water. CLEAR INK or RETRY and draw a stronger bridge.';
+    beep(140,0.25,'sawtooth',0.06);
+    return;
+  }
+  if(ball.x >= L.flag[0]-6 && ball.grounded){
+    rolling=false;
+    stopTimer();
+    cleared=Math.max(cleared, level+1);
+    localStorage.setItem('makenBridgeCleared', cleared);
+    el('msg').textContent='🎉 He made it across in '+fmt(seconds)+'! '+(level<LEVELS.length-1 ? 'Loading the next crossing…' : '🏆 ALL FOUR CROSSINGS CLEARED — master bridge builder!');
+    beep(784,0.12,'sine',0.05);
+    setTimeout(function(){ beep(1175,0.18,'sine',0.05); }, 140);
+    hud(); draw();
+    if(level<LEVELS.length-1) setTimeout(function(){ loadLevel(level+1); }, 1900);
+    return;
+  }
+  if(ball.x > W+20 || (ball.grounded && Math.abs(ball.vx)<4 && ball.x < L.flag[0]-40 && seconds>2)){
+    rolling=false;
+    stopTimer();
+    el('msg').textContent='🛑 He stalled — the bridge is too steep there. RETRY with a gentler slope.';
+    beep(200,0.15,'sawtooth',0.05);
+    return;
+  }
+  rafId=requestAnimationFrame(frame);
+}
+el('startBtn').addEventListener('click', roll);
+el('clearBtn').addEventListener('click', function(){
+  if(rolling) return;
+  stroke=[];
+  el('msg').textContent='🗑 Ink cleared — draw a fresh bridge.';
+  draw();
+});
+el('retryBtn').addEventListener('click', function(){ loadLevel(level); });
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+loadLevel(0);
+if(typeof module!=='undefined') module.exports={ LEVELS:LEVELS, stepBall:stepBall, closestPointOnSegment:closestPointOnSegment, polylineLength:polylineLength, polylineSegments:polylineSegments, BALL_R:BALL_R };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

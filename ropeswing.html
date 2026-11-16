@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stickman Rope Swing — Play Free Online | Maken Play</title>
+<meta name="description" content="Play Stickman Rope Swing free online. Hold to hook the rooftops, swing like a hero and land on the far tower. Three stages, one button. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#0d1330; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:14.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.on { background:#7c2d12; color:#fed7aa; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🦸 STICKMAN ROPE SWING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">🏙 STAGE <b id="level">1</b></div>
+  <div class="stat">⭐ <b id="stars">0</b></div>
+  <div class="stat">💥 FALLS <b id="falls">0</b></div>
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">🏆 BEST <b id="best">—</b></div>
+</div>
+
+<canvas id="cv" width="440" height="400"></canvas>
+<div id="msg">Press START, then HOLD anywhere to hook a rooftop anchor and swing — RELEASE to fly!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn lvl on" data-l="0">STAGE 1</button>
+  <button class="btn lvl" data-l="1">STAGE 2</button>
+  <button class="btn lvl" data-l="2">STAGE 3</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Hold mouse / touch / SPACE to swing · release at the top of the arc to fly far · land on the green tower</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Stickman Rope Swing</h2>
+  <p>One button, pure momentum. Your stickman hero stands on a rooftop with a grappling rope and a long way to fall. Hold to fire the rope at the nearest anchor overhead, swing out over the streets, and let go at the perfect moment to soar to the next roof — all the way to the green finish tower.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and hold anywhere on the canvas (or hold SPACE) and the rope hooks the best anchor in range; the swing builds speed as you drop through the bottom of the arc. Release while swinging upward-forward to launch. Clip a ⭐ star mid-flight for bonus points. Miss the landing and you splash down for a fall — the hero climbs back to the last roof and you try again. Three stages of widening gaps and trickier anchor lines; your best star count for each stage is saved.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>True pendulum physics — timing the release is everything</li>
+    <li>Three handcrafted rooftop stages with star pickups</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=440, H=400, GRAV=1500, HOOK_RANGE=360;
+/* ---------- stages: platforms {x, y(top), w} in world coords; anchors {x, y}; stars {x, y} ---------- */
+var STAGES=[
+  { length: 1500,
+    platforms: [ {x:0, y:270, w:160}, {x:640, y:300, w:120}, {x:1340, y:292, w:160} ],
+    anchors: [ {x:250, y:60}, {x:480, y:50}, {x:730, y:60}, {x:980, y:50}, {x:1210, y:60} ],
+    stars: [ {x:370, y:215}, {x:860, y:210}, {x:1100, y:215} ],
+    finish: 2 },
+  { length: 1900,
+    platforms: [ {x:0, y:260, w:150}, {x:900, y:305, w:110}, {x:1750, y:285, w:150} ],
+    anchors: [ {x:240, y:55}, {x:460, y:75}, {x:690, y:50}, {x:920, y:70}, {x:1150, y:50}, {x:1380, y:75}, {x:1590, y:55} ],
+    stars: [ {x:350, y:205}, {x:800, y:200}, {x:1270, y:205}, {x:1480, y:210} ],
+    finish: 2 },
+  { length: 2430,
+    platforms: [ {x:0, y:270, w:140}, {x:1150, y:308, w:100}, {x:2260, y:292, w:170} ],
+    anchors: [ {x:230, y:60}, {x:450, y:45}, {x:670, y:70}, {x:890, y:45}, {x:1110, y:65}, {x:1330, y:45}, {x:1550, y:70}, {x:1770, y:45}, {x:1990, y:65}, {x:2180, y:55} ],
+    stars: [ {x:560, y:200}, {x:1000, y:195}, {x:1440, y:200}, {x:1880, y:195}, {x:2160, y:205} ],
+    finish: 2 }
+];
+/* ---------- pure physics (testable) ---------- */
+/* swing state: { mode:'swing', ax, ay, L, theta, omega } — theta from straight-down, + = forward (right) */
+function swingPosition(s){
+  return { x: s.ax + s.L*Math.sin(s.theta), y: s.ay + s.L*Math.cos(s.theta) };
+}
+function pendulumStep(s, dt, pump){
+  var alpha = -(GRAV/s.L)*Math.sin(s.theta);
+  s.omega += alpha*dt;
+  if(pump){
+    /* holding pumps the swing: energy grows in the direction of motion,
+       the way you pump a playground swing — without it a soft catch stalls */
+    var dir= s.omega!==0 ? (s.omega>0 ? 1 : -1) : (s.theta<0 ? 1 : -1);
+    s.omega += dir*pump*dt;
+  }
+  s.omega *= 0.9995;
+  s.theta += s.omega*dt;
+  return s;
+}
+function releaseVelocity(s){
+  var pos=swingPosition(s);
+  return { x: pos.x, y: pos.y, vx: s.L*s.omega*Math.cos(s.theta), vy: -s.L*s.omega*Math.sin(s.theta) };
+}
+function freeStep(b, dt){
+  b.vy += GRAV*dt;
+  b.x += b.vx*dt;
+  b.y += b.vy*dt;
+  return b;
+}
+function nearestAnchor(anchors, x, y, current, forwardOnly){
+  var best=null, bestD=HOOK_RANGE;
+  anchors.forEach(function(a){
+    if(current && a.x===current.x && a.y===current.y) return;
+    if(a.y > y-10) return; /* anchor must be above the hero */
+    if(forwardOnly && a.x < x-10) return; /* never re-hook the anchor behind you mid-flight */
+    var dx=a.x-x, dy=a.y-y;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    if(d<bestD && d>40){ bestD=d; best=a; }
+  });
+  return best;
+}
+function attachState(anchor, x, y, vx, vy){
+  var dx=x-anchor.x, dy=y-anchor.y;
+  var L=Math.max(70, Math.min(320, Math.sqrt(dx*dx+dy*dy)));
+  var theta=Math.atan2(dx, dy);
+  /* tangential velocity -> omega: v_t = L*omega along (cos, -sin) direction */
+  var omega= (vx*Math.cos(theta) - vy*Math.sin(theta)) / L;
+  return { mode:'swing', ax:anchor.x, ay:anchor.y, L:L, theta:theta, omega:omega };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.045; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state / DOM ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var level=0, hero=null, holding=false, camX=0, starsGot=0, starTaken=[], falls=0, seconds=0, timerId=null, rafId=null, lastTs=0, playing=false, lastPlatform=0;
+function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function bestKey(){ return 'makenRopeBest'+level; }
+function showBest(){
+  var b=localStorage.getItem(bestKey());
+  el('best').textContent= b===null ? '—' : b+' ⭐';
+}
+function hud(){
+  el('level').textContent=level+1;
+  el('stars').textContent=starsGot;
+  el('falls').textContent=falls;
+  el('time').textContent=fmt(seconds);
+}
+function startTimer(){
+  if(timerId) return;
+  timerId=setInterval(function(){ seconds++; el('time').textContent=fmt(seconds); }, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+function stageStart(){
+  var st=STAGES[level];
+  var p=st.platforms[0];
+  hero={ mode:'stand', x:p.x+p.w/2, y:p.y, vx:0, vy:0 };
+  lastPlatform=0;
+}
+function loadLevel(lv){
+  level=lv;
+  starsGot=0; falls=0; seconds=0;
+  starTaken=STAGES[level].stars.map(function(){ return false; });
+  stopTimer();
+  if(rafId) cancelAnimationFrame(rafId);
+  stageStart();
+  playing=true;
+  camX=0;
+  Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+    b.classList.toggle('on', +b.getAttribute('data-l')===level);
+  });
+  el('msg').textContent='🏙 Stage '+(level+1)+' — HOLD to swing, RELEASE to fly. Land on the green tower!';
+  showBest(); hud(); draw();
+  lastTs=0;
+  rafId=requestAnimationFrame(frame);
+}
+function heroPos(){
+  if(hero.mode==='swing') return swingPosition(hero);
+  return { x:hero.x, y:hero.y };
+}
+function tryAttach(){
+  var pos=heroPos();
+  var current= hero.mode==='swing' ? { x:hero.ax, y:hero.ay } : null;
+  var a=nearestAnchor(STAGES[level].anchors, pos.x, pos.y, current, hero.mode==='fly');
+  if(!a) return false;
+  var vx= hero.mode==='swing' ? releaseVelocity(hero).vx : hero.vx;
+  var vy= hero.mode==='swing' ? releaseVelocity(hero).vy : hero.vy;
+  hero=attachState(a, pos.x, pos.y, vx||0, vy||0);
+  beep(740,0.05,'square',0.035);
+  return true;
+}
+function release(){
+  if(hero.mode!=='swing') return;
+  var v=releaseVelocity(hero);
+  hero={ mode:'fly', x:v.x, y:v.y, vx:v.vx, vy:v.vy };
+  beep(520,0.05,'sine',0.04);
+}
+function landCheck(pos){
+  var st=STAGES[level];
+  for(var i=0;i<st.platforms.length;i++){
+    var p=st.platforms[i];
+    if(pos.x>=p.x && pos.x<=p.x+p.w && Math.abs(pos.y-p.y)<=10 && hero.vy>=0){
+      return i;
+    }
+  }
+  return -1;
+}
+function frame(ts){
+  if(!playing) return;
+  if(!lastTs) lastTs=ts;
+  var dt=Math.min(0.033, (ts-lastTs)/1000);
+  lastTs=ts;
+  startTimer();
+  var sub=2;
+  for(var i=0;i<sub;i++){
+    var d=sub>1 ? dt/sub : dt;
+    if(hero.mode==='swing') pendulumStep(hero, d, 1.15);
+    else if(hero.mode==='fly') freeStep(hero, d);
+  }
+  var pos=heroPos();
+  if(hero.mode==='fly'){
+    var landed=landCheck(pos);
+    if(landed>=0){
+      var st=STAGES[level];
+      hero={ mode:'stand', x:pos.x, y:st.platforms[landed].y, vx:0, vy:0 };
+      lastPlatform=landed;
+      beep(880,0.07,'sine',0.045);
+      if(landed===st.finish){ win(); return; }
+      el('msg').textContent='🛬 Landed! HOLD to swing on.';
+    } else if(pos.y > H+30){
+      falls++;
+      var p=STAGES[level].platforms[lastPlatform];
+      hero={ mode:'stand', x:p.x+p.w/2, y:p.y, vx:0, vy:0 };
+      el('msg').textContent='💥 Down he goes! Back on the roof — HOLD to swing again.';
+      beep(150,0.2,'sawtooth',0.055);
+      hud();
+    }
+  }
+  /* stars */
+  var st2=STAGES[level];
+  st2.stars.forEach(function(s, i){
+    if(starTaken[i]) return;
+    var dx=pos.x-s.x, dy=pos.y-s.y;
+    if(dx*dx+dy*dy < 30*30){
+      starTaken[i]=true;
+      starsGot++;
+      beep(1180,0.09,'sine',0.05);
+      hud();
+    }
+  });
+  camX=Math.max(0, Math.min(st2.length-W, pos.x-W*0.42));
+  draw();
+  rafId=requestAnimationFrame(frame);
+}
+function win(){
+  stopTimer();
+  playing=false;
+  var total=STAGES[level].stars.length;
+  var prev=localStorage.getItem(bestKey());
+  if(prev===null || starsGot>+prev) localStorage.setItem(bestKey(), starsGot);
+  el('msg').textContent='🎉 Stage '+(level+1)+' cleared in '+fmt(seconds)+' — '+starsGot+'/'+total+' stars, '+falls+' falls! '+(level<2 ? 'Press STAGE '+(level+2)+' for the next skyline.' : '🏆 ALL STAGES CLEARED — rope hero!');
+  beep(784,0.12,'sine',0.05);
+  setTimeout(function(){ beep(988,0.12,'sine',0.05); }, 130);
+  setTimeout(function(){ beep(1175,0.2,'sine',0.05); }, 260);
+  showBest(); hud(); draw();
+}
+function draw(){
+  var st=STAGES[level];
+  var sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#1e3a8a'); sky.addColorStop(0.65,'#7c3aed'); sky.addColorStop(1,'#f59e0b');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fde68a';
+  ctx.beginPath(); ctx.arc(60,52,17,0,Math.PI*2); ctx.fill();
+  ctx.save();
+  ctx.translate(-camX, 0);
+  /* distant buildings */
+  ctx.fillStyle='rgba(15,23,42,0.5)';
+  for(var bx=-100; bx<st.length+200; bx+=86){
+    var bh=90+((bx*37)%70+70)%70;
+    ctx.fillRect(bx, H-bh-58, 62, bh);
+  }
+  /* street */
+  ctx.fillStyle='#111827'; ctx.fillRect(-100, H-58, st.length+300, 58);
+  ctx.fillStyle='#facc15';
+  for(var lx=-80; lx<st.length+200; lx+=44) ctx.fillRect(lx, H-32, 22, 3.4);
+  /* platforms */
+  st.platforms.forEach(function(p, i){
+    ctx.fillStyle= i===st.finish ? '#14532d' : '#334155';
+    ctx.fillRect(p.x, p.y, p.w, H-58-p.y);
+    ctx.fillStyle= i===st.finish ? '#22c55e' : '#64748b';
+    ctx.fillRect(p.x, p.y, p.w, 7);
+    ctx.fillStyle='rgba(253,224,71,0.9)';
+    for(var wx=p.x+12; wx<p.x+p.w-8; wx+=26) ctx.fillRect(wx, p.y+22, 9, 12);
+    if(i===st.finish){
+      ctx.font='20px Arial'; ctx.textAlign='center';
+      ctx.fillText('🏁', p.x+p.w/2, p.y-10);
+    }
+  });
+  /* anchors */
+  st.anchors.forEach(function(a){
+    ctx.fillStyle='#e2e8f0';
+    ctx.beginPath(); ctx.arc(a.x, a.y, 5.5, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(226,232,240,0.5)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(a.x, a.y, 10, 0, Math.PI*2); ctx.stroke();
+  });
+  /* stars */
+  ctx.font='19px Arial'; ctx.textAlign='center';
+  st.stars.forEach(function(s, i){
+    if(!starTaken[i]) ctx.fillText('⭐', s.x, s.y+6);
+  });
+  /* hero */
+  var pos=heroPos();
+  if(hero.mode==='swing'){
+    ctx.strokeStyle='#f8fafc'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(hero.ax, hero.ay); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+  }
+  drawStickman(pos.x, pos.y, hero.mode);
+  ctx.restore();
+  /* progress */
+  ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(10, H-22, W-20, 7);
+  ctx.fillStyle='#22c55e';
+  ctx.fillRect(10, H-22, (W-20)*Math.min(1, pos.x/st.length), 7);
+  hud();
+}
+function drawStickman(x, y, mode){
+  ctx.strokeStyle='#111827'; ctx.lineWidth=3.4; ctx.lineCap='round';
+  ctx.fillStyle='#fbbf24';
+  ctx.beginPath(); ctx.arc(x, y-20, 6.4, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#f8fafc';
+  ctx.beginPath(); ctx.moveTo(x, y-14); ctx.lineTo(x, y-2); ctx.stroke(); /* torso */
+  if(mode==='swing'){
+    ctx.beginPath(); ctx.moveTo(x, y-12); ctx.lineTo(x+(hero.ax-x)*0.3, y-12+(hero.ay-y)*0.3); ctx.stroke(); /* arm to rope */
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x-6, y+8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x+7, y+7); ctx.stroke();
+  } else if(mode==='fly'){
+    ctx.beginPath(); ctx.moveTo(x, y-12); ctx.lineTo(x-9, y-8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-12); ctx.lineTo(x+9, y-16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x-8, y+4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x+8, y+5); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(x, y-12); ctx.lineTo(x-8, y-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-12); ctx.lineTo(x+8, y-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x-5, y+10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y-2); ctx.lineTo(x+5, y+10); ctx.stroke();
+  }
+}
+function pressDown(e){
+  if(!playing) return;
+  e.preventDefault();
+  holding=true;
+  tryAttach();
+}
+function pressUp(){
+  if(!playing) return;
+  holding=false;
+  if(hero.mode==='swing') release();
+}
+cvs.addEventListener('mousedown', pressDown);
+document.addEventListener('mouseup', pressUp);
+cvs.addEventListener('touchstart', pressDown, {passive:false});
+cvs.addEventListener('touchend', pressUp);
+document.addEventListener('keydown', function(e){
+  if(e.code==='Space'){ e.preventDefault(); if(!holding) pressDown(e); }
+});
+document.addEventListener('keyup', function(e){
+  if(e.code==='Space'){ e.preventDefault(); pressUp(); }
+});
+el('startBtn').addEventListener('click', function(){ loadLevel(level); });
+Array.prototype.forEach.call(document.querySelectorAll('.lvl'), function(b){
+  b.addEventListener('click', function(){ loadLevel(+b.getAttribute('data-l')); });
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+stageStart();
+showBest(); hud(); draw();
+if(typeof module!=='undefined') module.exports={ STAGES:STAGES, swingPosition:swingPosition, pendulumStep:pendulumStep, releaseVelocity:releaseVelocity, freeStep:freeStep, nearestAnchor:nearestAnchor, attachState:attachState };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
