@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Solitaire (Klondike) — Play Free Online | Maken Play</title>
+<meta name="description" content="Play classic Klondike Solitaire free online. Draw-1 stock, click to move, double-click to send a card home. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  #table { background:#14532d; border:2px solid #166534; border-radius:14px; padding:12px 10px 16px; max-width:96vw; }
+  .trow { display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
+  .pile { width:74px; min-height:104px; border-radius:9px; position:relative; }
+  .slot { border:2px dashed rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; font-size:24px; color:rgba(255,255,255,0.5); height:104px; border-radius:9px; cursor:pointer; }
+  .card { width:74px; height:104px; background:#f8fafc; border-radius:9px; border:1.5px solid #94a3b8; position:absolute; left:0; cursor:pointer; padding:4px 6px; font-weight:800; font-size:16.5px; color:#111827; box-shadow:0 1px 3px rgba(0,0,0,0.35); user-select:none; }
+  .card.red { color:#dc2626; }
+  .card .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; padding-top:12px; }
+  .card.back { background:repeating-linear-gradient(45deg,#1d4ed8,#1d4ed8 6px,#1e40af 6px,#1e40af 12px); border-color:#172554; }
+  .card.sel { box-shadow:0 0 0 3px #facc15, 0 2px 6px rgba(0,0,0,0.4); }
+  .col { width:74px; position:relative; min-height:104px; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🃏 SOLITAIRE</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">⏱ <b id="time">0:00</b></div>
+  <div class="stat">MOVES <b id="moves">0</b></div>
+  <div class="stat">HOME <b id="home">0/52</b></div>
+  <div class="stat">WINS <b id="wins">0</b></div>
+  <div class="stat">BEST TIME <b id="best">—</b></div>
+</div>
+
+<div id="table">
+  <div class="trow" id="toprow"></div>
+  <div class="trow" id="tabrow"></div>
+</div>
+<div id="msg">Press NEW GAME, then click the stock to draw. Click a card to select it, click where it should go.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ NEW GAME</button>
+  <button class="btn" id="autoBtn">🏠 AUTO-HOME</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Draw-1 rules · double-click a card to send it to its foundation · build down in alternating colours; foundations build up by suit from the Ace</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Solitaire</h2>
+  <p>The classic Klondike patience game. Seven tableau columns, four foundations, one stock. Build the tableaus down in alternating red and black, free the buried cards, and stack every suit from Ace to King to win. This version uses friendly draw-1 rules and unlimited stock passes.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Click the stock (top left) to flip a card to the waste. Click any face-up card to select it — a whole descending stack moves together — then click the column or foundation it should land on. Only a King can fill an empty column. Double-click a card to send it home automatically, or press AUTO-HOME to sweep every safe card to the foundations.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Classic Klondike with draw-1 stock and unlimited redeals</li>
+    <li>Click-to-move, double-click auto-home and a full AUTO-HOME sweep</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var SUITS=['♠','♥','♦','♣'];
+var RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+/* card: { s:0-3, r:1-13, up:bool } */
+function isRed(card){ return card.s===1 || card.s===2; }
+function makeDeck(){
+  var deck=[];
+  for(var s=0;s<4;s++) for(var r=1;r<=13;r++) deck.push({ s:s, r:r, up:false });
+  for(var i=deck.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=deck[i]; deck[i]=deck[j]; deck[j]=t;
+  }
+  return deck;
+}
+/* ---------- pure logic (testable) ---------- */
+function canStackOnTableau(card, target){
+  if(!target) return card.r===13;
+  return isRed(card)!==isRed(target) && target.r===card.r+1;
+}
+function canStackOnFoundation(card, foundation){
+  if(!foundation || foundation.length===0) return card.r===1;
+  var top=foundation[foundation.length-1];
+  return top.s===card.s && card.r===top.r+1;
+}
+function isMovableRun(cards){
+  for(var i=1;i<cards.length;i++){
+    if(!(isRed(cards[i])!==isRed(cards[i-1]) && cards[i-1].r===cards[i].r+1)) return false;
+  }
+  return cards.length>0;
+}
+function deal(deck){
+  var d=deck.slice();
+  var tableau=[[],[],[],[],[],[],[]];
+  for(var col=0;col<7;col++){
+    for(var k=0;k<=col;k++){
+      var card=d.pop();
+      card.up = (k===col);
+      tableau[col].push(card);
+    }
+  }
+  return { tableau:tableau, stock:d, waste:[], foundations:[[],[],[],[]] };
+}
+function foundationCount(foundations){
+  return foundations.reduce(function(a, f){ return a+f.length; }, 0);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.04; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.05));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.05));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var el=function(id){ return document.getElementById(id); };
+var G=null, sel=null, moves, playing, startTime, timerId;
+var wins=+(localStorage.getItem('makenSolWins')||0);
+var bestT=+(localStorage.getItem('makenSolBest')||0);
+el('wins').textContent=wins;
+el('best').textContent= bestT ? fmtTime(bestT) : '—';
+function fmtTime(s){
+  return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+}
+function elapsed(){
+  return playing ? Math.floor((Date.now()-startTime)/1000) : 0;
+}
+function hud(){
+  el('moves').textContent=moves;
+  el('home').textContent=(G ? foundationCount(G.foundations) : 0)+'/52';
+}
+function cardEl(card, extra){
+  var d=document.createElement('div');
+  d.className='card'+(isRed(card) ? ' red' : '')+(extra ? ' '+extra : '');
+  d.innerHTML=RANKS[card.r-1]+SUITS[card.s]+'<span class="big">'+SUITS[card.s]+'</span>';
+  return d;
+}
+function backEl(){
+  var d=document.createElement('div');
+  d.className='card back';
+  return d;
+}
+function isSelected(pile, idx){
+  return sel && sel.pile===pile && idx>=sel.idx;
+}
+function render(){
+  var top=el('toprow');
+  top.innerHTML='';
+  /* stock */
+  var stockPile=document.createElement('div');
+  stockPile.className='pile';
+  if(G.stock.length){
+    var b=backEl();
+    b.style.top='0';
+    b.addEventListener('click', drawCard);
+    stockPile.appendChild(b);
+  } else {
+    var s0=document.createElement('div');
+    s0.className='slot';
+    s0.textContent='↻';
+    s0.addEventListener('click', drawCard);
+    stockPile.appendChild(s0);
+  }
+  top.appendChild(stockPile);
+  /* waste */
+  var wastePile=document.createElement('div');
+  wastePile.className='pile';
+  if(G.waste.length){
+    var w=G.waste[G.waste.length-1];
+    var wc=cardEl(w, isSelected('waste', G.waste.length-1) ? 'sel' : '');
+    wc.style.top='0';
+    (function(){
+      wc.addEventListener('click', function(){ selectPile('waste', G.waste.length-1); });
+      wc.addEventListener('dblclick', function(){ autoHomeFrom('waste', G.waste.length-1); });
+    })();
+    wastePile.appendChild(wc);
+  } else {
+    var s1=document.createElement('div');
+    s1.className='slot';
+    wastePile.appendChild(s1);
+  }
+  top.appendChild(wastePile);
+  /* spacer */
+  var spacer=document.createElement('div');
+  spacer.className='pile';
+  top.appendChild(spacer);
+  /* foundations */
+  G.foundations.forEach(function(f, fi){
+    var fp=document.createElement('div');
+    fp.className='pile';
+    if(f.length){
+      var fc=cardEl(f[f.length-1], '');
+      fc.style.top='0';
+      (function(fidx){
+        fc.addEventListener('click', function(){ clickFoundation(fidx); });
+      })(fi);
+      fp.appendChild(fc);
+    } else {
+      var s2=document.createElement('div');
+      s2.className='slot';
+      s2.textContent=SUITS[fi];
+      (function(fidx){
+        s2.addEventListener('click', function(){ clickFoundation(fidx); });
+      })(fi);
+      fp.appendChild(s2);
+    }
+    top.appendChild(fp);
+  });
+  /* tableau */
+  var tab=el('tabrow');
+  tab.innerHTML='';
+  G.tableau.forEach(function(col, ci){
+    var colEl=document.createElement('div');
+    colEl.className='col';
+    colEl.style.height=(104 + Math.max(0, col.length-1)*26 + 6)+'px';
+    if(!col.length){
+      var s3=document.createElement('div');
+      s3.className='slot';
+      s3.addEventListener('click', function(){ clickTableau(ci, -1); });
+      colEl.appendChild(s3);
+    }
+    col.forEach(function(card, idx){
+      var ce= card.up ? cardEl(card, isSelected('t'+ci, idx) ? 'sel' : '') : backEl();
+      ce.style.top=(idx*26)+'px';
+      (function(cii, ii){
+        ce.addEventListener('click', function(){ clickTableau(cii, ii); });
+        ce.addEventListener('dblclick', function(){ autoHomeFrom('t'+cii, ii); });
+      })(ci, idx);
+      colEl.appendChild(ce);
+    });
+    tab.appendChild(colEl);
+  });
+  hud();
+}
+function getPileCards(pile){
+  if(pile==='waste') return G.waste;
+  if(pile.charAt(0)==='f') return G.foundations[+pile.slice(1)];
+  return G.tableau[+pile.slice(1)];
+}
+function selectPile(pile, idx){
+  if(!playing) return;
+  var cards=getPileCards(pile);
+  var moving=cards.slice(idx);
+  if(!moving.length || !moving[0].up) return;
+  if(pile.charAt(0)==='t' && !isMovableRun(moving)) return;
+  if(pile.charAt(0)==='f' && idx!==cards.length-1) return;
+  if(sel && sel.pile===pile && sel.idx===idx){ sel=null; render(); return; }
+  sel={ pile:pile, idx:idx };
+  beep(600,0.03,'square',0.025);
+  render();
+}
+function flipTop(col){
+  if(col.length && !col[col.length-1].up){
+    col[col.length-1].up=true;
+    beep(880,0.05,'sine',0.04);
+  }
+}
+function afterMove(fromPile){
+  if(fromPile && fromPile.charAt(0)==='t') flipTop(G.tableau[+fromPile.slice(1)]);
+  sel=null;
+  moves++;
+  render();
+  checkWin();
+}
+function clickTableau(ci, idx){
+  if(!playing) return;
+  var col=G.tableau[ci];
+  if(sel){
+    var src=getPileCards(sel.pile);
+    var moving=src.slice(sel.idx);
+    var target= col.length ? col[col.length-1] : null;
+    if(sel.pile!=='t'+ci && canStackOnTableau(moving[0], target)){
+      for(var i=0;i<moving.length;i++) col.push(moving[i]);
+      src.length=sel.idx;
+      afterMove(sel.pile);
+      el('msg').textContent='🃏 Moved.';
+      return;
+    }
+  }
+  if(idx>=0) selectPile('t'+ci, idx);
+}
+function clickFoundation(fi){
+  if(!playing || !sel) return;
+  var src=getPileCards(sel.pile);
+  if(sel.idx!==src.length-1) return;
+  var card=src[sel.idx];
+  if(canStackOnFoundation(card, G.foundations[fi])){
+    G.foundations[fi].push(src.pop());
+    afterMove(sel.pile);
+    el('msg').textContent='🏠 '+RANKS[card.r-1]+SUITS[card.s]+' is home.';
+  }
+}
+function autoHomeFrom(pile, idx){
+  if(!playing) return;
+  var cards=getPileCards(pile);
+  if(idx!==cards.length-1) return;
+  var card=cards[idx];
+  if(!card.up) return;
+  for(var fi=0;fi<4;fi++){
+    if(canStackOnFoundation(card, G.foundations[fi])){
+      G.foundations[fi].push(cards.pop());
+      sel=null; moves++;
+      if(pile.charAt(0)==='t') flipTop(G.tableau[+pile.slice(1)]);
+      beep(920,0.05,'sine',0.04);
+      render();
+      checkWin();
+      return;
+    }
+  }
+}
+function drawCard(){
+  if(!playing) return;
+  if(G.stock.length){
+    var card=G.stock.pop();
+    card.up=true;
+    G.waste.push(card);
+    moves++;
+    beep(500,0.03,'square',0.025);
+  } else if(G.waste.length){
+    while(G.waste.length){
+      var c2=G.waste.pop();
+      c2.up=false;
+      G.stock.push(c2);
+    }
+    moves++;
+    el('msg').textContent='↻ Stock recycled.';
+  }
+  sel=null;
+  render();
+}
+function checkWin(){
+  if(foundationCount(G.foundations)===52){
+    playing=false;
+    clearInterval(timerId);
+    wins++;
+    localStorage.setItem('makenSolWins', wins);
+    el('wins').textContent=wins;
+    var t=elapsed();
+    if(!bestT || t<bestT){ bestT=t; localStorage.setItem('makenSolBest', t); el('best').textContent=fmtTime(t); }
+    el('msg').textContent='🎉 YOU WIN! Solitaire solved in '+fmtTime(t)+' with '+moves+' moves!';
+    beep(1180,0.22,'sine',0.06);
+  }
+}
+el('startBtn').addEventListener('click', function(){
+  G=deal(makeDeck());
+  sel=null; moves=0;
+  playing=true;
+  startTime=Date.now();
+  if(timerId) clearInterval(timerId);
+  timerId=setInterval(function(){ el('time').textContent=fmtTime(elapsed()); }, 500);
+  el('time').textContent='0:00';
+  el('msg').textContent='🃏 New game dealt. Click the stock to draw!';
+  render();
+});
+el('autoBtn').addEventListener('click', function(){
+  if(!playing || !G) return;
+  var movedAny=false, guard=0;
+  var progress=true;
+  while(progress && guard<60){
+    progress=false; guard++;
+    if(G.waste.length){
+      var before=G.waste.length;
+      autoHomeFrom('waste', before-1);
+      if(G.waste.length<before){ progress=true; movedAny=true; }
+    }
+    for(var ci=0;ci<7;ci++){
+      var col=G.tableau[ci];
+      if(col.length && col[col.length-1].up){
+        var b2=col.length;
+        autoHomeFrom('t'+ci, b2-1);
+        if(G.tableau[ci].length<b2){ progress=true; movedAny=true; }
+      }
+    }
+  }
+  el('msg').textContent= movedAny ? '🏠 Swept every available card home.' : '🏠 Nothing can go home yet.';
+  render();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+G=deal(makeDeck());
+moves=0;
+render();
+if(typeof module!=='undefined') module.exports={ makeDeck:makeDeck, deal:deal, canStackOnTableau:canStackOnTableau, canStackOnFoundation:canStackOnFoundation, isMovableRun:isMovableRun, foundationCount:foundationCount, isRed:isRed };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
