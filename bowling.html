@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bowling Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play ten-pin bowling free online. Position, aim, add hook and chase the perfect 300 game with real bowling scoring. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .score-strip { display:flex; gap:3px; flex-wrap:wrap; justify-content:center; margin:2px 0 4px; max-width:94vw; }
+  .frame { background:#0e1530; border:1px solid #26335f; border-radius:6px; padding:3px 5px; font-size:11px; color:#9aa7c7; text-align:center; min-width:44px; }
+  .frame b { display:block; color:#fff; font-size:13px; }
+  .frame.cur { border-color:#facc15; }
+  canvas#cv { background:linear-gradient(180deg,#3b2f2f 0%,#6b4f35 18%,#a67c52 30%,#b98d5f 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:pointer; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; align-items:center; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.bowl { background:linear-gradient(90deg,#dc2626,#f59e0b); color:#fff; font-size:16px; padding:12px 28px; }
+  label.sl { font-size:12px; color:#9aa7c7; display:flex; align-items:center; gap:6px; }
+  input[type=range] { width:110px; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🎳 BOWLING</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">FRAME <b id="frameNo">1 / 10</b></div>
+  <div class="stat">BALL <b id="ballNo">1</b></div>
+  <div class="stat">TOTAL <b id="total">0</b></div>
+  <div class="stat">BEST GAME <b id="best">0</b></div>
+</div>
+<div class="score-strip" id="strip"></div>
+
+<canvas id="cv" width="480" height="520"></canvas>
+<div id="msg">Set your position and aim with the sliders (or drag on the lane), choose power and hook, then BOWL!</div>
+<div class="row">
+  <label class="sl">↔ Position <input type="range" id="posSl" min="-70" max="70" value="0"></label>
+  <label class="sl">🎯 Aim <input type="range" id="aimSl" min="-46" max="46" value="0"></label>
+</div>
+<div class="row">
+  <label class="sl">💪 Power <input type="range" id="powSl" min="30" max="100" value="80"></label>
+  <label class="sl">🌀 Hook <input type="range" id="hookSl" min="-40" max="40" value="0"></label>
+</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW GAME</button>
+  <button class="btn bowl" id="bowlBtn">🎳 BOWL!</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">The pocket (just beside the head pin) is where strikes live · too much power into the middle can leave a split · real scoring: strikes and spares carry bonuses</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Bowling</h2>
+  <p>A full ten frames of proper ten-pin bowling with real scoring — strikes, spares, and a tenth frame that can make or break the game. Find the pocket, manage your hook, and chase the perfect 300.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Set your stance with Position, point the ball with Aim, then choose Power and Hook (the sideways curve as the ball travels). Press BOWL and watch it run. Knock the head pin dead-centre with full power and you risk a split; slide the ball into the pocket beside it and strikes follow.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Complete 10-frame game with official strike/spare scoring</li>
+    <li>Position, aim, power and hook — four real controls over every shot</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=480, H=520, LANE={ x0:110, x1:370, top:64, foul:452 };
+/* pin layout: rows from head pin; positions in px offsets from lane centre at deck */
+var PINS=[
+  { id:1, dx:0, dy:0 },
+  { id:2, dx:-17, dy:24 }, { id:3, dx:17, dy:24 },
+  { id:4, dx:-34, dy:48 }, { id:5, dx:0, dy:48 }, { id:6, dx:34, dy:48 },
+  { id:7, dx:-51, dy:72 }, { id:8, dx:-17, dy:72 }, { id:9, dx:17, dy:72 }, { id:10, dx:51, dy:72 }
+];
+var DECK_Y=96;
+/* ---------- pure logic (testable) ---------- */
+function scoreFrames(rolls){
+  var score=0, i=0, frames=[];
+  for(var f=0; f<10; f++){
+    if(f<9){
+      if(rolls[i]===10){ var v=10 + (rolls[i+1]||0) + (rolls[i+2]||0); score+=v; frames.push(score); i+=1; }
+      else if((rolls[i]||0)+(rolls[i+1]||0)===10){ score+=10 + (rolls[i+2]||0); frames.push(score); i+=2; }
+      else { score+=(rolls[i]||0)+(rolls[i+1]||0); frames.push(score); i+=2; }
+    } else {
+      var rest=rolls.slice(i);
+      score+=rest.reduce(function(a,b){ return a+b; }, 0);
+      frames.push(score);
+    }
+  }
+  return { total:score, frames:frames };
+}
+function pinFall(impact, power, standing, rand){
+  /* impact: ball x-offset from head-pin centre at the deck (px). Returns array of fallen pin ids. */
+  var fallen=[];
+  var spread = 26 + power*0.42;
+  standing.forEach(function(p){
+    var dist=Math.hypot(p.dx - impact, p.dy*0.55);
+    var chain = fallen.length ? 12 : 0;
+    var reach = spread + chain;
+    if(dist < reach*0.62) fallen.push(p.id);
+    else if(dist < reach && rand() < 0.55) fallen.push(p.id);
+  });
+  /* chain reaction: neighbours of fallen pins may topple */
+  var changed=true;
+  while(changed){
+    changed=false;
+    standing.forEach(function(p){
+      if(fallen.indexOf(p.id)>=0) return;
+      var nearFallen=standing.some(function(q){
+        return fallen.indexOf(q.id)>=0 && Math.hypot(q.dx-p.dx, q.dy-p.dy) < 26;
+      });
+      if(nearFallen && rand() < 0.5){ fallen.push(p.id); changed=true; }
+    });
+  }
+  return fallen;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var rolls, frame, ballInFrame, standing, phase, ballAnim, over;
+var best=+(localStorage.getItem('makenBowlingBest')||0);
+el('best').textContent=best;
+function curFrameRollsStart(){
+  var i=0;
+  for(var f=0; f<frame; f++){
+    if(f<9){ i += rolls[i]===10 ? 1 : 2; }
+  }
+  return i;
+}
+function pinsStandingObjs(){
+  return PINS.filter(function(p){ return standing.indexOf(p.id)>=0; });
+}
+function hud(){
+  el('frameNo').textContent=Math.min(10, frame+1)+' / 10';
+  el('ballNo').textContent=ballInFrame+1;
+  var sc=scoreFrames(rolls);
+  el('total').textContent=sc.total;
+  /* strip */
+  var strip=el('strip');
+  strip.innerHTML='';
+  var labels=frameLabels();
+  for(var f=0; f<10; f++){
+    var d=document.createElement('div');
+    d.className='frame'+(f===frame && !over ? ' cur' : '');
+    d.innerHTML='F'+(f+1)+' · '+labels[f]+'<b>'+(sc.frames[f]!==undefined && rolls.length>frameStart(f) ? sc.frames[f] : '–')+'</b>';
+    strip.appendChild(d);
+  }
+  if(sc.total>best && over){ best=sc.total; localStorage.setItem('makenBowlingBest', best); el('best').textContent=best; }
+}
+function frameStart(f){
+  var i=0;
+  for(var k=0;k<f;k++){ i += (k<9 && rolls[i]===10) ? 1 : 2; if(k>=9) break; }
+  return i;
+}
+function frameLabels(){
+  var out=[], i=0;
+  for(var f=0; f<10; f++){
+    if(f<9){
+      if(rolls[i]===undefined){ out.push(''); }
+      else if(rolls[i]===10){ out.push('X'); i+=1; }
+      else {
+        var a=rolls[i], b=rolls[i+1];
+        out.push((a===0?'–':a) + (b===undefined?'':(a+b===10?'/':(b===0?'–':b))));
+        i+=2;
+      }
+    } else {
+      var rest=rolls.slice(i);
+      out.push(rest.map(function(r){ return r===10?'X':r===0?'–':''+r; }).join(' '));
+    }
+  }
+  return out;
+}
+function reset(){
+  rolls=[]; frame=0; ballInFrame=0;
+  standing=PINS.map(function(p){ return p.id; });
+  phase='aim'; ballAnim=null; over=false;
+  hud(); draw();
+}
+function newRack(){
+  standing=PINS.map(function(p){ return p.id; });
+}
+function draw(){
+  /* lane */
+  ctx.fillStyle='#8a6844'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#b98d5f'; ctx.fillRect(LANE.x0, 0, LANE.x1-LANE.x0, H);
+  ctx.fillStyle='#a67c52';
+  for(var i=0;i<7;i++) ctx.fillRect(LANE.x0 + i*((LANE.x1-LANE.x0)/7), 0, 2, H);
+  /* gutters */
+  ctx.fillStyle='#4b3a2a'; ctx.fillRect(LANE.x0-18, 0, 16, H); ctx.fillRect(LANE.x1+2, 0, 16, H);
+  /* arrows on lane */
+  ctx.fillStyle='rgba(70,45,25,0.5)';
+  [-52,-26,0,26,52].forEach(function(dx, i){
+    var y=300 - Math.abs(i-2)*16;
+    ctx.beginPath(); ctx.moveTo(W/2+dx-4, y+16); ctx.lineTo(W/2+dx, y); ctx.lineTo(W/2+dx+4, y+16); ctx.closePath(); ctx.fill();
+  });
+  /* foul line */
+  ctx.fillStyle='rgba(220,38,38,0.7)'; ctx.fillRect(LANE.x0, LANE.foul, LANE.x1-LANE.x0, 3);
+  /* pins */
+  pinsStandingObjs().forEach(function(p){
+    var x=W/2 + p.dx, y=DECK_Y + p.dy;
+    ctx.fillStyle='#f8fafc';
+    ctx.beginPath(); ctx.ellipse(x, y, 7.5, 10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#dc2626'; ctx.fillRect(x-7, y-3, 14, 3.4);
+  });
+  /* ball */
+  var pos=+el('posSl').value, aim=+el('aimSl').value;
+  var bx = ballAnim ? ballAnim.x : W/2 + pos;
+  var by = ballAnim ? ballAnim.y : LANE.foul - 26;
+  if(!ballAnim && phase==='aim'){
+    /* aim guide */
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.setLineDash([5,6]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(bx + aim*0.4, (by+DECK_Y)/2, bx + aim, DECK_Y+10);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  var grad=ctx.createRadialGradient(bx-4, by-5, 2, bx, by, 13);
+  grad.addColorStop(0,'#60a5fa'); grad.addColorStop(1,'#1e3a8a');
+  ctx.fillStyle=grad;
+  ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  [[-4,-3],[3,-5],[0,3]].forEach(function(h){ ctx.beginPath(); ctx.arc(bx+h[0], by+h[1], 2.2, 0, Math.PI*2); ctx.fill(); });
+  if(over){
+    ctx.fillStyle='rgba(7,11,24,0.66)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    var tot=scoreFrames(rolls).total;
+    ctx.fillText('🎳 GAME OVER — '+tot, W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(tot>=250 ? 'Pro bowler territory!' : tot>=150 ? 'A fine series — the pocket is yours to find.' : tot>=100 ? 'Solid game! Watch the splits.' : 'Keep practicing — aim for the pocket!', W/2, H/2+18);
+  }
+}
+function endFrameOrBall(fallenCount){
+  rolls.push(fallenCount);
+  var isStrike = ballInFrame===0 && fallenCount===10 && frame<9;
+  var isTenth = frame===9;
+  if(!isTenth){
+    if(isStrike){
+      frame++; ballInFrame=0; newRack();
+      el('msg').textContent='🎉 STRIKE! All ten with one ball!';
+    } else if(ballInFrame===0){
+      ballInFrame=1;
+      el('msg').textContent= fallenCount===0 ? '😬 Gutter… no pins. Pick up the spare!' : fallenCount+' down, '+(10-fallenCount)+' standing — go for the spare!';
+    } else {
+      var start=frameStart(frame);
+      var two=rolls[start]+rolls[start+1];
+      frame++; ballInFrame=0; newRack();
+      el('msg').textContent= two===10 ? '👏 SPARE! Nicely picked up.' : 'Frame over — '+two+' pins that frame.';
+    }
+  } else {
+    /* tenth frame: fr = this frame's rolls so far (after this ball was pushed) */
+    var start10=frameStart(9);
+    var fr=rolls.slice(start10);
+    if(ballInFrame===0){
+      ballInFrame=1;
+      if(fallenCount===10){ newRack(); el('msg').textContent='🎉 STRIKE in the 10th! Fresh rack — two more balls.'; }
+      else el('msg').textContent=fallenCount+' down — ball 2 for the spare!';
+    } else if(ballInFrame===1){
+      if(fr[0]===10){
+        /* ball 2 was on a fresh rack: strike again -> fresh rack for ball 3, otherwise shoot at what remains */
+        if(fallenCount===10) newRack();
+        ballInFrame=2;
+        el('msg').textContent='Final ball of the game!';
+      } else if(fr[0]+fallenCount===10){
+        newRack(); ballInFrame=2;
+        el('msg').textContent='👏 SPARE in the 10th! One bonus ball — fresh rack.';
+      } else {
+        over=true;
+      }
+    } else {
+      over=true;
+    }
+    if(over){
+      var tot=scoreFrames(rolls).total;
+      if(tot>best){ best=tot; localStorage.setItem('makenBowlingBest', best); el('best').textContent=best; }
+      el('msg').textContent='🎳 Game over — total '+tot+(tot>=200 ? '! Superb bowling!' : '. Press NEW GAME to roll again.');
+      beep(880,0.16,'sine',0.06);
+    }
+  }
+  phase='aim';
+  hud(); draw();
+}
+function bowl(){
+  if(over || phase!=='aim') return;
+  var pos=+el('posSl').value, aim=+el('aimSl').value, pow=+el('powSl').value, hook=+el('hookSl').value;
+  phase='rolling';
+  var startX=W/2 + pos;
+  var impactX = pos + aim + hook*1.35;
+  ballAnim={ x:startX, y:LANE.foul-26, t:0, dur:0.95, impact:impactX, pow:pow };
+  beep(180,0.12,'sine',0.04);
+  var iv=setInterval(function(){
+    ballAnim.t += 0.045;
+    var t=ballAnim.t;
+    ballAnim.x = startX + aim*t + hook*1.35*t*t;
+    ballAnim.y = (LANE.foul-26) + (DECK_Y+6 - (LANE.foul-26))*t;
+    draw();
+    if(t>=1){
+      clearInterval(iv);
+      var objs=pinsStandingObjs();
+      var fallen=pinFall(ballAnim.impact, pow, objs, Math.random);
+      standing=standing.filter(function(id){ return fallen.indexOf(id)<0; });
+      ballAnim=null;
+      beep(120,0.18,'square',0.07);
+      setTimeout(function(){ endFrameOrBall(fallen.length); }, 350);
+      draw();
+    }
+  }, 30);
+}
+['posSl','aimSl','powSl','hookSl'].forEach(function(id){
+  el(id).addEventListener('input', function(){ if(phase==='aim') draw(); });
+});
+el('bowlBtn').addEventListener('click', bowl);
+el('newBtn').addEventListener('click', reset);
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+if(typeof module!=='undefined') module.exports={ PINS:PINS, scoreFrames:scoreFrames, pinFall:pinFall };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

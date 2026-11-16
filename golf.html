@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mini Golf Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play mini golf free online. Six holes with walls, sand traps and water hazards — sink it under par. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#16a34a; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; cursor:crosshair; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>⛳ MINI GOLF</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">HOLE <b id="holeNo">1 / 6</b></div>
+  <div class="stat">PAR <b id="par">2</b></div>
+  <div class="stat">STROKES <b id="strokes">0</b></div>
+  <div class="stat">TOTAL <b id="total">E</b></div>
+  <div class="stat">BEST <b id="best">–</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Drag back from the ball to aim and set power — release to putt!</div>
+<div class="row">
+  <button class="btn primary" id="newBtn">↻ NEW ROUND</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Sand traps swallow your speed · water costs a stroke and a drop · a ball rolling too fast will lip out of the cup</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Mini Golf</h2>
+  <p>Six hand-built holes of pure putting craft. Bank shots off the walls, feather the ball through sand, and stay out of the water — every hole has a par, and the round is won stroke by stroke against it.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Press and drag back from the ball to set direction and power (watch the guide line), then release to putt. The ball must be moving slowly to drop into the cup — a rocket will lip out. Sand drains speed, water adds a penalty stroke and returns the ball to the last safe spot.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Six distinct holes with walls, sand traps and water hazards</li>
+    <li>Full par scoring across the round, with a saved best total</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400, BALL_R=8, CUP_R=11;
+/* holes: walls are rects [x,y,w,h]; sand/water rects; tee; cup */
+var HOLES=[
+  { par:2, tee:{x:70, y:200}, cup:{x:566, y:200}, walls:[[300,120,18,160]], sand:[], water:[] },
+  { par:3, tee:{x:70, y:330}, cup:{x:566, y:70}, walls:[[200,180,220,18],[380,60,18,140]], sand:[[440,260,120,80]], water:[] },
+  { par:3, tee:{x:70, y:70}, cup:{x:566, y:330}, walls:[[150,150,340,18]], sand:[], water:[[260,230,130,90]] },
+  { par:4, tee:{x:60, y:200}, cup:{x:580, y:200}, walls:[[170,60,18,120],[170,220,18,120],[320,140,18,120],[452,60,18,120],[452,220,18,120]], sand:[[240,300,80,60]], water:[] },
+  { par:3, tee:{x:320, y:350}, cup:{x:320, y:56}, walls:[[120,190,160,18],[360,190,160,18]], sand:[[270,120,100,50]], water:[[120,260,110,70]] },
+  { par:4, tee:{x:56, y:56}, cup:{x:584, y:344}, walls:[[200,100,18,200],[420,100,18,200],[290,190,60,18]], sand:[[480,60,100,70]], water:[[80,270,120,80]] }
+];
+/* ---------- pure logic (testable) ---------- */
+function ballFriction(ball, inSand, dt){
+  var f = inSand ? Math.pow(0.06, dt) : Math.pow(0.42, dt);
+  ball.vx *= f; ball.vy *= f;
+  ball.x += ball.vx*dt; ball.y += ball.vy*dt;
+  if(Math.hypot(ball.vx, ball.vy) < 6){ ball.vx=0; ball.vy=0; }
+  return ball;
+}
+function inCup(ball, cup){
+  return Math.hypot(ball.x-cup.x, ball.y-cup.y) < CUP_R && Math.hypot(ball.vx, ball.vy) < 130;
+}
+function inRect(x, y, r){
+  return x>=r[0] && x<=r[0]+r[2] && y>=r[1] && y<=r[1]+r[3];
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var holeIdx, ball, strokes, scores, dragging, dragPos, lastSafe, rafId, lastTick, finished;
+var best=+(localStorage.getItem('makenGolfBest')||0);
+el('best').textContent=best ? fmtScore(best - totalPar()) : '–';
+function totalPar(){ return HOLES.reduce(function(a,h){ return a+h.par; }, 0); }
+function fmtScore(d){ return d===0 ? 'E' : d>0 ? '+'+d : ''+d; }
+function totalStrokes(){ return scores.reduce(function(a,b){ return a+b; }, 0); }
+function hud(){
+  el('holeNo').textContent=Math.min(6, holeIdx+1)+' / 6';
+  el('par').textContent=HOLES[holeIdx].par;
+  el('strokes').textContent=strokes;
+  el('total').textContent=fmtScore(totalStrokes() - HOLES.slice(0, scores.length).reduce(function(a,h){ return a+h.par; }, 0));
+}
+function setupHole(){
+  var h=HOLES[holeIdx];
+  ball={ x:h.tee.x, y:h.tee.y, vx:0, vy:0 };
+  lastSafe={ x:h.tee.x, y:h.tee.y };
+  strokes=0;
+  hud(); draw();
+}
+function reset(){
+  holeIdx=0; scores=[]; finished=false;
+  setupHole();
+  el('msg').textContent='Hole 1 — drag back from the ball and putt!';
+}
+function draw(){
+  var h=HOLES[holeIdx];
+  /* fairway stripes */
+  for(var i=0;i<8;i++){ ctx.fillStyle= i%2 ? '#16a34a' : '#15a047'; ctx.fillRect(i*80, 0, 80, H); }
+  /* sand + water */
+  h.sand.forEach(function(r){ ctx.fillStyle='#e7cf8f'; roundRect(r); });
+  h.water.forEach(function(r){ ctx.fillStyle='#2563eb'; roundRect(r); ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fillRect(r[0]+8, r[1]+10, r[2]-16, 3); });
+  /* walls */
+  h.walls.forEach(function(r){ ctx.fillStyle='#7c4a21'; ctx.fillRect(r[0], r[1], r[2], r[3]); ctx.fillStyle='#96602c'; ctx.fillRect(r[0], r[1], r[2], 4); });
+  /* border */
+  ctx.strokeStyle='#14532d'; ctx.lineWidth=10; ctx.strokeRect(0, 0, W, H);
+  /* cup + flag */
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(h.cup.x, h.cup.y, CUP_R, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#f8fafc'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(h.cup.x, h.cup.y); ctx.lineTo(h.cup.x, h.cup.y-34); ctx.stroke();
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath(); ctx.moveTo(h.cup.x, h.cup.y-34); ctx.lineTo(h.cup.x+15, h.cup.y-28); ctx.lineTo(h.cup.x, h.cup.y-22); ctx.closePath(); ctx.fill();
+  /* tee marker */
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(h.tee.x, h.tee.y, 12, 0, Math.PI*2); ctx.fill();
+  /* aim */
+  if(dragging && dragPos && ball && ball.vx===0 && ball.vy===0){
+    var dx=ball.x-dragPos.x, dy=ball.y-dragPos.y;
+    var power=Math.min(1, Math.hypot(dx,dy)/150);
+    ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(ball.x, ball.y);
+    ctx.lineTo(ball.x + dx*1.4, ball.y + dy*1.4); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+    ctx.fillText('POWER '+Math.round(power*100)+'%', ball.x, ball.y-22);
+  }
+  /* ball */
+  if(ball){
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1.2; ctx.stroke();
+  }
+  if(finished){
+    ctx.fillStyle='rgba(7,11,24,0.68)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 27px Arial'; ctx.textAlign='center';
+    var d=totalStrokes()-totalPar();
+    ctx.fillText('⛳ ROUND COMPLETE — '+fmtScore(d), W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(totalStrokes()+' strokes on a par '+totalPar()+' course — press NEW ROUND to play again', W/2, H/2+18);
+  }
+}
+function roundRect(r){
+  ctx.beginPath();
+  ctx.roundRect(r[0], r[1], r[2], r[3], 10);
+  ctx.fill();
+}
+function loop(ts){
+  var dt=Math.min(0.03, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var h=HOLES[holeIdx];
+  if(ball && (ball.vx!==0 || ball.vy!==0)){
+    var wasSafe = !h.water.some(function(r){ return inRect(ball.x, ball.y, r); });
+    if(wasSafe && Math.hypot(ball.vx, ball.vy) < 40) lastSafe={ x:ball.x, y:ball.y };
+    var sand=h.sand.some(function(r){ return inRect(ball.x, ball.y, r); });
+    ballFriction(ball, sand, dt);
+    /* wall bounces */
+    var allWalls=h.walls.concat([[0,-10,W,10],[0,H,W,10],[-10,0,10,H],[W,0,10,H]]);
+    allWalls.forEach(function(r){
+      if(ball.x+BALL_R > r[0] && ball.x-BALL_R < r[0]+r[2] && ball.y+BALL_R > r[1] && ball.y-BALL_R < r[1]+r[3]){
+        var overlapL=(ball.x+BALL_R)-r[0], overlapR=(r[0]+r[2])-(ball.x-BALL_R);
+        var overlapT=(ball.y+BALL_R)-r[1], overlapB=(r[1]+r[3])-(ball.y-BALL_R);
+        var minO=Math.min(overlapL, overlapR, overlapT, overlapB);
+        if(minO===overlapL){ ball.x=r[0]-BALL_R; ball.vx=-Math.abs(ball.vx)*0.82; }
+        else if(minO===overlapR){ ball.x=r[0]+r[2]+BALL_R; ball.vx=Math.abs(ball.vx)*0.82; }
+        else if(minO===overlapT){ ball.y=r[1]-BALL_R; ball.vy=-Math.abs(ball.vy)*0.82; }
+        else { ball.y=r[1]+r[3]+BALL_R; ball.vy=Math.abs(ball.vy)*0.82; }
+        beep(240,0.03,'square',0.025);
+      }
+    });
+    /* water */
+    if(h.water.some(function(r){ return inRect(ball.x, ball.y, r); })){
+      strokes++;
+      ball={ x:lastSafe.x, y:lastSafe.y, vx:0, vy:0 };
+      el('msg').textContent='💧 Splash! Water hazard — +1 penalty stroke, ball dropped at the last safe spot.';
+      beep(300,0.2,'sine',0.05);
+      hud();
+    }
+    /* cup */
+    if(inCup(ball, h.cup)){
+      ball.x=h.cup.x; ball.y=h.cup.y; ball.vx=0; ball.vy=0;
+      scores.push(strokes);
+      var rel=strokes-h.par;
+      el('msg').textContent= strokes===1 ? '🎉 HOLE IN ONE!! Unbelievable!' :
+        '⛳ Holed in '+strokes+' ('+(rel===0?'par':rel<0? Math.abs(rel)+' under par' : rel+' over par')+') — '+(holeIdx<5 ? 'next hole…' : 'round complete!');
+      beep(980,0.16,'sine',0.07);
+      hud(); draw();
+      if(holeIdx<5){
+        holeIdx++;
+        setTimeout(setupHole, 1100);
+      } else {
+        finished=true;
+        var tot=totalStrokes();
+        if(!best || tot<best){ best=tot; localStorage.setItem('makenGolfBest', best); }
+        el('best').textContent=fmtScore(best-totalPar());
+        draw();
+      }
+      return;
+    }
+  }
+  draw();
+  if(!finished) rafId=requestAnimationFrame(loop);
+}
+function posOf(e){
+  var rect=cvs.getBoundingClientRect();
+  var cx = e.touches ? e.touches[0].clientX : e.clientX;
+  var cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height) };
+}
+function startDrag(e){
+  if(finished || !ball || ball.vx!==0 || ball.vy!==0) return;
+  dragging=true; dragPos=posOf(e);
+  e.preventDefault();
+}
+function moveDrag(e){
+  if(!dragging) return;
+  dragPos=posOf(e); draw(); e.preventDefault();
+}
+function endDrag(){
+  if(!dragging) return;
+  dragging=false;
+  var dx=ball.x-dragPos.x, dy=ball.y-dragPos.y;
+  var power=Math.min(1, Math.hypot(dx,dy)/150);
+  if(power<0.06){ dragPos=null; draw(); return; }
+  var len=Math.hypot(dx,dy)||1;
+  ball.vx=dx/len*power*560;
+  ball.vy=dy/len*power*560;
+  strokes++;
+  dragPos=null;
+  beep(420,0.05,'sine',0.04);
+  hud();
+}
+cvs.addEventListener('mousedown', startDrag);
+cvs.addEventListener('mousemove', moveDrag);
+document.addEventListener('mouseup', endDrag);
+cvs.addEventListener('touchstart', startDrag, {passive:false});
+cvs.addEventListener('touchmove', moveDrag, {passive:false});
+cvs.addEventListener('touchend', endDrag);
+el('newBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  lastTick=performance.now();
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+reset();
+lastTick=performance.now();
+rafId=requestAnimationFrame(loop);
+if(typeof module!=='undefined') module.exports={ HOLES:HOLES, ballFriction:ballFriction, inCup:inCup, inRect:inRect, totalPar:totalPar };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
