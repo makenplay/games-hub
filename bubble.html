@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bubble Shooter Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play the famous bubble shooter game free online. Aim, shoot and pop matching bubbles, drop clusters and clear the board level after level. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .ad-slot { width:100%; max-width:728px; min-height:50px; margin:6px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:11px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:linear-gradient(180deg,#0a1030,#0a0f22); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 6px; flex-wrap:wrap; }
+  .btn { padding:9px 16px; font-size:13.5px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.96); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<h1>🫧 BUBBLE SHOOTER</h1>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+  <div class="stat">LEVEL <b id="level">1</b></div>
+  <div class="stat">CEILING IN <b id="ceil">6</b></div>
+</div>
+
+<canvas id="cv" width="420" height="620"></canvas>
+<div id="msg">Press START — aim with mouse or finger, click / tap to shoot.</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="swapBtn">🔄 Swap Bubble</button>
+  <button class="btn" id="soundBtn">🔊 Sound</button>
+</div>
+<div class="keys">Match 3 or more bubbles of the same colour to pop them. Every 6 misses, a new row drops from the top — don't let the bubbles cross the line!</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<script>
+(function(){
+"use strict";
+var W=420, H=620, R=18, D=R*2, COLS=11, ROWH=Math.round(R*1.74);
+var TOP=8, LINE_Y=H-96, SHOOT_Y=H-56, SHOOT_X=W/2;
+var COLORS=['#f87171','#fbbf24','#4ade80','#60a5fa','#a78bfa','#f472b6','#22d3ee'];
+var START_ROWS=6, SHOTS_PER_DROP=6;
+
+/* ---------- pure grid logic (testable) ---------- */
+function neighbors(r, c, rows, cols){
+  var offs = (r%2===0) ? [[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]]
+                       : [[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]];
+  var out=[];
+  for(var i=0;i<offs.length;i++){
+    var nr=r+offs[i][0], nc=c+offs[i][1];
+    if(nr>=0 && nr<rows && nc>=0 && nc<cols) out.push([nr,nc]);
+  }
+  return out;
+}
+function cluster(grid, r, c){
+  var color=grid[r][c]; if(!color) return [];
+  var rows=grid.length, cols=grid[0].length;
+  var seen={}, stack=[[r,c]], out=[];
+  seen[r+','+c]=1;
+  while(stack.length){
+    var cur=stack.pop(); out.push(cur);
+    var ns=neighbors(cur[0],cur[1],rows,cols);
+    for(var i=0;i<ns.length;i++){
+      var nr=ns[i][0], nc=ns[i][1], k=nr+','+nc;
+      if(!seen[k] && grid[nr][nc]===color){ seen[k]=1; stack.push([nr,nc]); }
+    }
+  }
+  return out;
+}
+function connectedToTop(grid){
+  var rows=grid.length, cols=grid[0].length, seen={}, stack=[];
+  for(var c=0;c<cols;c++) if(grid[0][c]){ seen['0,'+c]=1; stack.push([0,c]); }
+  while(stack.length){
+    var cur=stack.pop();
+    var ns=neighbors(cur[0],cur[1],rows,cols);
+    for(var i=0;i<ns.length;i++){
+      var nr=ns[i][0], nc=ns[i][1], k=nr+','+nc;
+      if(!seen[k] && grid[nr][nc]){ seen[k]=1; stack.push([nr,nc]); }
+    }
+  }
+  return seen;
+}
+function findDrops(grid){
+  var seen=connectedToTop(grid), out=[];
+  for(var r=0;r<grid.length;r++) for(var c=0;c<grid[0].length;c++)
+    if(grid[r][c] && !seen[r+','+c]) out.push([r,c]);
+  return out;
+}
+function boardEmpty(grid){
+  for(var r=0;r<grid.length;r++) for(var c=0;c<grid[0].length;c++) if(grid[r][c]) return false;
+  return true;
+}
+function cellCenter(r, c){
+  var x = R + c*D + (r%2===1 ? R : 0);
+  if(x > W-R) x = W-R;
+  return { x:x, y: TOP + R + r*ROWH };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.06; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.08));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.08));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var grid=[], score=0, level=1, best=+(localStorage.getItem('makenBubbleBest')||0);
+var curColor=0, nextColor=0, flying=null, aimAngle=-Math.PI/2;
+var misses=0, running=false;
+el('best').textContent=best;
+
+function numColors(){ return Math.min(3+level, COLORS.length); }
+function presentColors(){
+  var set={};
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++) if(grid[r][c]) set[grid[r][c]]=1;
+  var out=Object.keys(set).map(Number);
+  return out.length?out:[1];
+}
+function pickColor(){ var p=presentColors(); return p[(Math.random()*p.length)|0]; }
+function newRow(){
+  var row=[], n=numColors();
+  for(var c=0;c<COLS;c++) row.push(1+((Math.random()*n)|0));
+  return row;
+}
+function setupLevel(){
+  grid=[];
+  for(var r=0;r<START_ROWS;r++) grid.push(newRow());
+  for(var e=0;e<4;e++) grid.push(new Array(COLS).fill(0));
+  misses=0; flying=null;
+  curColor=pickColor(); nextColor=pickColor();
+  hud();
+}
+function hud(){
+  el('score').textContent=score; el('level').textContent=level;
+  el('ceil').textContent=SHOTS_PER_DROP-misses;
+  if(score>best){ best=score; localStorage.setItem('makenBubbleBest',best); }
+  el('best').textContent=best;
+}
+function lowestBubbleY(){
+  var maxY=0;
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++)
+    if(grid[r][c]) maxY=Math.max(maxY, cellCenter(r,c).y);
+  return maxY;
+}
+function drawBubble(x,y,colorIdx,rad){
+  var col=COLORS[colorIdx-1];
+  var g=ctx.createRadialGradient(x-rad*0.35,y-rad*0.35,rad*0.15,x,y,rad);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(0.25,col); g.addColorStop(1,col);
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.75)';
+  ctx.beginPath(); ctx.arc(x-rad*0.35,y-rad*0.4,rad*0.18,0,Math.PI*2); ctx.fill();
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(248,113,113,0.5)'; ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(0,LINE_Y); ctx.lineTo(W,LINE_Y); ctx.stroke(); ctx.setLineDash([]);
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++)
+    if(grid[r][c]){ var p=cellCenter(r,c); drawBubble(p.x,p.y,grid[r][c],R-1); }
+  /* aim guide */
+  if(running && !flying){
+    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.setLineDash([4,7]);
+    ctx.beginPath(); ctx.moveTo(SHOOT_X,SHOOT_Y);
+    ctx.lineTo(SHOOT_X+Math.cos(aimAngle)*70, SHOOT_Y+Math.sin(aimAngle)*70); ctx.stroke(); ctx.setLineDash([]);
+    drawBubble(SHOOT_X,SHOOT_Y,curColor,R-1);
+    ctx.fillStyle='#9aa7c7'; ctx.font='11px Arial'; ctx.textAlign='left';
+    ctx.fillText('NEXT', 12, SHOOT_Y-14);
+    drawBubble(30,SHOOT_Y+16,nextColor,R-6);
+  }
+  if(flying) drawBubble(flying.x,flying.y,flying.color,R-1);
+}
+function snapAndResolve(fx, fy, color){
+  /* choose nearest empty cell to the impact point */
+  var bestCell=null, bestDist=1e9;
+  for(var r=0;r<grid.length;r++) for(var c=0;c<COLS;c++){
+    if(grid[r][c]) continue;
+    var p=cellCenter(r,c), d=(p.x-fx)*(p.x-fx)+(p.y-fy)*(p.y-fy);
+    if(d<bestDist){ bestDist=d; bestCell=[r,c]; }
+  }
+  if(!bestCell){
+    grid.push(new Array(COLS).fill(0));
+    return snapAndResolve(fx,fy,color);
+  }
+  var r0=bestCell[0], c0=bestCell[1];
+  grid[r0][c0]=color;
+  var cl=cluster(grid,r0,c0);
+  if(cl.length>=3){
+    for(var i=0;i<cl.length;i++) grid[cl[i][0]][cl[i][1]]=0;
+    score += cl.length*10;
+    beep(500+cl.length*40,0.12,'sine',0.08);
+    var drops=findDrops(grid);
+    if(drops.length){
+      for(var j=0;j<drops.length;j++) grid[drops[j][0]][drops[j][1]]=0;
+      score += drops.length*20;
+      el('msg').textContent='🎉 Popped '+cl.length+' + dropped '+drops.length+'!';
+      beep(760,0.15,'sine',0.08);
+    } else el('msg').textContent='🎉 Popped '+cl.length+'!';
+    misses=0;
+  } else {
+    beep(240,0.05,'sine',0.05);
+    misses++;
+    if(misses>=SHOTS_PER_DROP){
+      misses=0;
+      grid.unshift(newRow());
+      el('msg').textContent='⬇️ New row dropped!';
+      beep(180,0.15,'sawtooth',0.06);
+    }
+  }
+  while(grid.length>0 && grid[grid.length-1].every(function(v){return !v;})) grid.pop();
+  for(var e2=grid.length;e2<6;e2++) grid.push(new Array(COLS).fill(0));
+  hud(); draw();
+  if(boardEmpty(grid)){
+    level++; score+=250;
+    el('msg').textContent='⭐ Board cleared! Level '+level+' (+250 bonus)';
+    beep(880,0.2,'sine',0.08); setupLevel(); draw(); return;
+  }
+  if(lowestBubbleY()+R >= LINE_Y){ gameOver(); return; }
+  curColor=nextColor; nextColor=pickColor();
+}
+function gameOver(){
+  running=false;
+  el('msg').textContent='💀 Game Over — the bubbles crossed the line. Score '+score+'.';
+  beep(150,0.4,'sawtooth',0.07);
+  el('startBtn').textContent='▶ PLAY AGAIN';
+}
+function shoot(){
+  if(!running || flying) return;
+  flying={ x:SHOOT_X, y:SHOOT_Y, vx:Math.cos(aimAngle)*9.5, vy:Math.sin(aimAngle)*9.5, color:curColor };
+  beep(420,0.05,'sine',0.05);
+}
+function tick(){
+  if(flying){
+    flying.x+=flying.vx; flying.y+=flying.vy;
+    if(flying.x<R){ flying.x=R; flying.vx*=-1; }
+    if(flying.x>W-R){ flying.x=W-R; flying.vx*=-1; }
+    var hit=false;
+    if(flying.y<=TOP+R) hit=true;
+    if(!hit){
+      for(var r=0;r<grid.length && !hit;r++) for(var c=0;c<COLS;c++){
+        if(!grid[r][c]) continue;
+        var p=cellCenter(r,c), dx=flying.x-p.x, dy=flying.y-p.y;
+        if(dx*dx+dy*dy < (D-2)*(D-2)){ hit=true; break; }
+      }
+    }
+    if(hit){
+      var col=flying.color, fx=flying.x, fy=flying.y;
+      flying=null;
+      snapAndResolve(fx,fy,col);
+    }
+    draw();
+  }
+  if(running || flying) requestAnimationFrame(tick);
+}
+function setAim(clientX, clientY){
+  var rect=cvs.getBoundingClientRect();
+  var x=(clientX-rect.left)*(W/rect.width), y=(clientY-rect.top)*(H/rect.height);
+  var ang=Math.atan2(y-SHOOT_Y, x-SHOOT_X);
+  if(ang>-Math.PI*0.92 && ang<-Math.PI*0.08) aimAngle=ang;
+  draw();
+}
+cvs.addEventListener('mousemove', function(e){ if(running) setAim(e.clientX,e.clientY); });
+cvs.addEventListener('click', function(e){ if(running){ setAim(e.clientX,e.clientY); shoot(); } });
+cvs.addEventListener('touchstart', function(e){ if(running){ var t=e.touches[0]; setAim(t.clientX,t.clientY); } }, {passive:true});
+cvs.addEventListener('touchmove', function(e){ if(running){ var t=e.touches[0]; setAim(t.clientX,t.clientY); e.preventDefault(); } }, {passive:false});
+cvs.addEventListener('touchend', function(e){ if(running){ shoot(); e.preventDefault(); } }, {passive:false});
+el('swapBtn').addEventListener('click', function(){
+  if(!running || flying) return;
+  var t=curColor; curColor=nextColor; nextColor=t; draw(); beep(350,0.04,'sine',0.04);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+el('startBtn').addEventListener('click', function(){
+  score=0; level=1; running=true;
+  this.textContent='↻ RESTART';
+  el('msg').textContent='Aim and shoot — match 3+ of a colour!';
+  setupLevel(); draw();
+  requestAnimationFrame(tick);
+});
+setupLevel(); running=false; draw();
+if(typeof module!=='undefined') module.exports={ neighbors:neighbors, cluster:cluster, findDrops:findDrops, boardEmpty:boardEmpty, connectedToTop:connectedToTop, cellCenter:cellCenter, COLS:COLS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>
