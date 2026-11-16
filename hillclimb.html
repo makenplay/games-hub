@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hill Climb Racing Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play hill climb free online. Drive endless rolling hills, grab coins and fuel, and don't flip — how far can you go? No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .fuelwrap { width:min(640px,94vw); height:12px; background:#111a33; border:1px solid #26335f; border-radius:6px; overflow:hidden; margin:2px 0; }
+  .fuelwrap i { display:block; height:100%; background:linear-gradient(90deg,#dc2626,#f59e0b,#22c55e); transition:width .2s; }
+  canvas#cv { background:linear-gradient(180deg,#38bdf8 0%,#bae6fd 60%,#fef3c7 100%); border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:12px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.gas { background:linear-gradient(180deg,#22c55e,#15803d); color:#fff; }
+  .btn.brake { background:linear-gradient(180deg,#dc2626,#991b1b); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🚙 HILL CLIMB</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">DISTANCE <b id="dist">0 m</b></div>
+  <div class="stat">🪙 <b id="coins">0</b></div>
+  <div class="stat">FLIPS <b id="flips">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0 m</b></div>
+</div>
+<div class="fuelwrap"><i id="fuelBar" style="width:100%"></i></div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">GAS to climb, BRAKE to slow or roll back. Grab ⛽ before the tank runs dry — and never land on the roof!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn brake" id="brakeBtn">🛑 BRAKE (hold)</button>
+  <button class="btn gas" id="gasBtn">⛽ GAS (hold)</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">D / → = gas · A / ← = brake · in the air the pedals tilt the jeep — land wheels-down or it's over</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Hill Climb</h2>
+  <p>The endless hill-driving classic. One jeep, infinite countryside, and a fuel gauge that never stops falling. Feather the pedals over the crests, catch air without flipping, and chase the next fuel can before the engine coughs out.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Hold GAS (D / → or the green button) to drive and BRAKE (A / ←) to slow down or reverse. In the air, GAS tilts the jeep backward and BRAKE tilts it forward — use that to land safely and complete flips for +100. Collect coins (+10) and fuel cans to keep going. The run ends when you flip onto the roof or run dry.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless procedurally-rolling hills that get steeper the further you go</li>
+    <li>Fuel management, coin pickups and airborne flip bonuses</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* ---------- pure logic (testable) ---------- */
+function terrainY(x){
+  /* endless deterministic hills; amplitude grows slowly with distance */
+  var amp = 34 + Math.min(46, x/900);
+  return 292
+    - Math.sin(x/235) * amp
+    - Math.sin(x/97 + 1.7) * 15
+    - Math.sin(x/41 + 0.4) * 4;
+}
+function slopeAt(x){
+  return Math.atan2(terrainY(x+13) - terrainY(x-13), 26);
+}
+function normAng(a){
+  return ((a + Math.PI*3) % (Math.PI*2)) - Math.PI;
+}
+function flipsFromRotation(rot){
+  return Math.floor(Math.abs(rot) / (Math.PI*2));
+}
+function fuelSpacing(){ return 460; }
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, car, camX, fuel, coins, flips, score, airRot, nextFuel, coinSet, over, rafId, lastTick, keys;
+var best=+(localStorage.getItem('makenHillBest')||0);
+el('best').textContent=best+' m';
+function hud(){
+  el('dist').textContent=Math.max(0, Math.floor(car.x/10))+' m';
+  el('coins').textContent=coins;
+  el('flips').textContent=flips;
+  el('score').textContent=score;
+  el('fuelBar').style.width=Math.max(0, fuel)+'%';
+  var d=Math.floor(car.x/10);
+  if(d>best){ best=d; localStorage.setItem('makenHillBest',best); }
+  el('best').textContent=best+' m';
+}
+function reset(){
+  playing=false; over=false;
+  car={ x:80, y:terrainY(80)-16, vx:0, vy:0, ang:0, va:0, grounded:true };
+  camX=0; fuel=100; coins=0; flips=0; score=0; airRot=0;
+  nextFuel=520;
+  coinSet={};
+  keys={};
+  hud(); draw();
+}
+function draw(){
+  /* sky + parallax hills */
+  ctx.fillStyle='rgba(255,255,255,0.65)';
+  ctx.beginPath(); ctx.arc(560, 52, 24, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#7fb069';
+  ctx.beginPath(); ctx.moveTo(0, 310);
+  for(var bx=0; bx<=W; bx+=32){
+    var wx=bx + camX*0.4;
+    ctx.lineTo(bx, 268 - Math.abs(Math.sin(wx/260))*52);
+  }
+  ctx.lineTo(W, 400); ctx.lineTo(0, 400); ctx.closePath(); ctx.fill();
+  /* terrain */
+  ctx.fillStyle='#8a6844';
+  ctx.beginPath();
+  ctx.moveTo(-4, terrainY(camX-4));
+  for(var x=0;x<=W;x+=8) ctx.lineTo(x, terrainY(camX+x));
+  ctx.lineTo(W+4, H); ctx.lineTo(-4, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#5d4429'; ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-4, terrainY(camX-4));
+  for(var x2=0;x2<=W;x2+=8) ctx.lineTo(x2, terrainY(camX+x2));
+  ctx.stroke();
+  ctx.fillStyle='#6aa84f';
+  ctx.beginPath();
+  ctx.moveTo(-4, terrainY(camX-4)-3);
+  for(var x3=0;x3<=W;x3+=8) ctx.lineTo(x3, terrainY(camX+x3)-3);
+  for(var x4=W;x4>=0;x4-=8) ctx.lineTo(x4, terrainY(camX+x4)+5);
+  ctx.closePath(); ctx.fill();
+  /* distance markers */
+  ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
+  for(var m=500; m<car.x+W; m+=500){
+    var mx=m-camX;
+    if(mx>0 && mx<W) ctx.fillText((m/10)+'m', mx, terrainY(m)-26);
+  }
+  /* coins */
+  ctx.font='17px Arial';
+  for(var cx=Math.floor(camX/130)*130; cx<camX+W+130; cx+=130){
+    if(!coinSet[cx]){
+      var cy=terrainY(cx)-30;
+      if(cx-camX>-20) ctx.fillText('🪙', cx-camX, cy);
+    }
+  }
+  /* fuel can */
+  var fx=nextFuel-camX;
+  if(fx>-30 && fx<W+30){
+    ctx.font='26px Arial';
+    ctx.fillText('⛽', fx, terrainY(nextFuel)-8);
+    if(fuel<30){
+      ctx.fillStyle='#ef4444'; ctx.font='bold 13px Arial';
+      ctx.fillText('⚠️ FUEL!', fx, terrainY(nextFuel)-44);
+    }
+  }
+  /* jeep */
+  var px=car.x-camX, py=car.y;
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(car.ang);
+  ctx.fillStyle='#dc2626';
+  ctx.fillRect(-24, -14, 48, 13);
+  ctx.fillRect(-8, -26, 26, 13);
+  ctx.fillStyle='#bae6fd'; ctx.fillRect(-3, -24, 10, 9);
+  ctx.fillStyle='#facc15'; ctx.beginPath(); ctx.arc(-13, -19, 4.6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111827';
+  ctx.beginPath(); ctx.arc(-16, 2, 9, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(17, 2, 9, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#9ca3af';
+  ctx.beginPath(); ctx.arc(-16, 2, 3.6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(17, 2, 3.6, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(over ? (fuel<=0 ? '⛽ OUT OF FUEL!' : '💥 FLIPPED!') : '🚙 HILL CLIMB', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(over ? 'You reached '+Math.floor(car.x/10)+' m · score '+score+' — press START to go further' : 'Press START — endless hills, watch the fuel', W/2, H/2+18);
+  }
+}
+function endRun(why){
+  playing=false; over=true;
+  el('msg').textContent= why==='fuel' ? '⛽ Tank dry at '+Math.floor(car.x/10)+' m. Score: '+score+'.' : '💥 Roof landing at '+Math.floor(car.x/10)+' m! Score: '+score+'.';
+  beep(140,0.3,'sawtooth',0.08);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var gas=keys.KeyD || keys.ArrowRight || keys.__gas;
+  var brake=keys.KeyA || keys.ArrowLeft || keys.__brake;
+  fuel -= dt*2.6;
+  if(fuel<=0){ fuel=0; endRun('fuel'); return; }
+  var slope=slopeAt(car.x);
+  if(car.grounded){
+    if(gas) car.vx += 265*dt;
+    if(brake) car.vx -= 215*dt;
+    car.vx += Math.sin(slope)*175*dt;
+    car.vx *= Math.pow(0.5, dt);
+    car.vx=Math.max(-95, Math.min(295, car.vx));
+    car.x += car.vx*dt;
+    car.y = terrainY(car.x)-16;
+    car.ang += (slope - car.ang) * Math.min(1, dt*11);
+    var aheadDrop = terrainY(car.x+18) - (car.y+16);
+    if(aheadDrop > 14 && car.vx > 55){
+      car.grounded=false;
+      car.vy=-(aheadDrop)*1.1;
+      car.va=car.vx/340;
+      airRot=0;
+    }
+  } else {
+    car.vy += 660*dt;
+    car.x += car.vx*dt;
+    car.y += car.vy*dt;
+    if(gas) car.va -= 2.6*dt;
+    if(brake) car.va += 2.6*dt;
+    car.ang += car.va*dt*2.1;
+    airRot += car.va*dt*2.1;
+    var gy=terrainY(car.x)-16;
+    if(car.y>=gy && car.vy>0){
+      var diff=normAng(car.ang - slopeAt(car.x));
+      if(Math.abs(diff) > 0.85){ endRun('flip'); return; }
+      var f=flipsFromRotation(airRot);
+      if(f>0){
+        flips+=f; score+=100*f;
+        el('msg').textContent='🤸 Flip landed! +'+(100*f)+' pts.';
+        beep(990,0.13,'sine',0.07);
+      }
+      car.y=gy; car.grounded=true; car.vy=0; car.ang=slopeAt(car.x);
+    }
+  }
+  if(car.x<40) car.x=40;
+  /* coins */
+  var cell=Math.round(car.x/130)*130;
+  if(!coinSet[cell] && Math.abs(car.x-cell)<17 && car.grounded){
+    coinSet[cell]=1; coins++; score+=10;
+    beep(1180,0.05,'sine',0.05);
+  }
+  /* fuel pickup */
+  if(Math.abs(car.x-nextFuel)<24 && car.grounded){
+    fuel=100;
+    nextFuel += fuelSpacing() + Math.floor(car.x/2600)*90;
+    el('msg').textContent='⛽ Fuel up! Tank full.';
+    beep(840,0.1,'sine',0.06);
+  }
+  score += dt*3;
+  score=Math.floor(score);
+  camX=Math.max(0, car.x-190);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('gasBtn','__gas'); holdBtn('brakeBtn','__brake');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🚙 Go! First fuel can at 52 m.';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ terrainY:terrainY, slopeAt:slopeAt, normAng:normAng, flipsFromRotation:flipsFromRotation, fuelSpacing:fuelSpacing };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

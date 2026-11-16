@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Parking Master Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play parking master free online. Steer into the marked bay without touching a cone or car — 6 levels of precision driving. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#2b3446; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🅿️ PARKING MASTER</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1 / 6</b></div>
+  <div class="stat">⭐ <b id="stars">☆☆☆</b></div>
+  <div class="stat">BUMPS <b id="bumps">0</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="400"></canvas>
+<div id="msg">Drive with W/S (or ↑/↓), steer with A/D. Stop fully inside the green bay — straight!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn" id="upBtn">▲ GAS</button>
+  <button class="btn" id="downBtn">▼ REV</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Real car steering: the car only turns while moving, and reversing flips the turn — just like a real parking lot</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Parking Master</h2>
+  <p>Six parking lots, one marked bay, and rows of cones and parked cars that punish every careless swing. This is precision driving at walking pace — plan your arc, use reverse properly, and stop dead-centre and straight.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Accelerate with W/↑, reverse with S/↓, and steer with A/D (the car turns only while moving, and steering reverses when backing up — like a real car). Roll fully into the green bay, straighten up, and stop. Parking quality earns 1–3 stars: fast and bump-free is worth the most.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Six lots from an easy straight-in bay to a tight parallel park</li>
+    <li>True Ackermann-style steering feel with cones and parked cars as obstacles</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=400;
+/* levels: start {x,y,ang}, bay {x,y,w,h,ang}, obstacles: parked cars {x,y,ang} + cones {x,y} */
+var LEVELS=[
+  { start:{x:110,y:200,ang:0}, bay:{x:520,y:200,w:64,h:40,ang:0}, cars:[], cones:[[330,150],[330,250]] },
+  { start:{x:110,y:320,ang:0}, bay:{x:520,y:90,w:64,h:40,ang:0}, cars:[{x:520,y:170,ang:0}], cones:[[300,200],[380,260]] },
+  { start:{x:110,y:110,ang:0}, bay:{x:520,y:300,w:40,h:64,ang:Math.PI/2}, cars:[{x:440,y:300,ang:Math.PI/2}], cones:[[300,150],[360,300]] },
+  { start:{x:110,y:200,ang:0}, bay:{x:330,y:80,w:64,h:40,ang:0}, cars:[{x:250,y:80,ang:0},{x:410,y:80,ang:0}], cones:[[200,240],[440,240],[330,180]] },
+  { start:{x:90,y:90,ang:0}, bay:{x:520,y:320,w:64,h:40,ang:0}, cars:[{x:330,y:200,ang:0.6},{x:520,y:200,ang:0}], cones:[[200,300],[420,120],[250,90]] },
+  { start:{x:90,y:330,ang:0}, bay:{x:340,y:70,w:70,h:38,ang:0}, cars:[{x:262,y:70,ang:0},{x:424,y:70,ang:0},{x:520,y:330,ang:0}], cones:[[180,200],[470,200],[340,230],[120,150]] }
+];
+/* ---------- pure logic (testable) ---------- */
+function carCorners(car){
+  var L=21, Wd=11;
+  var c=Math.cos(car.ang), s=Math.sin(car.ang);
+  var pts=[];
+  [[L,Wd],[L,-Wd],[-L,-Wd],[-L,Wd]].forEach(function(p){
+    pts.push({ x: car.x + p[0]*c - p[1]*s, y: car.y + p[0]*s + p[1]*c });
+  });
+  return pts;
+}
+function pointInRect(px, py, cx, cy, w, h, ang){
+  var dx=px-cx, dy=py-cy;
+  var c=Math.cos(-ang), s=Math.sin(-ang);
+  var lx=dx*c - dy*s, ly=dx*s + dy*c;
+  return Math.abs(lx) <= w/2 && Math.abs(ly) <= h/2;
+}
+function parkedScore(car, bay){
+  var cs=carCorners(car);
+  for(var i=0;i<4;i++){
+    if(!pointInRect(cs[i].x, cs[i].y, bay.x, bay.y, bay.w, bay.h, bay.ang)) return 0;
+  }
+  var dAng=Math.abs(((car.ang - bay.ang + Math.PI*3) % (Math.PI*2)) - Math.PI);
+  var align=Math.min(dAng, Math.PI - dAng); /* nose-in or reverse-in both count as aligned */
+  if(align > 0.3) return 0;
+  var dc=Math.hypot(car.x-bay.x, car.y-bay.y);
+  if(dc <= 7 && align <= 0.09) return 3;
+  if(dc <= 13 && align <= 0.19) return 2;
+  return 1;
+}
+function hitsCircle(car, cx, cy, r){
+  /* check circle against car OBB by sampling corners + centre distance in car frame */
+  var dx=cx-car.x, dy=cy-car.y;
+  var c=Math.cos(-car.ang), s=Math.sin(-car.ang);
+  var lx=dx*c - dy*s, ly=dx*s + dy*c;
+  var qx=Math.max(-21, Math.min(21, lx)), qy=Math.max(-11, Math.min(11, ly));
+  return Math.hypot(lx-qx, ly-qy) < r;
+}
+function hitsCar(car, other){
+  var cs=carCorners(other);
+  for(var i=0;i<4;i++){
+    if(pointInRect(cs[i].x, cs[i].y, car.x, car.y, 44, 24, car.ang)) return true;
+  }
+  var oc=carCorners(car);
+  for(var j=0;j<4;j++){
+    if(pointInRect(oc[j].x, oc[j].y, other.x, other.y, 44, 24, other.ang)) return true;
+  }
+  return false;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, levelIdx, car, bumps, score, levelTime, starsEarned, finished, keys, rafId, lastTick, bumpCool;
+var best=+(localStorage.getItem('makenParkBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('level').textContent=Math.min(6, levelIdx+1)+' / 6';
+  el('stars').textContent= starsEarned ? '⭐'.repeat(starsEarned) + '☆'.repeat(3-starsEarned) : '☆☆☆';
+  el('bumps').textContent=bumps;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenParkBest',best); }
+  el('best').textContent=best;
+}
+function loadLevel(){
+  var lv=LEVELS[levelIdx];
+  car={ x:lv.start.x, y:lv.start.y, ang:lv.start.ang, v:0 };
+  levelTime=0; starsEarned=0; bumpCool=0;
+  hud();
+}
+function reset(){
+  playing=false; finished=false;
+  levelIdx=0; bumps=0; score=0;
+  keys={};
+  loadLevel();
+  draw();
+}
+function drawCar(c, color){
+  ctx.save();
+  ctx.translate(c.x, c.y);
+  ctx.rotate(c.ang);
+  ctx.fillStyle=color;
+  ctx.fillRect(-21, -11, 42, 22);
+  ctx.fillStyle='#1f2937';
+  ctx.fillRect(-6, -9, 16, 18);
+  ctx.fillStyle='#bae6fd';
+  ctx.fillRect(4, -8, 5, 16);
+  ctx.fillStyle='#facc15';
+  ctx.fillRect(19, -9, 2.6, 5); ctx.fillRect(19, 4, 2.6, 5);
+  ctx.fillStyle='#f87171';
+  ctx.fillRect(-21.6, -9, 2.4, 5); ctx.fillRect(-21.6, 4, 2.4, 5);
+  ctx.restore();
+}
+function draw(){
+  var lv=LEVELS[levelIdx];
+  /* lot markings */
+  ctx.strokeStyle='rgba(255,255,255,0.16)'; ctx.lineWidth=2;
+  for(var i=0;i<7;i++){
+    ctx.strokeRect(468 + (i%2)*0, 40+i*0, 0, 0);
+  }
+  ctx.strokeStyle='rgba(255,255,255,0.13)';
+  for(var gx=80; gx<W; gx+=80){ ctx.beginPath(); ctx.moveTo(gx, 24); ctx.lineTo(gx, H-24); ctx.stroke(); }
+  for(var gy=60; gy<H; gy+=80){ ctx.beginPath(); ctx.moveTo(24, gy); ctx.lineTo(W-24, gy); ctx.stroke(); }
+  /* bay */
+  ctx.save();
+  ctx.translate(lv.bay.x, lv.bay.y);
+  ctx.rotate(lv.bay.ang);
+  ctx.fillStyle='rgba(34,197,94,0.25)';
+  ctx.fillRect(-lv.bay.w/2, -lv.bay.h/2, lv.bay.w, lv.bay.h);
+  ctx.strokeStyle='#22c55e'; ctx.lineWidth=3;
+  ctx.strokeRect(-lv.bay.w/2, -lv.bay.h/2, lv.bay.w, lv.bay.h);
+  ctx.fillStyle='#4ade80'; ctx.font='bold 19px Arial'; ctx.textAlign='center';
+  ctx.fillText('P', 0, 7);
+  ctx.restore();
+  /* cones */
+  lv.cones.forEach(function(cn){
+    ctx.font='17px Arial'; ctx.textAlign='center';
+    ctx.fillText('🔶', cn[0], cn[1]+6);
+  });
+  /* parked cars */
+  lv.cars.forEach(function(pc){ drawCar({ x:pc.x, y:pc.y, ang:pc.ang }, '#64748b'); });
+  drawCar(car, '#0ea5e9');
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(finished ? '🏆 PARKING MASTER!' : '🅿️ PARKING MASTER', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(finished ? 'All 6 lots parked · score '+score+' · bumps '+bumps+' — press START to play again' : 'Press START — 6 lots, park it clean', W/2, H/2+18);
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  levelTime+=dt;
+  if(bumpCool>0) bumpCool-=dt;
+  var lv=LEVELS[levelIdx];
+  var fwd=keys.KeyW || keys.ArrowUp || keys.__up;
+  var rev=keys.KeyS || keys.ArrowDown || keys.__down;
+  var steer=0;
+  if(keys.KeyA || keys.ArrowLeft || keys.__left) steer=-1;
+  if(keys.KeyD || keys.ArrowRight || keys.__right) steer=1;
+  if(fwd) car.v += 130*dt;
+  else if(rev) car.v -= 95*dt;
+  else car.v *= Math.pow(0.25, dt);
+  if(!fwd && !rev) car.v *= Math.pow(0.4, dt);
+  car.v=Math.max(-52, Math.min(88, car.v));
+  /* bicycle-ish steering: turn rate proportional to speed */
+  car.ang += steer * (car.v/30) * 0.62 * dt;
+  car.x += Math.cos(car.ang) * car.v * dt;
+  car.y += Math.sin(car.ang) * car.v * dt;
+  car.x=Math.max(26, Math.min(W-26, car.x));
+  car.y=Math.max(26, Math.min(H-26, car.y));
+  /* collisions */
+  var hit=false;
+  lv.cones.forEach(function(cn){ if(hitsCircle(car, cn[0], cn[1], 9)) hit=true; });
+  lv.cars.forEach(function(pc){ if(hitsCar(car, pc)) hit=true; });
+  if(hit && bumpCool<=0){
+    bumps++;
+    bumpCool=0.7;
+    car.v = -car.v*0.35;
+    el('msg').textContent='💥 Bump! '+(bumps>=4 ? 'Careful — stars are slipping away.' : 'That costs you stars.');
+    beep(110,0.14,'sawtooth',0.08);
+    hud();
+  }
+  /* parked check: nearly stopped and fully in bay */
+  if(Math.abs(car.v) < 2.2){
+    var st=parkedScore(car, lv.bay);
+    if(st>0){
+      starsEarned=st;
+      var gained= st*100 + Math.max(0, 90 - Math.floor(levelTime)*2) - bumps*15;
+      score += Math.max(20, gained);
+      el('msg').textContent='🅿️ Parked! '+st+' star'+(st>1?'s':'')+' — +'+Math.max(20, gained)+' pts. Next lot…';
+      beep(880+st*90, 0.16, 'sine', 0.07);
+      levelIdx++;
+      hud();
+      if(levelIdx>=LEVELS.length){
+        playing=false; finished=true;
+        el('msg').textContent='🏆 All 6 lots parked! Final score '+score+' with '+bumps+' bumps.';
+      } else {
+        loadLevel();
+      }
+      draw();
+      if(playing) rafId=requestAnimationFrame(loop);
+      return;
+    }
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('upBtn','__up'); holdBtn('downBtn','__down'); holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🅿️ Lot 1 — nice and easy. Stop fully inside the green bay!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ LEVELS:LEVELS, carCorners:carCorners, pointInRect:pointInRect, parkedScore:parkedScore, hitsCircle:hitsCircle, hitsCar:hitsCar };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
