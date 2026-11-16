@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maken Play — Play Free Online Games | 100+ Games, No Download</title>
+<meta name="description" content="Maken Play: play free online games instantly — car racing, subway runner, snake, 2048, flappy, dino runner, fruit slice and more. No download, no sign-up. New games added every week.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; max-width:1180px; margin:0 auto; }
+  .logo { font-size:26px; font-weight:900; letter-spacing:1px; }
+  .logo .play { color:#22d3ee; text-shadow:0 0 16px rgba(34,211,238,.6); }
+  .logo .maken { color:#f472b6; text-shadow:0 0 16px rgba(244,114,182,.5); }
+  .topbar .badge { font-size:12px; color:#9aa7c7; border:1px solid #26335f; padding:6px 12px; border-radius:999px; background:#0e1530; }
+  .hero { text-align:center; padding:26px 16px 8px; max-width:860px; margin:0 auto; }
+  .hero h1 { font-size:clamp(28px, 5vw, 44px); font-weight:900; line-height:1.15; }
+  .hero h1 .grad { background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p { color:#9aa7c7; font-size:15px; margin-top:10px; }
+  .hero .stats { display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .hero .stat { background:#0e1530; border:1px solid #26335f; border-radius:10px; padding:8px 16px; font-size:13px; }
+  .hero .stat b { color:#fff; font-size:16px; }
+  .ad-slot { width:100%; max-width:728px; min-height:60px; margin:14px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #33406b; border-radius:8px; color:#5b6b96; font-size:12px; letter-spacing:2px; background:#0e1530; overflow:hidden; }
+  .tools { max-width:1180px; margin:6px auto 0; padding:0 16px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+  #search { width:min(92vw, 440px); padding:11px 16px; border-radius:999px; border:1px solid #26335f; background:#0e1530; color:#fff; font-size:14px; outline:none; }
+  #search:focus { border-color:#22d3ee; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .chip { padding:7px 15px; border-radius:999px; border:1px solid #26335f; background:#0e1530; color:#c6d0ea; font-size:13px; cursor:pointer; }
+  .chip.on { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; border-color:transparent; font-weight:700; }
+  .grid { max-width:1180px; margin:18px auto; padding:0 16px 8px; display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:16px; }
+  .card { background:linear-gradient(180deg,#101a3d,#0b1229); border:1px solid #26335f; border-radius:16px; padding:18px 14px 14px; text-align:center;
+          transition:transform .15s ease, border-color .15s ease; display:flex; flex-direction:column; gap:8px; }
+  .card:hover { transform:translateY(-4px); border-color:#22d3ee; }
+  .card .icon { font-size:52px; line-height:1; filter:drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
+  .card h3 { font-size:17px; color:#fff; }
+  .card .cat { font-size:11px; letter-spacing:2px; color:#7dd3fc; text-transform:uppercase; }
+  .card p { font-size:12.5px; color:#9aa7c7; flex:1; }
+  .playbtn { display:block; margin-top:4px; padding:10px; border-radius:10px; text-decoration:none; font-weight:800; font-size:14px; color:#04121f;
+             background:linear-gradient(90deg,#22d3ee,#34d399); box-shadow:0 4px 14px rgba(34,211,238,.35); }
+  .playbtn:active { transform:scale(.98); }
+  .card.soon { opacity:.55; }
+  .card.soon .playbtn { background:#26335f; color:#9aa7c7; box-shadow:none; pointer-events:none; }
+  #noresults { display:none; text-align:center; color:#9aa7c7; padding:22px; font-size:14px; }
+  footer { text-align:center; color:#5b6b96; font-size:12.5px; padding:18px 12px 26px; }
+  footer b { color:#9aa7c7; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">🎮 <span class="maken">MAKEN</span> <span class="play">PLAY</span></div>
+  <div class="badge">100% FREE · NO DOWNLOAD</div>
+</div>
+
+<div class="hero">
+  <h1>Play Free Online Games<br><span class="grad">Instantly — No Download, No Sign-Up</span></h1>
+  <p>Racing, runners, puzzles, classics and more. New famous games are added every week — our goal is 100+ games, all free.</p>
+  <div class="stats">
+    <div class="stat"><b id="liveCount">8</b> games live now</div>
+    <div class="stat"><b>100+</b> games coming</div>
+    <div class="stat"><b>Mobile + PC</b> friendly</div>
+  </div>
+</div>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="tools">
+  <input id="search" type="text" placeholder="🔍 Search games… (e.g. racing, snake, puzzle)">
+  <div class="chips" id="chips">
+    <button class="chip on" data-cat="all">All Games</button>
+    <button class="chip" data-cat="racing">🏎️ Racing</button>
+    <button class="chip" data-cat="runner">🏃 Runner</button>
+    <button class="chip" data-cat="puzzle">🧩 Puzzle</button>
+    <button class="chip" data-cat="classic">🕹️ Classic</button>
+    <button class="chip" data-cat="action">⚔️ Action</button>
+    <button class="chip" data-cat="board">🎲 Board</button>
+  </div>
+</div>
+
+<div class="grid" id="grid">
+  <div class="card" data-cat="racing" data-name="3d car racing cyber horizon">
+    <div class="icon">🏎️</div><div class="cat">Racing</div><h3>3D Car Racing</h3>
+    <p>High-speed 3D highway racing. Dodge traffic, chase the horizon, beat your best time.</p>
+    <a class="playbtn" href="https://makenplay.github.io/car-racing-game/" target="_blank" rel="noopener">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="runner" data-name="subway runner surfers 3d endless">
+    <div class="icon">🚇</div><div class="cat">Runner</div><h3>Subway Runner 3D</h3>
+    <p>The famous endless runner — dash through the subway, dodge trains, grab coins.</p>
+    <a class="playbtn" href="https://makenplay.github.io/car-racing-game/game1.html" target="_blank" rel="noopener">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="classic" data-name="snake classic nokia">
+    <div class="icon">🐍</div><div class="cat">Classic</div><h3>Snake</h3>
+    <p>The all-time classic, rebuilt — levels, bonus food and a best-score chase.</p>
+    <a class="playbtn" href="snake.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="puzzle" data-name="2048 puzzle numbers merge">
+    <div class="icon">🔢</div><div class="cat">Puzzle</div><h3>2048 Puzzle</h3>
+    <p>Slide and merge the number tiles. Can you reach the legendary 2048 tile?</p>
+    <a class="playbtn" href="game2048.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="classic" data-name="flappy wings bird pipes">
+    <div class="icon">🐤</div><div class="cat">Classic</div><h3>Flappy Wings</h3>
+    <p>Tap to fly, dodge the pipes, earn medals. Simple to start, hard to master.</p>
+    <a class="playbtn" href="flappy.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="runner" data-name="dino runner t-rex chrome dinosaur jump">
+    <div class="icon">🦖</div><div class="cat">Runner</div><h3>Dino Runner</h3>
+    <p>The famous dinosaur runner — jump the cactus, duck the birds, run forever.</p>
+    <a class="playbtn" href="dino.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="action" data-name="fruit slice ninja swipe">
+    <div class="icon">🍉</div><div class="cat">Action</div><h3>Fruit Slice</h3>
+    <p>Swipe to slice flying fruits, chain combos — and never touch a bomb.</p>
+    <a class="playbtn" href="fruit.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card" data-cat="board" data-name="connect four board strategy">
+    <div class="icon">🔴</div><div class="cat">Board</div><h3>Connect Four</h3>
+    <p>Drop discs and connect 4 in a row. Play vs the computer or a friend.</p>
+    <a class="playbtn" href="connect4.html">▶ PLAY NOW</a>
+  </div>
+  <div class="card soon" data-cat="racing" data-name="bike racing 3d coming soon">
+    <div class="icon">🏍️</div><div class="cat">Racing</div><h3>Bike Racing 3D</h3>
+    <p>Coming soon — high-speed bike racing with stunts and traffic.</p>
+    <a class="playbtn" href="#">⏳ COMING SOON</a>
+  </div>
+  <div class="card soon" data-cat="puzzle" data-name="candy match 3 coming soon">
+    <div class="icon">🍬</div><div class="cat">Puzzle</div><h3>Candy Match 3</h3>
+    <p>Coming soon — match, crush and combo your way through sweet levels.</p>
+    <a class="playbtn" href="#">⏳ COMING SOON</a>
+  </div>
+  <div class="card soon" data-cat="board" data-name="ludo board coming soon">
+    <div class="icon">🎲</div><div class="cat">Board</div><h3>Ludo</h3>
+    <p>Coming soon — the family board classic, race all four tokens home.</p>
+    <a class="playbtn" href="#">⏳ COMING SOON</a>
+  </div>
+  <div class="card soon" data-cat="action" data-name="cricket batting coming soon">
+    <div class="icon">🏏</div><div class="cat">Sports</div><h3>Cricket Batting</h3>
+    <p>Coming soon — time your shots and chase the target score.</p>
+    <a class="playbtn" href="#">⏳ COMING SOON</a>
+  </div>
+</div>
+<div id="noresults">No games found — try another search word.</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<footer>
+  <b>MAKEN PLAY</b> — free online games for everyone.<br>
+  All games run in your browser. No downloads, no installs, no sign-ups.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var search = document.getElementById('search');
+  var chips = document.querySelectorAll('#chips .chip');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('#grid .card'));
+  var noresults = document.getElementById('noresults');
+  var activeCat = 'all';
+  function apply(){
+    var q = search.value.trim().toLowerCase();
+    var visible = 0;
+    cards.forEach(function(card){
+      var catOk = activeCat === 'all' || card.getAttribute('data-cat') === activeCat;
+      var nameOk = !q || (card.getAttribute('data-name') + ' ' + card.querySelector('h3').textContent.toLowerCase()).indexOf(q) > -1;
+      var show = catOk && nameOk;
+      card.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    noresults.style.display = visible ? 'none' : 'block';
+  }
+  search.addEventListener('input', apply);
+  chips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      chips.forEach(function(c){ c.classList.remove('on'); });
+      chip.classList.add('on');
+      activeCat = chip.getAttribute('data-cat');
+      apply();
+    });
+  });
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>
