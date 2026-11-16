@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Space Invaders Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a space-invaders-style arcade shooter free online. Blast the marching alien rows, hide behind the shields, catch the mystery UFO. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#020617; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.fire { background:linear-gradient(180deg,#ef4444,#991b1b); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>👾 SPACE INVADERS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">WAVE <b id="wave">1</b></div>
+  <div class="stat">❤️ <b id="lives">3</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="560" height="520"></canvas>
+<div id="msg">Move with ◀ ▶ / A D, fire with SPACE. The lower they march, the faster they come!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn fire" id="fireBtn">🔥 FIRE</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Top row = 30 pts · middle = 20 · bottom = 10 · red UFO = 100 bonus · shields erode under fire</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Space Invaders</h2>
+  <p>The arcade legend, faithfully rebuilt: five rows of invaders march side to side, dropping a step closer with every pass — and the fewer remain, the faster they move. Four green shields stand between you and their bombs, but every shot chews them away.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Slide your cannon with A/D or the arrow buttons and fire with SPACE (one shot at a time, like the original). Clear the whole formation to advance a wave; each new wave starts one row lower. If an invader lands, or your three cannons fall, the game ends.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Authentic marching formation that speeds up as it thins</li>
+    <li>Destructible shields and a bonus UFO flyby</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=560, H=520, ROWS=5, COLS=8;
+/* ---------- pure logic (testable) ---------- */
+function pointsForRow(r){
+  return r===0 ? 30 : r<=2 ? 20 : 10;
+}
+function makeFormation(wave){
+  var aliens=[];
+  for(var r=0;r<ROWS;r++){
+    for(var c=0;c<COLS;c++){
+      aliens.push({ row:r, col:c, alive:true });
+    }
+  }
+  return { aliens:aliens, ox:58, oy:64 + (wave-1)*16, dir:1, stepT:0 };
+}
+function aliveCount(f){
+  return f.aliens.filter(function(a){ return a.alive; }).length;
+}
+function stepInterval(alive){
+  return Math.max(0.09, 0.85 * alive/40);
+}
+function alienPos(f, a){
+  return { x: f.ox + a.col*50, y: f.oy + a.row*38 };
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, cannon, bullet, bombs, formation, shields, ufo, wave, lives, score, keys, bombT, rafId, lastTick;
+var best=+(localStorage.getItem('makenInvadersBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('wave').textContent=wave;
+  el('lives').textContent=lives;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenInvadersBest',best); }
+  el('best').textContent=best;
+}
+function makeShields(){
+  var s=[];
+  for(var i=0;i<4;i++){
+    s.push({ x:62+i*128, y:404, w:64, h:26, hp:14 });
+  }
+  return s;
+}
+function reset(){
+  playing=false;
+  wave=1; lives=3; score=0;
+  cannon={ x:W/2-19, w:38 };
+  bullet=null; bombs=[];
+  formation=makeFormation(1);
+  shields=makeShields();
+  ufo=null; bombT=0;
+  keys={};
+  hud(); draw();
+}
+function drawAlien(x, y, row, frame){
+  var colors=['#f472b6','#a78bfa','#38bdf8','#4ade80','#4ade80'];
+  ctx.fillStyle=colors[row];
+  ctx.fillRect(x+6, y+2, 24, 7);
+  ctx.fillRect(x+2, y+9, 32, 9);
+  ctx.fillRect(x+9, y+18, 5, 6);
+  ctx.fillRect(x+22, y+18, 5, 6);
+  if(frame===0){
+    ctx.fillRect(x, y+20, 6, 6); ctx.fillRect(x+30, y+20, 6, 6);
+  } else {
+    ctx.fillRect(x+4, y+22, 6, 5); ctx.fillRect(x+26, y+22, 6, 5);
+  }
+  ctx.fillStyle='#020617';
+  ctx.fillRect(x+10, y+11, 4.6, 4.6);
+  ctx.fillRect(x+21, y+11, 4.6, 4.6);
+}
+function draw(){
+  /* stars */
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  for(var i=0;i<40;i++){
+    var sx=(i*137)%W, sy=(i*89)%H;
+    ctx.fillRect(sx, sy, 1.8, 1.8);
+  }
+  /* shields */
+  shields.forEach(function(s){
+    if(s.hp<=0) return;
+    ctx.fillStyle= s.hp>7 ? '#22c55e' : s.hp>3 ? '#16a34a' : '#15803d';
+    ctx.fillRect(s.x, s.y, s.w, s.h);
+    ctx.fillStyle='#020617';
+    ctx.fillRect(s.x+8, s.y+s.h-9, 12, 9);
+    ctx.fillRect(s.x+s.w-20, s.y+s.h-9, 12, 9);
+    ctx.fillStyle='rgba(2,6,23,0.55)';
+    var holes=14-s.hp;
+    for(var hIdx=0;hIdx<holes;hIdx++){
+      ctx.fillRect(s.x+4+((hIdx*23)%(s.w-10)), s.y+3+((hIdx*11)%(s.h-8)), 6, 5);
+    }
+  });
+  /* formation */
+  var frame=Math.floor(performance.now()/400)%2;
+  formation.aliens.forEach(function(a){
+    if(!a.alive) return;
+    var p=alienPos(formation, a);
+    drawAlien(p.x, p.y, a.row, frame);
+  });
+  /* ufo */
+  if(ufo){
+    ctx.fillStyle='#ef4444';
+    ctx.beginPath(); ctx.ellipse(ufo.x, 30, 21, 8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fca5a5';
+    ctx.beginPath(); ctx.arc(ufo.x, 24, 8, Math.PI, 0); ctx.fill();
+  }
+  /* cannon */
+  ctx.fillStyle='#4ade80';
+  ctx.fillRect(cannon.x+15, 470, 8, 12);
+  ctx.fillRect(cannon.x+6, 482, 26, 8);
+  ctx.fillRect(cannon.x, 490, 38, 8);
+  /* bullet + bombs */
+  if(bullet){
+    ctx.fillStyle='#fef08a';
+    ctx.fillRect(bullet.x-1.6, bullet.y, 3.2, 11);
+  }
+  ctx.fillStyle='#f87171';
+  bombs.forEach(function(b){ ctx.fillRect(b.x-1.6, b.y, 3.2, 9); });
+  /* ground line */
+  ctx.fillStyle='#22c55e'; ctx.fillRect(0, 502, W, 2);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(lives<=0 ? '👾 EARTH HAS FALLEN' : '👾 SPACE INVADERS', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(lives<=0 ? 'Score '+score+' — press START to defend again' : 'Press START — defend Earth, wave by wave', W/2, H/2+18);
+  }
+}
+function hitShield(x, y){
+  for(var i=0;i<shields.length;i++){
+    var s=shields[i];
+    if(s.hp>0 && x>=s.x && x<=s.x+s.w && y>=s.y && y<=s.y+s.h){
+      s.hp--;
+      return true;
+    }
+  }
+  return false;
+}
+function gameOver(){
+  playing=false;
+  el('msg').textContent='👾 The invaders win this time. Final score: '+score+'.';
+  beep(130,0.3,'sawtooth',0.08);
+  hud(); draw();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  if(left) cannon.x -= 265*dt;
+  if(right) cannon.x += 265*dt;
+  cannon.x=Math.max(4, Math.min(W-cannon.w-4, cannon.x));
+  if((keys.Space || keys.__fire) && !bullet){
+    bullet={ x:cannon.x+cannon.w/2, y:468 };
+    beep(880,0.06,'square',0.045);
+  }
+  /* formation march */
+  formation.stepT += dt;
+  var alive=aliveCount(formation);
+  if(formation.stepT >= stepInterval(alive)){
+    formation.stepT=0;
+    formation.ox += formation.dir*13;
+    var minX=1e9, maxX=-1e9, maxY=0;
+    formation.aliens.forEach(function(a){
+      if(!a.alive) return;
+      var p=alienPos(formation, a);
+      minX=Math.min(minX, p.x); maxX=Math.max(maxX, p.x+36); maxY=Math.max(maxY, p.y+26);
+    });
+    if(maxX >= W-8 || minX <= 8){
+      formation.dir *= -1;
+      formation.ox += formation.dir*13;
+      formation.oy += 17;
+    }
+    if(maxY >= 466){
+      gameOver();
+      el('msg').textContent='👾 They landed! Final score: '+score+'.';
+      return;
+    }
+    beep(72+((40-alive)%4)*14, 0.05, 'sine', 0.06);
+  }
+  /* alien bombs */
+  bombT += dt;
+  if(bombT > 0.85 && bombs.length < 3){
+    bombT=0;
+    var shooters=formation.aliens.filter(function(a){ return a.alive; });
+    if(shooters.length){
+      var s=shooters[Math.floor(Math.random()*shooters.length)];
+      var p=alienPos(formation, s);
+      bombs.push({ x:p.x+18, y:p.y+26 });
+    }
+  }
+  /* bullet */
+  if(bullet){
+    bullet.y -= 520*dt;
+    if(bullet.y < 0) bullet=null;
+    else if(hitShield(bullet.x, bullet.y)) bullet=null;
+    else if(ufo && Math.abs(bullet.x-ufo.x)<22 && Math.abs(bullet.y-30)<13){
+      score+=100;
+      el('msg').textContent='🛸 UFO down! +100 bonus!';
+      beep(1200,0.14,'sine',0.07);
+      ufo=null; bullet=null;
+    } else if(bullet){
+      for(var i=0;i<formation.aliens.length;i++){
+        var a=formation.aliens[i];
+        if(!a.alive) continue;
+        var ap=alienPos(formation, a);
+        if(bullet.x>=ap.x && bullet.x<=ap.x+36 && bullet.y>=ap.y && bullet.y<=ap.y+27){
+          a.alive=false;
+          score+=pointsForRow(a.row);
+          beep(300,0.06,'square',0.055);
+          bullet=null;
+          break;
+        }
+      }
+    }
+  }
+  /* bombs */
+  bombs=bombs.filter(function(b){
+    b.y += 238*dt;
+    if(hitShield(b.x, b.y)) return false;
+    if(b.y > 470 && b.y < 500 && b.x>=cannon.x && b.x<=cannon.x+cannon.w){
+      lives--;
+      el('msg').textContent='💥 Cannon hit! '+lives+' left.';
+      beep(160,0.18,'sawtooth',0.08);
+      hud();
+      if(lives<=0){ gameOver(); return false; }
+      return false;
+    }
+    return b.y < 500;
+  });
+  if(!playing) return;
+  /* ufo spawn */
+  if(!ufo && Math.random() < dt*0.028) ufo={ x:-26, dir:1 };
+  if(ufo){
+    ufo.x += 74*dt*ufo.dir;
+    if(ufo.x > W+30) ufo=null;
+  }
+  /* wave cleared */
+  if(aliveCount(formation)===0){
+    wave++;
+    formation=makeFormation(wave);
+    bullet=null; bombs=[];
+    el('msg').textContent='🎉 Wave '+(wave-1)+' cleared! Wave '+wave+' starts lower…';
+    beep(920,0.16,'sine',0.06);
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('fireBtn','__fire');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='👾 Wave 1 — fire at will!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ pointsForRow:pointsForRow, makeFormation:makeFormation, aliveCount:aliveCount, stepInterval:stepInterval, alienPos:alienPos, ROWS:ROWS, COLS:COLS };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>

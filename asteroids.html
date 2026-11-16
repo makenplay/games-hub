@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Asteroids Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play an asteroids-style space shooter free online. Blast the rocks, split them smaller, survive the belt. Neon vector action — no download, Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#020617; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 15px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.fire { background:linear-gradient(180deg,#ef4444,#991b1b); color:#fff; }
+  .btn.thrust { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>☄️ ASTEROIDS</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">WAVE <b id="wave">1</b></div>
+  <div class="stat">🚀 <b id="lives">3</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Rotate with ◀ ▶, thrust with ⬆, fire with SPACE. Big rocks split — small rocks pay best!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn thrust" id="thrustBtn">⬆ THRUST</button>
+  <button class="btn fire" id="fireBtn">🔥 FIRE</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Large rock 20 pts · medium 50 · small 100 · the screen wraps — fly off one edge, return on the other</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Asteroids</h2>
+  <p>The neon vector classic. You are one small ship with real inertia in an endless rock field: every boulder you blast splits into faster, smaller fragments until the tiniest ones — worth the most points — pop out of existence.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Rotate with A/D or the arrow keys, thrust with W/↑ (your ship keeps drifting — tap thrust, don't hold it), and fire with SPACE. Clear every rock to advance a wave; each wave adds another large asteroid. Three ships; collisions with any rock cost one.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>True momentum physics with wrap-around space</li>
+    <li>Splitting rocks with escalating waves</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460;
+/* ---------- pure logic (testable) ---------- */
+function rockPoints(size){
+  return size===3 ? 20 : size===2 ? 50 : 100;
+}
+function makeRock(x, y, size, rnd){
+  var ang=rnd()*Math.PI*2;
+  var speed= size===3 ? 26+rnd()*30 : size===2 ? 40+rnd()*38 : 58+rnd()*46;
+  var verts=[];
+  var n=9+Math.floor(rnd()*4);
+  for(var i=0;i<n;i++) verts.push(0.72+rnd()*0.5);
+  return {
+    x:x, y:y, size:size,
+    r: size===3 ? 44 : size===2 ? 25 : 13,
+    vx: Math.cos(ang)*speed, vy: Math.sin(ang)*speed,
+    rot: rnd()*Math.PI*2, vr: (rnd()-0.5)*1.1,
+    verts: verts
+  };
+}
+function splitRock(rock, rnd){
+  if(rock.size<=1) return [];
+  return [
+    makeRock(rock.x, rock.y, rock.size-1, rnd),
+    makeRock(rock.x, rock.y, rock.size-1, rnd)
+  ];
+}
+function waveRockCount(wave){
+  return 3+wave;
+}
+function wrap(v, max){
+  if(v<0) return v+max;
+  if(v>=max) return v-max;
+  return v;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.07));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.07));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var playing, ship, bullets, rocks, wave, lives, score, keys, fireCd, invulnT, rafId, lastTick;
+var best=+(localStorage.getItem('makenAsteroidsBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('wave').textContent=wave;
+  el('lives').textContent=lives;
+  el('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('makenAsteroidsBest',best); }
+  el('best').textContent=best;
+}
+function spawnWave(){
+  rocks=[];
+  var n=waveRockCount(wave);
+  for(var i=0;i<n;i++){
+    var x, y, tries=0;
+    do {
+      x=Math.random()*W; y=Math.random()*H; tries++;
+    } while(Math.hypot(x-ship.x, y-ship.y)<130 && tries<20);
+    rocks.push(makeRock(x, y, 3, Math.random));
+  }
+}
+function resetShip(){
+  ship={ x:W/2, y:H/2, vx:0, vy:0, ang:-Math.PI/2 };
+  invulnT=2;
+}
+function reset(){
+  playing=false;
+  wave=1; lives=3; score=0;
+  bullets=[]; fireCd=0;
+  keys={};
+  resetShip();
+  spawnWave();
+  hud(); draw();
+}
+function draw(){
+  ctx.fillStyle='rgba(255,255,255,0.75)';
+  for(var i=0;i<55;i++) ctx.fillRect((i*173)%W, (i*97)%H, 1.7, 1.7);
+  /* rocks */
+  rocks.forEach(function(r){
+    ctx.save();
+    ctx.translate(r.x, r.y);
+    ctx.rotate(r.rot);
+    ctx.strokeStyle= r.size===3 ? '#94a3b8' : r.size===2 ? '#cbd5e1' : '#e2e8f0';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    var n=r.verts.length;
+    for(var i=0;i<n;i++){
+      var a=i/n*Math.PI*2, rad=r.r*r.verts[i];
+      if(i===0) ctx.moveTo(Math.cos(a)*rad, Math.sin(a)*rad);
+      else ctx.lineTo(Math.cos(a)*rad, Math.sin(a)*rad);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.restore();
+  });
+  /* bullets */
+  ctx.fillStyle='#fef08a';
+  bullets.forEach(function(b){ ctx.fillRect(b.x-1.8, b.y-1.8, 3.6, 3.6); });
+  /* ship */
+  if(!(invulnT>0 && Math.floor(performance.now()/90)%2===0)){
+    ctx.save();
+    ctx.translate(ship.x, ship.y);
+    ctx.rotate(ship.ang);
+    ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(15, 0); ctx.lineTo(-10, 9); ctx.lineTo(-6, 0); ctx.lineTo(-10, -9); ctx.closePath(); ctx.stroke();
+    if(keys.KeyW || keys.ArrowUp || keys.__thrust){
+      ctx.strokeStyle='#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(-8, 4.4); ctx.lineTo(-17-Math.random()*7, 0); ctx.lineTo(-8, -4.4); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(lives<=0 ? '☄️ SHIP DESTROYED' : '☄️ ASTEROIDS', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(lives<=0 ? 'Score '+score+' — press START to fly again' : 'Press START — clear the belt, wave by wave', W/2, H/2+18);
+  }
+}
+function shipHit(){
+  lives--;
+  el('msg').textContent='💥 Ship destroyed! '+lives+' left.';
+  beep(150,0.22,'sawtooth',0.08);
+  hud();
+  if(lives<=0){
+    playing=false;
+    el('msg').textContent='☄️ Game over. Final score: '+score+'.';
+    draw();
+    return;
+  }
+  resetShip();
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  if(invulnT>0) invulnT-=dt;
+  if(fireCd>0) fireCd-=dt;
+  var left=keys.KeyA || keys.ArrowLeft || keys.__left;
+  var right=keys.KeyD || keys.ArrowRight || keys.__right;
+  var thrust=keys.KeyW || keys.ArrowUp || keys.__thrust;
+  if(left) ship.ang -= 3.4*dt;
+  if(right) ship.ang += 3.4*dt;
+  if(thrust){
+    ship.vx += Math.cos(ship.ang)*250*dt;
+    ship.vy += Math.sin(ship.ang)*250*dt;
+  }
+  ship.vx *= Math.pow(0.42, dt);
+  ship.vy *= Math.pow(0.42, dt);
+  ship.x=wrap(ship.x + ship.vx*dt, W);
+  ship.y=wrap(ship.y + ship.vy*dt, H);
+  if((keys.Space || keys.__fire) && fireCd<=0){
+    fireCd=0.19;
+    bullets.push({ x:ship.x+Math.cos(ship.ang)*15, y:ship.y+Math.sin(ship.ang)*15, vx:Math.cos(ship.ang)*460+ship.vx*0.4, vy:Math.sin(ship.ang)*460+ship.vy*0.4, life:1.05 });
+    beep(920,0.05,'square',0.04);
+  }
+  bullets=bullets.filter(function(b){
+    b.x=wrap(b.x+b.vx*dt, W);
+    b.y=wrap(b.y+b.vy*dt, H);
+    b.life-=dt;
+    return b.life>0;
+  });
+  rocks.forEach(function(r){
+    r.x=wrap(r.x+r.vx*dt, W);
+    r.y=wrap(r.y+r.vy*dt, H);
+    r.rot+=r.vr*dt;
+  });
+  /* bullet vs rock */
+  for(var bi=bullets.length-1; bi>=0; bi--){
+    var b=bullets[bi], hit=false;
+    for(var ri=rocks.length-1; ri>=0; ri--){
+      var r=rocks[ri];
+      if(Math.hypot(b.x-r.x, b.y-r.y) < r.r*0.94){
+        score+=rockPoints(r.size);
+        beep(r.size===3 ? 200 : r.size===2 ? 280 : 380, 0.07, 'square', 0.055);
+        var kids=splitRock(r, Math.random);
+        rocks.splice(ri,1);
+        kids.forEach(function(k){ rocks.push(k); });
+        hit=true;
+        break;
+      }
+    }
+    if(hit) bullets.splice(bi,1);
+  }
+  /* ship vs rock */
+  if(invulnT<=0){
+    for(var i=0;i<rocks.length;i++){
+      if(Math.hypot(ship.x-rocks[i].x, ship.y-rocks[i].y) < rocks[i].r*0.88 + 9){
+        shipHit();
+        break;
+      }
+    }
+  }
+  if(!playing) return;
+  if(rocks.length===0){
+    wave++;
+    el('msg').textContent='🎉 Belt cleared! Wave '+wave+' — more rocks incoming.';
+    beep(940,0.15,'sine',0.06);
+    spawnWave();
+  }
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('leftBtn','__left'); holdBtn('rightBtn','__right'); holdBtn('thrustBtn','__thrust'); holdBtn('fireBtn','__fire');
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='☄️ Wave 1 — blast those rocks!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ rockPoints:rockPoints, makeRock:makeRock, splitRock:splitRock, waveRockCount:waveRockCount, wrap:wrap };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
