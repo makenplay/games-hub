@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2048 Puzzle Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play 2048 online for free. Slide the tiles, merge the numbers, reach the 2048 tile. Works on mobile and desktop.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#faf8ef; color:#776e65; font-family:'Segoe UI', Arial, sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+  header { text-align:center; margin:8px 0 2px; }
+  header h1 { font-size:34px; color:#776e65; letter-spacing:1px; }
+  header h1 span { color:#edc22e; }
+  header p { font-size:13px; color:#a89a87; margin-top:2px; }
+  .ad-slot { width:100%; max-width:728px; min-height:60px; margin:8px auto; display:flex; align-items:center; justify-content:center;
+             border:1px dashed #cdc1b4; border-radius:8px; color:#a89a87; font-size:12px; letter-spacing:2px; background:#f3eee3; overflow:hidden; }
+  .hud { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:8px 0; align-items:stretch; }
+  .hud .box { background:#bbada0; border-radius:8px; padding:6px 16px; text-align:center; min-width:84px; }
+  .hud .box b { display:block; font-size:19px; color:#fff; }
+  .hud .box span { font-size:11px; color:#eee4da; letter-spacing:1px; }
+  .hud button { background:#8f7a66; color:#f9f6f2; border:none; border-radius:8px; padding:8px 16px; font-size:14px; font-weight:700; cursor:pointer; }
+  .hud button:active { transform:scale(.97); }
+  #board { position:relative; width:min(92vw, 420px); aspect-ratio:1/1; background:#bbada0; border-radius:10px; padding:10px;
+           display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr); gap:10px; touch-action:none; }
+  .cell { background:rgba(238,228,218,.35); border-radius:6px; }
+  .tile { position:absolute; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:800;
+          transition:left .09s ease, top .09s ease; z-index:2; }
+  .tile.new { animation:pop .15s ease; }
+  @keyframes pop { 0%{ transform:scale(.4);} 100%{ transform:scale(1);} }
+  #overlay { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+             background:rgba(250,248,239,.78); border-radius:10px; text-align:center; padding:16px; z-index:5; }
+  #overlay h2 { font-size:30px; }
+  #overlay p { font-size:14px; }
+  .btn { background:#8f7a66; color:#f9f6f2; border:none; border-radius:8px; padding:11px 24px; font-size:15px; font-weight:700; cursor:pointer; }
+  .t2{background:#eee4da;color:#776e65;} .t4{background:#ede0c8;color:#776e65;} .t8{background:#f2b179;color:#f9f6f2;}
+  .t16{background:#f59563;color:#f9f6f2;} .t32{background:#f67c5f;color:#f9f6f2;} .t64{background:#f65e3b;color:#f9f6f2;}
+  .t128{background:#edcf72;color:#f9f6f2;} .t256{background:#edcc61;color:#f9f6f2;} .t512{background:#edc850;color:#f9f6f2;}
+  .t1024{background:#edc53f;color:#f9f6f2;} .t2048{background:#edc22e;color:#f9f6f2; box-shadow:0 0 18px rgba(237,194,46,.8);}
+  .tsuper{background:#3c3a32;color:#f9f6f2;}
+  footer { margin:10px 0 4px; font-size:12px; color:#a89a87; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>2048 <span>PUZZLE</span></h1>
+  <p>Slide the tiles. When two tiles with the same number touch, they merge!</p>
+</header>
+
+<!-- ADSTERRA 728 BANNER SLOT (TOP) — replace this block with the 728 banner code -->
+<div class="ad-slot" id="ad-top">AD SPACE 728×90</div>
+<!-- /ADSTERRA 728 BANNER SLOT (TOP) -->
+
+<div class="hud">
+  <div class="box"><b id="score">0</b><span>SCORE</span></div>
+  <div class="box"><b id="best">0</b><span>BEST</span></div>
+  <button id="newBtn">↻ New Game</button>
+  <button id="soundBtn">🔊 Sound</button>
+</div>
+
+<div id="board">
+  <div id="overlay">
+    <h2 id="ov-title">Game Over!</h2>
+    <p id="ov-text"></p>
+    <button class="btn" id="ovBtn">Try Again</button>
+  </div>
+</div>
+
+<!-- ADSTERRA 300 BANNER SLOT (BOTTOM) — replace this block with the 300 banner code -->
+<div class="ad-slot" id="ad-bottom" style="max-width:300px; min-height:250px;">AD SPACE 300×250</div>
+<!-- /ADSTERRA 300 BANNER SLOT (BOTTOM) -->
+
+<footer>Maken Play — free online games. Arrow keys, WASD or swipe to play.</footer>
+
+<script>
+(function(){
+  "use strict";
+  var N = 4;
+  var boardEl = document.getElementById('board');
+  var scoreEl = document.getElementById('score'), bestEl = document.getElementById('best');
+  var overlay = document.getElementById('overlay'), ovTitle = document.getElementById('ov-title'), ovText = document.getElementById('ov-text');
+  var grid, score, best, won, keepPlaying, soundOn = true;
+  best = parseInt(localStorage.getItem('g2048_best') || '0', 10) || 0;
+  bestEl.textContent = best;
+
+  var AC = null;
+  function beep(freq, dur){
+    if(!soundOn) return;
+    try{
+      if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.05, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+    }catch(e){}
+  }
+
+  // background cells
+  for(var i=0;i<N*N;i++){ var c = document.createElement('div'); c.className='cell'; boardEl.appendChild(c); }
+
+  function emptyCells(){
+    var list = [];
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++) if(!grid[y][x]) list.push({x:x,y:y});
+    return list;
+  }
+  function addRandom(){
+    var list = emptyCells(); if(!list.length) return;
+    var p = list[Math.floor(Math.random()*list.length)];
+    grid[p.y][p.x] = { v: Math.random() < 0.9 ? 2 : 4, isNew: true };
+  }
+  function setup(){
+    grid = [];
+    for(var y=0;y<N;y++){ grid.push([null,null,null,null]); }
+    score = 0; won = false; keepPlaying = false;
+    scoreEl.textContent = '0';
+    overlay.style.display = 'none';
+    addRandom(); addRandom();
+    render();
+  }
+  function tileClass(v){ return v <= 2048 ? 't'+v : 'tsuper'; }
+  function render(){
+    boardEl.querySelectorAll('.tile').forEach(function(t){ t.remove(); });
+    var bw = boardEl.clientWidth, pad = 10, gap = 10;
+    var size = (bw - pad*2 - gap*(N-1)) / N;
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++){
+      var cell = grid[y][x]; if(!cell) continue;
+      var d = document.createElement('div');
+      d.className = 'tile ' + tileClass(cell.v) + (cell.isNew ? ' new' : '');
+      d.style.width = size+'px'; d.style.height = size+'px';
+      d.style.left = (pad + x*(size+gap))+'px'; d.style.top = (pad + y*(size+gap))+'px';
+      d.style.fontSize = (cell.v < 100 ? size*0.42 : cell.v < 1000 ? size*0.34 : size*0.27) + 'px';
+      d.textContent = cell.v;
+      boardEl.appendChild(d);
+      cell.isNew = false;
+    }
+  }
+  function slideLine(line){
+    var arr = line.filter(function(c){ return c; }).map(function(c){ return c.v; });
+    var gained = 0;
+    for(var i=0;i<arr.length-1;i++){
+      if(arr[i] === arr[i+1]){ arr[i] *= 2; gained += arr[i]; arr.splice(i+1,1); if(arr[i]===2048) won = true; }
+    }
+    while(arr.length < N) arr.push(0);
+    return { arr: arr, gained: gained };
+  }
+  function gridsEqual(a, b){
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++){
+      var av = a[y][x] ? a[y][x].v : 0, bv = b[y][x] ? b[y][x].v : 0;
+      if(av !== bv) return false;
+    }
+    return true;
+  }
+  function move(dx, dy){
+    var before = grid.map(function(r){ return r.map(function(c){ return c ? {v:c.v} : null; }); });
+    var gained = 0;
+    var xs = [0,1,2,3], ys = [0,1,2,3];
+    if(dx === 1) xs.reverse(); if(dy === 1) ys.reverse();
+    var newGrid = []; for(var i=0;i<N;i++) newGrid.push([null,null,null,null]);
+    // build lines along movement axis
+    for(var a=0;a<N;a++){
+      var line = [];
+      for(var b=0;b<N;b++){
+        var x = dx !== 0 ? xs[b] : a;
+        var y = dy !== 0 ? ys[b] : a;
+        line.push(grid[y][x]);
+      }
+      var res = slideLine(line); gained += res.gained;
+      for(var b2=0;b2<N;b2++){
+        var x2 = dx !== 0 ? xs[b2] : a;
+        var y2 = dy !== 0 ? ys[b2] : a;
+        newGrid[y2][x2] = res.arr[b2] ? { v: res.arr[b2] } : null;
+      }
+    }
+    if(gridsEqual(before, newGrid)) return;
+    grid = newGrid;
+    score += gained; scoreEl.textContent = score;
+    if(score > best){ best = score; localStorage.setItem('g2048_best', String(best)); bestEl.textContent = best; }
+    if(gained > 0) beep(440 + Math.min(gained, 512), 0.07); else beep(220, 0.04);
+    addRandom(); render();
+    if(won && !keepPlaying){
+      ovTitle.textContent = '🎉 You made 2048!';
+      ovText.textContent = 'Score: ' + score + '. Keep going for a higher score?';
+      document.getElementById('ovBtn').textContent = 'Keep Playing';
+      overlay.style.display = 'flex';
+      keepPlaying = true;
+      return;
+    }
+    if(!movesAvailable()){
+      ovTitle.textContent = 'Game Over!';
+      ovText.textContent = 'Final score: ' + score + '  ·  Best: ' + best;
+      document.getElementById('ovBtn').textContent = 'Try Again';
+      overlay.style.display = 'flex';
+      beep(160, 0.3);
+    }
+  }
+  function movesAvailable(){
+    if(emptyCells().length) return true;
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++){
+      var v = grid[y][x].v;
+      if(x+1<N && grid[y][x+1].v === v) return true;
+      if(y+1<N && grid[y+1][x].v === v) return true;
+    }
+    return false;
+  }
+  document.addEventListener('keydown', function(e){
+    var k = e.key, used = true;
+    if(k==='ArrowLeft' || k==='a' || k==='A') move(-1,0);
+    else if(k==='ArrowRight' || k==='d' || k==='D') move(1,0);
+    else if(k==='ArrowUp' || k==='w' || k==='W') move(0,-1);
+    else if(k==='ArrowDown' || k==='s' || k==='S') move(0,1);
+    else used = false;
+    if(used) e.preventDefault();
+  });
+  var tx=0, ty=0;
+  boardEl.addEventListener('touchstart', function(e){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+  boardEl.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if(Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+    if(Math.abs(dx) > Math.abs(dy)) move(dx>0?1:-1, 0); else move(0, dy>0?1:-1);
+  }, {passive:true});
+  document.getElementById('newBtn').addEventListener('click', setup);
+  document.getElementById('ovBtn').addEventListener('click', function(){
+    if(ovTitle.textContent.indexOf('2048') > -1){ overlay.style.display = 'none'; }
+    else setup();
+  });
+  document.getElementById('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted'; });
+  window.addEventListener('resize', render);
+  setup();
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR SLOT — paste the Social Bar code here (just above /body) -->
+</body>
+</html>
