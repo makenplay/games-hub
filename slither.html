@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Slither Worm Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a slither.io-style worm game free online. Eat glowing orbs, grow huge, trap rival worms — never hit a body. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  canvas#cv { background:#0a0f22; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 16px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; user-select:none; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .btn.boost { background:linear-gradient(180deg,#f59e0b,#b45309); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>🐍 SLITHER WORM</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LENGTH <b id="length">10</b></div>
+  <div class="stat">KILLS <b id="kills">0</b></div>
+  <div class="stat">RANK <b id="rank">–</b></div>
+  <div class="stat">BEST <b id="best">10</b></div>
+</div>
+
+<canvas id="cv" width="640" height="460"></canvas>
+<div id="msg">Steer with the mouse or arrow keys. Eat orbs to grow — cut rivals off so THEY crash into you!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START</button>
+  <button class="btn" id="leftBtn">◀</button>
+  <button class="btn boost" id="boostBtn">⚡ BOOST</button>
+  <button class="btn" id="rightBtn">▶</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Boost (hold) burns length for speed · a dead worm drops all its orbs · the red edge of the arena is death</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Slither Worm</h2>
+  <p>The arena worm phenomenon. You start tiny in a dark field of glowing food, sharing the space with rival worms. Every orb makes you longer; every rival who crashes into your body bursts into a feast of orbs. Grow to rule the leaderboard — but one touch of your head on any body, including your own, ends it.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Steer with the mouse, touch, or arrow keys. Eat the glowing orbs to grow. Hold BOOST (or the ⚡ button) for a burst of speed that slowly burns your length — perfect for cutting across a rival's path so they crash into you. Avoid every body and the red arena edge.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>6 AI rival worms that hunt orbs and die into feasts</li>
+    <li>Boost mechanics and a live size leaderboard rank</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var W=640, H=460, WORLD=1500;
+/* ---------- pure logic (testable) ---------- */
+function wormRadius(length){
+  return Math.min(15, 6 + length*0.055);
+}
+function growBy(foodValue){
+  return foodValue; /* length units per orb */
+}
+function hitsBody(head, bodyPoints, selfSkip){
+  for(var i=selfSkip;i<bodyPoints.length;i++){
+    var p=bodyPoints[i];
+    if(Math.hypot(head.x-p.x, head.y-p.y) < 11) return true;
+  }
+  return false;
+}
+function rankOf(worms, me){
+  var bigger=worms.filter(function(w){ return w!==me && w.alive && w.targetLen > me.targetLen; }).length;
+  return bigger+1;
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var PALETTE=['#4ade80','#f87171','#60a5fa','#facc15','#c084fc','#fb923c','#2dd4bf'];
+var playing, worms, orbs, camX, camY, kills, mouseAng, useMouse, keys, rafId, lastTick;
+var best=+(localStorage.getItem('makenSlitherBest')||10);
+el('best').textContent=best;
+function hud(){
+  var me=worms[0];
+  el('length').textContent=Math.floor(me.targetLen);
+  el('kills').textContent=kills;
+  el('rank').textContent='#'+rankOf(worms, me)+' / '+worms.filter(function(w){ return w.alive; }).length;
+  if(me.targetLen>best){ best=Math.floor(me.targetLen); localStorage.setItem('makenSlitherBest', best); }
+  el('best').textContent=best;
+}
+function makeWorm(x, y, color, isPlayer){
+  var pts=[];
+  for(var i=0;i<26;i++) pts.push({ x:x-i*4.4, y:y });
+  return {
+    pts:pts, ang:0, targetLen: 10 + Math.random()*6, color:color,
+    alive:true, isPlayer:!!isPlayer, aiT:0, wantAng:0, boost:false, name: isPlayer ? 'You' : 'Worm'
+  };
+}
+function spawnOrb(x, y, big){
+  orbs.push({ x: x!==undefined ? x : Math.random()*WORLD, y: y!==undefined ? y : Math.random()*WORLD, r: big ? 5.4 : 3.1, v: big ? 2.6 : 1, hue: Math.floor(Math.random()*360) });
+}
+function reset(){
+  playing=false;
+  worms=[makeWorm(WORLD/2, WORLD/2, PALETTE[0], true)];
+  for(var i=1;i<7;i++){
+    worms.push(makeWorm(200+Math.random()*(WORLD-400), 200+Math.random()*(WORLD-400), PALETTE[i], false));
+  }
+  orbs=[];
+  for(var j=0;j<240;j++) spawnOrb();
+  kills=0;
+  keys={}; useMouse=false; mouseAng=0;
+  camX=worms[0].pts[0].x - W/2;
+  camY=worms[0].pts[0].y - H/2;
+  hud(); draw();
+}
+function wormHead(w){ return w.pts[0]; }
+function drawWorm(w){
+  var r=wormRadius(w.targetLen);
+  for(var i=w.pts.length-1;i>=0;i-=2){
+    var p=w.pts[i];
+    var sx=p.x-camX, sy=p.y-camY;
+    if(sx<-30 || sx>W+30 || sy<-30 || sy>H+30) continue;
+    ctx.fillStyle=w.color;
+    ctx.beginPath(); ctx.arc(sx, sy, r*(i===0 ? 1.06 : 1), 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.14)';
+    ctx.beginPath(); ctx.arc(sx, sy, r*0.62, 0, Math.PI*2); ctx.fill();
+  }
+  var h=wormHead(w), hx=h.x-camX, hy=h.y-camY;
+  if(hx>-30 && hx<W+30 && hy>-30 && hy<H+30){
+    var ex=Math.cos(w.ang), ey=Math.sin(w.ang);
+    var pxn=-ey, pyn=ex;
+    [-1,1].forEach(function(s){
+      var eyeX=hx + ex*r*0.42 + pxn*s*r*0.44;
+      var eyeY=hy + ey*r*0.42 + pyn*s*r*0.44;
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(eyeX, eyeY, r*0.3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#111827';
+      ctx.beginPath(); ctx.arc(eyeX + ex*1.7, eyeY + ey*1.7, r*0.16, 0, Math.PI*2); ctx.fill();
+    });
+    if(w.isPlayer){
+      ctx.fillStyle='#fff'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+      ctx.fillText('YOU', hx, hy-r-6);
+    }
+  }
+}
+function draw(){
+  /* arena boundary */
+  ctx.strokeStyle='rgba(239,68,68,0.85)'; ctx.lineWidth=4;
+  ctx.strokeRect(-camX, -camY, WORLD, WORLD);
+  ctx.fillStyle='rgba(255,255,255,0.05)';
+  for(var gx=0; gx<=WORLD; gx+=46){
+    var wx=Math.floor((camX+gx)/46)*46;
+    ctx.fillRect(wx-camX, 0, 1.4, H);
+  }
+  /* orbs */
+  orbs.forEach(function(o){
+    var sx=o.x-camX, sy=o.y-camY;
+    if(sx<-10 || sx>W+10 || sy<-10 || sy>H+10) return;
+    ctx.fillStyle='hsl('+o.hue+', 90%, 65%)';
+    ctx.beginPath(); ctx.arc(sx, sy, o.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.arc(sx, sy, o.r*0.45, 0, Math.PI*2); ctx.fill();
+  });
+  worms.forEach(function(w){ if(w.alive) drawWorm(w); });
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.62)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText(worms[0].alive ? '🐍 SLITHER WORM' : '💀 WORM DOWN!', W/2, H/2-10);
+    ctx.font='15px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(worms[0].alive ? 'Press START — eat, grow, dominate' : 'Length reached: '+Math.floor(worms[0].targetLen)+' — press START again', W/2, H/2+18);
+  }
+}
+function killWorm(w, byPlayer){
+  w.alive=false;
+  for(var i=0;i<w.pts.length;i+=3){
+    spawnOrb(w.pts[i].x + (Math.random()*14-7), w.pts[i].y + (Math.random()*14-7), i%6===0);
+  }
+  if(w.isPlayer){
+    playing=false;
+    el('msg').textContent='💀 You crashed! Final length: '+Math.floor(w.targetLen)+', kills: '+kills+'.';
+    beep(130,0.28,'sawtooth',0.08);
+    hud(); draw();
+  } else {
+    if(byPlayer){
+      kills++;
+      el('msg').textContent='⚔️ A rival crashed into you — feast time! Kills: '+kills+'.';
+    }
+    beep(320,0.1,'sawtooth',0.05);
+    setTimeout(function(){
+      if(worms.indexOf(w)>=0 && !w.alive){
+        var nw=makeWorm(150+Math.random()*(WORLD-300), 150+Math.random()*(WORLD-300), w.color, false);
+        worms[worms.indexOf(w)]=nw;
+      }
+    }, 3500);
+  }
+}
+function stepWorm(w, dt){
+  var head=wormHead(w);
+  /* steering */
+  if(w.isPlayer){
+    var want=null;
+    if(useMouse) want=mouseAng;
+    if(keys.ArrowLeft || keys.KeyA) w.ang -= 3.6*dt;
+    if(keys.ArrowRight || keys.KeyD) w.ang += 3.6*dt;
+    if(want!==null){
+      var d=((want - w.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+      w.ang += Math.max(-3.9*dt, Math.min(3.9*dt, d));
+    }
+    w.boost = !!(keys.ShiftLeft || keys.ShiftRight || keys.__boost || keys.Space);
+  } else {
+    w.aiT -= dt;
+    if(w.aiT<=0){
+      w.aiT=0.3+Math.random()*0.5;
+      /* seek nearest orb, avoid edges */
+      var bestOrb=null, bd=1e12;
+      orbs.forEach(function(o){
+        var dd=(o.x-head.x)*(o.x-head.x)+(o.y-head.y)*(o.y-head.y);
+        if(dd<bd){ bd=dd; bestOrb=o; }
+      });
+      if(bestOrb) w.wantAng=Math.atan2(bestOrb.y-head.y, bestOrb.x-head.x);
+      if(head.x<130) w.wantAng=0;
+      if(head.x>WORLD-130) w.wantAng=Math.PI;
+      if(head.y<130) w.wantAng=Math.PI/2;
+      if(head.y>WORLD-130) w.wantAng=-Math.PI/2;
+    }
+    var d2=((w.wantAng - w.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    w.ang += Math.max(-2.9*dt, Math.min(2.9*dt, d2));
+    w.boost=false;
+  }
+  var speed=118;
+  if(w.boost && w.targetLen>12){
+    speed=196;
+    w.targetLen=Math.max(10, w.targetLen - dt*1.5);
+  }
+  var nx=head.x + Math.cos(w.ang)*speed*dt;
+  var ny=head.y + Math.sin(w.ang)*speed*dt;
+  /* arena edge */
+  if(nx<12 || nx>WORLD-12 || ny<12 || ny>WORLD-12){
+    killWorm(w, false);
+    return;
+  }
+  w.pts.unshift({ x:nx, y:ny });
+  /* trim to length: points spaced ~4.4 units; keep targetLen*2.4 points */
+  var keep=Math.floor(w.targetLen*2.4);
+  while(w.pts.length>keep) w.pts.pop();
+  /* eat orbs */
+  for(var i=orbs.length-1;i>=0;i--){
+    var o=orbs[i];
+    if(Math.hypot(nx-o.x, ny-o.y) < wormRadius(w.targetLen)+o.r+2){
+      w.targetLen += growBy(o.v)*0.62;
+      orbs.splice(i,1);
+      if(w.isPlayer) beep(880+Math.random()*260, 0.04, 'sine', 0.035);
+      if(orbs.length<230) spawnOrb();
+    }
+  }
+  /* body collisions */
+  var newHead={ x:nx, y:ny };
+  for(var j=0;j<worms.length;j++){
+    var other=worms[j];
+    if(!other.alive) continue;
+    if(other===w){
+      if(hitsBody(newHead, w.pts, 14)){ killWorm(w, false); return; }
+    } else {
+      if(hitsBody(newHead, other.pts, 0)){ killWorm(w, other.isPlayer); return; }
+    }
+  }
+}
+function loop(ts){
+  if(!playing) return;
+  var dt=Math.min(0.033, (ts-lastTick)/1000 || 0.016);
+  lastTick=ts;
+  worms.slice().forEach(function(w){ if(w.alive) stepWorm(w, dt); });
+  if(!playing) return;
+  var me=worms[0];
+  camX += ((me.pts[0].x - W/2) - camX)*Math.min(1, dt*6);
+  camY += ((me.pts[0].y - H/2) - camY)*Math.min(1, dt*6);
+  hud(); draw();
+  if(playing) rafId=requestAnimationFrame(loop);
+}
+cvs.addEventListener('mousemove', function(e){
+  var r=cvs.getBoundingClientRect();
+  var mx=(e.clientX-r.left)*(W/r.width), my=(e.clientY-r.top)*(H/r.height);
+  var me=worms[0].pts[0];
+  mouseAng=Math.atan2((camY+my)-me.y, (camX+mx)-me.x);
+  useMouse=true;
+});
+cvs.addEventListener('touchmove', function(e){
+  var r=cvs.getBoundingClientRect();
+  var mx=(e.touches[0].clientX-r.left)*(W/r.width), my=(e.touches[0].clientY-r.top)*(H/r.height);
+  var me=worms[0].pts[0];
+  mouseAng=Math.atan2((camY+my)-me.y, (camX+mx)-me.x);
+  useMouse=true;
+}, {passive:true});
+document.addEventListener('keydown', function(e){
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].indexOf(e.code)>=0) e.preventDefault();
+});
+document.addEventListener('keyup', function(e){ keys[e.code]=false; });
+keys={};
+function holdBtn(id, prop){
+  var b=el(id);
+  var on=function(e){ keys[prop]=true; e.preventDefault(); };
+  var off=function(){ keys[prop]=false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);
+  b.addEventListener('mousedown', on);
+  b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+}
+holdBtn('boostBtn','__boost');
+el('leftBtn').addEventListener('click', function(){ if(worms) worms[0].ang -= 0.5; });
+el('rightBtn').addEventListener('click', function(){ if(worms) worms[0].ang += 0.5; });
+el('startBtn').addEventListener('click', function(){
+  cancelAnimationFrame(rafId);
+  reset();
+  playing=true; lastTick=performance.now();
+  el('msg').textContent='🐍 Eat and grow!';
+  rafId=requestAnimationFrame(loop);
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ wormRadius:wormRadius, growBy:growBy, hitsBody:hitsBody, rankOf:rankOf, WORLD:WORLD };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
