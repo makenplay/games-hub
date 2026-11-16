@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jewel Quest Match-3 Game — Play Free Online | Maken Play</title>
+<meta name="description" content="Play a jewel match-3 quest free online. Swap gems, chain cascades, beat the score target before your moves run out. No download — Maken Play.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#070b18; color:#e8ecf8; font-family:'Segoe UI', Arial, sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  .brand { padding:10px 0 2px; font-size:14px; letter-spacing:3px; color:#7dd3fc; font-weight:700; }
+  .brand b { color:#f472b6; }
+  h1 { font-size:clamp(22px,4.5vw,32px); font-weight:900; margin:2px 0 4px; }
+  .hud { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0; }
+  .stat { background:#0e1530; border:1px solid #26335f; border-radius:8px; padding:5px 13px; font-size:12.5px; color:#9aa7c7; }
+  .stat b { color:#fff; font-size:15px; }
+  .goalwrap { width:min(448px,94vw); height:13px; background:#111a33; border:1px solid #26335f; border-radius:7px; overflow:hidden; margin:2px 0; }
+  .goalwrap i { display:block; height:100%; background:linear-gradient(90deg,#a855f7,#ec4899); transition:width .2s; }
+  canvas#cv { background:#150a2e; border:2px solid #26335f; border-radius:12px; display:block; touch-action:none; max-width:94vw; height:auto; }
+  #msg { min-height:20px; font-size:14px; color:#fbbf24; font-weight:700; text-align:center; padding:4px 8px; }
+  .row { display:flex; gap:8px; justify-content:center; padding:2px 0 8px; flex-wrap:wrap; }
+  .btn { padding:11px 18px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; background:#1e2a4a; color:#dbe6ff; }
+  .btn:active { transform:scale(.95); }
+  .btn.primary { background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; }
+  .keys { font-size:12px; color:#5b6b96; text-align:center; padding:2px 10px 10px; }
+  .topnav { text-align:center; margin:2px 0 4px; font-size:13px; }
+  .topnav a { color:#7dd3fc; text-decoration:none; font-weight:700; background:#0e1530; border:1px solid #26335f; padding:5px 14px; border-radius:20px; display:inline-block; }
+  .proinfo { max-width:680px; width:94vw; margin:14px auto 4px; background:#0e1530; border:1px solid #26335f; border-radius:12px; padding:16px 20px; text-align:left; }
+  .proinfo h2 { font-size:19px; color:#fff; margin-bottom:6px; }
+  .proinfo h3 { font-size:15px; color:#7dd3fc; margin:12px 0 4px; }
+  .proinfo p, .proinfo li { font-size:13.5px; color:#b9c4de; line-height:1.55; }
+  .proinfo ul { margin-left:18px; }
+  .backbtn { display:inline-block; margin-top:14px; padding:9px 18px; background:linear-gradient(90deg,#0ea5e9,#8b5cf6); color:#fff; font-weight:700; font-size:13.5px; border-radius:9px; text-decoration:none; }
+  .profoot { text-align:center; font-size:12px; color:#5b6b96; padding:8px 10px 16px; }
+  .profoot a { color:#7dd3fc; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="brand">🎮 <b>MAKEN</b> PLAY</div>
+<div class="topnav"><a href="index.html">← 🎮 All Games</a></div>
+<h1>💎 JEWEL QUEST</h1>
+
+<!-- ADSTERRA 728x90 SLOT (TOP) -->
+<div id="ad-top" style="max-width:728px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ea794a13afc3ce881e981b731e799a5d',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ea794a13afc3ce881e981b731e799a5d"></script>
+</div>
+<!-- /ADSTERRA 728x90 SLOT -->
+
+<div class="hud">
+  <div class="stat">LEVEL <b id="level">1</b></div>
+  <div class="stat">SCORE <b id="score">0</b></div>
+  <div class="stat">🎯 TARGET <b id="target">600</b></div>
+  <div class="stat">MOVES <b id="moves">25</b></div>
+  <div class="stat">BEST <b id="best">0</b></div>
+</div>
+<div class="goalwrap"><i id="goalBar" style="width:0%"></i></div>
+
+<canvas id="cv" width="448" height="448"></canvas>
+<div id="msg">Tap a gem, then tap a neighbour to swap. Match 3+ to score — reach the target before the moves run out!</div>
+<div class="row">
+  <button class="btn primary" id="startBtn">▶ START LEVEL</button>
+  <button class="btn" id="hintBtn">💡 HINT</button>
+  <button class="btn" id="soundBtn">🔊</button>
+</div>
+<div class="keys">Match 4 = line blast · match 5 = rainbow bomb · cascades multiply your points · every level: higher target, same 25 moves</div>
+
+<!-- MAKEN PLAY PRO INFO -->
+<div class="proinfo">
+  <h2>About Jewel Quest</h2>
+  <p>A match-3 with stakes: every level gives you 25 moves to hit a rising score target. Swap gems to line up rubies, sapphires, emeralds and more; matches of four fire a line blast, fives forge a rainbow bomb, and chain cascades multiply everything.</p>
+  <h3>🎯 How to Play</h3>
+  <p>Tap a gem, then tap an adjacent gem to swap them (or swipe). Only swaps that make a match of 3 or more count — anything else swaps back free. Clear gems to score; the purple bar tracks your target. Run out of moves below the target and the quest ends. Use HINT when you're stuck — it costs 30 points.</p>
+  <h3>⭐ Features</h3>
+  <ul>
+    <li>Endless level ladder with rising targets and move pressure</li>
+    <li>Line blasts, rainbow bombs and cascade multipliers</li>
+    <li>Free to play on mobile and PC — no download, no sign-up</li>
+  </ul>
+  <a class="backbtn" href="index.html">← 🎮 Play More Games at Maken Play</a>
+</div>
+<div class="profoot">🎮 <a href="index.html">Maken Play</a> — free online games. New games added regularly.</div>
+
+<!-- ADSTERRA 300x250 SLOT (BOTTOM) -->
+<div id="ad-bottom" style="max-width:300px;margin:6px auto;text-align:center;">
+<script>
+  atOptions = {
+    'key' : 'ce1c8062fa346c83841a797adf119e69',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bicea.org/22/ce1c8062fa346c83841a797adf119e69"></script>
+</div>
+<!-- /ADSTERRA 300x250 SLOT -->
+
+<script>
+(function(){
+"use strict";
+var N=8, CELL=56, TYPES=6;
+/* gem types: 0 ruby, 1 sapphire, 2 emerald, 3 topaz, 4 amethyst, 5 pearl; 6 = rainbow bomb */
+var COLORS=['#ef4444','#3b82f6','#22c55e','#facc15','#a855f7','#f8fafc'];
+var GLYPHS=['♦','💧','🍀','⭐','🔮','⚪'];
+/* ---------- pure logic (testable) ---------- */
+function findMatches(board){
+  var matched=new Set();
+  var r, c, len, k;
+  for(r=0;r<N;r++){
+    c=0;
+    while(c<N){
+      var v=board[r][c];
+      if(v<0){ c++; continue; }
+      len=1;
+      while(c+len<N && board[r][c+len]===v) len++;
+      if(len>=3) for(k=0;k<len;k++) matched.add(r*N+c+k);
+      c+=len;
+    }
+  }
+  for(c=0;c<N;c++){
+    r=0;
+    while(r<N){
+      var v2=board[r][c];
+      if(v2<0){ r++; continue; }
+      len=1;
+      while(r+len<N && board[r+len][c]===v2) len++;
+      if(len>=3) for(k=0;k<len;k++) matched.add((r+k)*N+c);
+      r+=len;
+    }
+  }
+  return matched;
+}
+function findRuns(board){
+  /* runs of >=4 for special-gem creation */
+  var runs=[];
+  var r, c, len, k;
+  for(r=0;r<N;r++){
+    c=0;
+    while(c<N){
+      var v=board[r][c];
+      if(v<0){ c++; continue; }
+      len=1;
+      while(c+len<N && board[r][c+len]===v) len++;
+      if(len>=4){ var cells=[]; for(k=0;k<len;k++) cells.push([r, c+k]); runs.push({ cells:cells, len:len, horiz:true }); }
+      c+=len;
+    }
+  }
+  for(c=0;c<N;c++){
+    r=0;
+    while(r<N){
+      var v2=board[r][c];
+      if(v2<0){ r++; continue; }
+      len=1;
+      while(r+len<N && board[r+len][c]===v2) len++;
+      if(len>=4){ var cells2=[]; for(k=0;k<len;k++) cells2.push([r+k, c]); runs.push({ cells:cells2, len:len, horiz:false }); }
+      r+=len;
+    }
+  }
+  return runs;
+}
+function hasMove(board){
+  function swapped(r1, c1, r2, c2){
+    if(r2<0 || c2<0 || r2>=N || c2>=N) return false;
+    var t=board[r1][c1]; board[r1][c1]=board[r2][c2]; board[r2][c2]=t;
+    var ok=findMatches(board).size>0;
+    t=board[r1][c1]; board[r1][c1]=board[r2][c2]; board[r2][c2]=t;
+    return ok;
+  }
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    if(swapped(r, c, r, c+1) || swapped(r, c, r+1, c)) return true;
+  }
+  return false;
+}
+function targetForLevel(level){
+  return 600 + (level-1)*450;
+}
+function pointsFor(count, chain){
+  return count*10*chain + (count>3 ? (count-3)*15*chain : 0);
+}
+
+/* ---------- audio ---------- */
+var audioCtx=null, soundOn=true;
+function beep(f,d,type,g){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(), gn=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    gn.gain.value=g||0.05; gn.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(d||0.06));
+    o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+(d||0.06));
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+var cvs=document.getElementById('cv'), ctx=cvs.getContext('2d');
+var el=function(id){ return document.getElementById(id); };
+var board, specials, level, score, moves, playing, busy, selected, hintCell;
+var best=+(localStorage.getItem('makenJewelBest')||0);
+el('best').textContent=best;
+function hud(){
+  el('level').textContent=level;
+  el('score').textContent=score;
+  el('target').textContent=targetForLevel(level);
+  el('moves').textContent=moves;
+  el('goalBar').style.width=Math.min(100, score/targetForLevel(level)*100)+'%';
+  if(score>best){ best=score; localStorage.setItem('makenJewelBest', best); }
+  el('best').textContent=best;
+}
+function randomGem(){
+  return Math.floor(Math.random()*TYPES);
+}
+function newBoard(){
+  board=[];
+  specials={};
+  for(var r=0;r<N;r++){
+    board.push([]);
+    for(var c=0;c<N;c++){
+      var v;
+      do { v=randomGem(); }
+      while((c>=2 && board[r][c-1]===v && board[r][c-2]===v) || (r>=2 && board[r-1][c]===v && board[r-2][c]===v));
+      board[r].push(v);
+    }
+  }
+  if(!hasMove(board)) newBoard();
+}
+function reset(){
+  playing=false; busy=false;
+  level=1; score=0; moves=25;
+  selected=null; hintCell=null;
+  newBoard();
+  hud(); draw();
+}
+function drawGem(r, c){
+  var x=c*CELL, y=r*CELL;
+  var v=board[r][c];
+  ctx.fillStyle= (r+c)%2===0 ? '#1d1140' : '#170c33';
+  ctx.fillRect(x, y, CELL, CELL);
+  if(v<0) return;
+  var cx=x+CELL/2, cy=y+CELL/2;
+  if(v===6){
+    var grad=ctx.createRadialGradient(cx, cy, 2, cx, cy, 19);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(0.5, '#f472b6');
+    grad.addColorStop(1, '#7c3aed');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='15px Arial'; ctx.textAlign='center';
+    ctx.fillText('💣', cx, cy+5.4);
+    return;
+  }
+  ctx.fillStyle=COLORS[v];
+  ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  /* diamond cut */
+  ctx.moveTo(cx, cy-17);
+  ctx.lineTo(cx+14, cy-5);
+  ctx.lineTo(cx+9, cy+16);
+  ctx.lineTo(cx-9, cy+16);
+  ctx.lineTo(cx-14, cy-5);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy-17); ctx.lineTo(cx+14, cy-5); ctx.lineTo(cx-14, cy-5); ctx.closePath(); ctx.fill();
+  var key=r*N+c;
+  if(specials[key]==='row'){
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+    ctx.fillText('↔', cx, cy+16);
+  } else if(specials[key]==='col'){
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+    ctx.fillText('↕', cx, cy+16);
+  }
+  if(selected && selected[0]===r && selected[1]===c){
+    ctx.strokeStyle='#facc15'; ctx.lineWidth=3.2;
+    ctx.strokeRect(x+2, y+2, CELL-4, CELL-4);
+  }
+  if(hintCell && hintCell[0]===r && hintCell[1]===c){
+    ctx.strokeStyle='#22d3ee'; ctx.lineWidth=3;
+    ctx.strokeRect(x+3, y+3, CELL-6, CELL-6);
+  }
+}
+function draw(){
+  ctx.fillStyle='#150a2e'; ctx.fillRect(0, 0, 448, 448);
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) drawGem(r, c);
+  if(!playing){
+    ctx.fillStyle='rgba(7,11,24,0.55)'; ctx.fillRect(0, 0, 448, 448);
+    ctx.fillStyle='#fff'; ctx.font='bold 23px Arial'; ctx.textAlign='center';
+    var wonLevel= score>=targetForLevel(level);
+    ctx.fillText(moves<=0 && !wonLevel ? '💔 QUEST FAILED' : level>1 || score>0 ? '💎 LEVEL '+(wonLevel ? level+' CLEAR!' : level) : '💎 JEWEL QUEST', 224, 210);
+    ctx.font='14.5px Arial'; ctx.fillStyle='#fbbf24';
+    ctx.fillText(moves<=0 && !wonLevel ? 'Target missed — press START LEVEL to retry' : wonLevel && moves<=0 ? 'Press START LEVEL for level '+(level+1) : 'Press START LEVEL — 25 moves, target '+targetForLevel(level), 224, 238);
+  }
+}
+function collapseAndRefill(){
+  for(var c=0;c<N;c++){
+    var write=N-1;
+    for(var r=N-1;r>=0;r--){
+      if(board[r][c]>=0){
+        board[write][c]=board[r][c];
+        if(specials[r*N+c]){ specials[write*N+c]=specials[r*N+c]; delete specials[r*N+c]; }
+        if(write!==r) board[r][c]=-1;
+        write--;
+      }
+    }
+    for(var r2=write;r2>=0;r2--) board[r2][c]=randomGem();
+  }
+}
+function resolveBoard(firstMove){
+  busy=true;
+  var chain=0;
+  function step(){
+    var runs=findRuns(board);
+    var matched=findMatches(board);
+    if(matched.size===0){
+      busy=false;
+      afterResolve(firstMove);
+      return;
+    }
+    chain++;
+    /* create specials from runs of 4/5 on the first chain only */
+    var reserved=new Set();
+    if(chain===1){
+      runs.forEach(function(run){
+        var keep=run.cells[Math.floor(run.cells.length/2)];
+        if(run.len>=5){
+          board[keep[0]][keep[1]]=6;
+          reserved.add(keep[0]*N+keep[1]);
+          delete specials[keep[0]*N+keep[1]];
+        } else {
+          specials[keep[0]*N+keep[1]]= run.horiz ? 'row' : 'col';
+          reserved.add(keep[0]*N+keep[1]);
+        }
+      });
+    }
+    /* expand with special effects */
+    var toClear=new Set(matched);
+    matched.forEach(function(idx){
+      var r=Math.floor(idx/N), c=idx%N;
+      if(specials[idx]==='row'){ for(var cc=0;cc<N;cc++) toClear.add(r*N+cc); }
+      if(specials[idx]==='col'){ for(var rr=0;rr<N;rr++) toClear.add(rr*N+c); }
+      if(board[r][c]===6){ for(var cc2=0;cc2<N;cc2++){ toClear.add(r*N+cc2); } for(var rr2=0;rr2<N;rr2++){ toClear.add(rr2*N+c); } }
+    });
+    reserved.forEach(function(idx){ toClear.delete(idx); });
+    var gained=pointsFor(toClear.size, chain);
+    score+=gained;
+    toClear.forEach(function(idx){
+      board[Math.floor(idx/N)][idx%N]=-1;
+      delete specials[idx];
+    });
+    beep(500+chain*90, 0.07, 'sine', 0.05);
+    hud(); draw();
+    setTimeout(function(){
+      collapseAndRefill();
+      hud(); draw();
+      setTimeout(step, 60);
+    }, 170);
+  }
+  step();
+}
+function afterResolve(wasMove){
+  if(wasMove){
+    if(score>=targetForLevel(level) && moves>0){
+      /* allow finishing the level early once target reached at moves end; check end */
+    }
+    if(moves<=0){
+      playing=false;
+      if(score>=targetForLevel(level)){
+        el('msg').textContent='🎉 Level '+level+' cleared with '+score+' points! Starting level '+(level+1)+'…';
+        beep(1180,0.18,'sine',0.06);
+        level++;
+        moves=25;
+        score=0;
+        newBoard();
+        playing=true;
+      } else {
+        el('msg').textContent='💔 Out of moves at '+score+' / '+targetForLevel(level)+'. The quest ends at level '+level+'.';
+        beep(150,0.26,'sawtooth',0.07);
+      }
+    } else if(!hasMove(board)){
+      el('msg').textContent='🔀 No moves left on the board — shuffling (free)!';
+      newBoard();
+    }
+  }
+  hud(); draw();
+}
+function trySwap(r1, c1, r2, c2){
+  if(busy || !playing) return;
+  if(r2<0 || c2<0 || r2>=N || c2>=N) return;
+  if(Math.abs(r1-r2)+Math.abs(c1-c2)!==1) return;
+  var t=board[r1][c1]; board[r1][c1]=board[r2][c2]; board[r2][c2]=t;
+  var ts=specials[r1*N+c1]; specials[r1*N+c1]=specials[r2*N+c2]; specials[r2*N+c2]=ts;
+  if(specials[r1*N+c1]===undefined) delete specials[r1*N+c1];
+  if(specials[r2*N+c2]===undefined) delete specials[r2*N+c2];
+  /* rainbow bomb swap = always valid */
+  var bombSwap= board[r1][c1]===6 || board[r2][c2]===6;
+  if(findMatches(board).size>0 || bombSwap){
+    moves--;
+    hintCell=null;
+    if(bombSwap && findMatches(board).size===0){
+      /* detonate the bomb: clear its row+col */
+      var br= board[r1][c1]===6 ? r1 : r2, bc= board[r1][c1]===6 ? c1 : c2;
+      for(var cc=0;cc<N;cc++) board[br][cc]=-1;
+      for(var rr=0;rr<N;rr++) board[rr][bc]=-1;
+      score+=pointsFor(15, 1);
+      beep(300,0.16,'sawtooth',0.06);
+      hud(); draw();
+      busy=true;
+      setTimeout(function(){ collapseAndRefill(); resolveBoard(true); }, 180);
+    } else {
+      resolveBoard(true);
+    }
+  } else {
+    t=board[r1][c1]; board[r1][c1]=board[r2][c2]; board[r2][c2]=t;
+    ts=specials[r1*N+c1]; specials[r1*N+c1]=specials[r2*N+c2]; specials[r2*N+c2]=ts;
+    if(specials[r1*N+c1]===undefined) delete specials[r1*N+c1];
+    if(specials[r2*N+c2]===undefined) delete specials[r2*N+c2];
+    el('msg').textContent='💎 That swap makes no match — try another.';
+    beep(180,0.07,'sawtooth',0.045);
+  }
+  hud(); draw();
+}
+function cellFromEvent(e){
+  var r=cvs.getBoundingClientRect();
+  var x=(e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var y=(e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  return [Math.floor(y*(448/r.height)/CELL), Math.floor(x*(448/r.width)/CELL)];
+}
+cvs.addEventListener('mousedown', function(e){
+  if(!playing || busy) return;
+  var cell=cellFromEvent(e);
+  if(cell[0]<0 || cell[0]>=N || cell[1]<0 || cell[1]>=N) return;
+  hintCell=null;
+  if(!selected){ selected=cell; draw(); return; }
+  if(selected[0]===cell[0] && selected[1]===cell[1]){ selected=null; draw(); return; }
+  trySwap(selected[0], selected[1], cell[0], cell[1]);
+  selected=null;
+});
+cvs.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  if(!playing || busy) return;
+  var cell=cellFromEvent(e);
+  if(cell[0]<0 || cell[0]>=N || cell[1]<0 || cell[1]>=N) return;
+  hintCell=null;
+  if(!selected){ selected=cell; draw(); return; }
+  if(selected[0]===cell[0] && selected[1]===cell[1]){ selected=null; draw(); return; }
+  trySwap(selected[0], selected[1], cell[0], cell[1]);
+  selected=null;
+}, {passive:false});
+el('hintBtn').addEventListener('click', function(){
+  if(!playing || busy) return;
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var dirs=[[0,1],[1,0]];
+    for(var d=0;d<2;d++){
+      var r2=r+dirs[d][0], c2=c+dirs[d][1];
+      if(r2>=N || c2>=N) continue;
+      var t=board[r][c]; board[r][c]=board[r2][c2]; board[r2][c2]=t;
+      var ok=findMatches(board).size>0;
+      t=board[r][c]; board[r][c]=board[r2][c2]; board[r2][c2]=t;
+      if(ok){
+        hintCell=[r, c];
+        score=Math.max(0, score-30);
+        el('msg').textContent='💡 Try the glowing gem (-30 pts).';
+        hud(); draw();
+        return;
+      }
+    }
+  }
+  el('msg').textContent='💡 No moves found — the board will shuffle.';
+});
+el('startBtn').addEventListener('click', function(){
+  reset();
+  playing=true;
+  el('msg').textContent='💎 Level 1 — reach '+targetForLevel(1)+' in 25 moves!';
+  hud(); draw();
+});
+el('soundBtn').addEventListener('click', function(){ soundOn=!soundOn; this.textContent = soundOn ? '🔊' : '🔇'; });
+reset();
+if(typeof module!=='undefined') module.exports={ findMatches:findMatches, findRuns:findRuns, hasMove:hasMove, targetForLevel:targetForLevel, pointsFor:pointsFor, N:N };
+})();
+</script>
+<!-- ADSTERRA SOCIAL BAR (Maken Play Zone) -->
+<script data-cfasync="false" src="https://bicea.org/14/3af3e40d6d282b555dec95c3e059be7e"></script>
+</body>
+</html>
