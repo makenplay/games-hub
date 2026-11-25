@@ -324,7 +324,7 @@ function beep(f,d,type,g){
   }catch(e){}
 }
 var el=function(id){ return document.getElementById(id); };
-var st, selected, targets, mode='ai', depth=2, gameOverFlag, lastMove, capturedByW, capturedByB, moveNo;
+var st, selected, targets, mode='ai', depth=2, gameOverFlag, lastMove, capturedByW, capturedByB, moveNo, aiGen=0;
 var boardEl=el('board');
 var sqEls=[];
 for(var s=0;s<64;s++){
@@ -335,6 +335,7 @@ for(var s=0;s<64;s++){
   boardEl.appendChild(d); sqEls.push(d);
 }
 function reset(){
+  aiGen++; /* invalidate any AI reply still waiting from the previous game */
   st=initialState(); selected=-1; targets=[]; gameOverFlag=false; lastMove=null;
   capturedByW=[]; capturedByB=[]; moveNo=1;
   el('log').innerHTML='';
@@ -389,7 +390,10 @@ function afterMove(mv, name){
   render();
   if(!gameOverFlag && mode==='ai' && st.turn==='b'){
     el('msg').textContent='🤖 Computer is thinking…';
+    var gen=aiGen;
     setTimeout(function(){
+      if(gen!==aiGen) return; /* NEW GAME / mode switch since scheduling: reply cancelled */
+      if(gameOverFlag || mode!=='ai' || st.turn!=='b') return;
       var bm=bestMove(st, depth);
       if(bm){ var nm=moveName(st, bm); st=applyMove(st, bm); afterMove(bm, nm); }
     }, 350);
